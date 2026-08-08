@@ -24,6 +24,9 @@ SOFTWARE.
 
 #include "benchmarks_common.h"
 
+// Global performance monitor instance (defined here, declared extern in header)
+PerformanceMonitor perfMonitor;
+
 // Global configuration variables (defined here, declared extern in header)
 int PERF_RUNS = 10;   // Default number of runs, can be overridden via command line
 int WARMUP_RUNS = 50;       // Default number of warmup runs, can be overridden via command line
@@ -748,12 +751,13 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_write_string(gray_sheet, row, 2, "Image Size", header_format);
     worksheet_write_string(gray_sheet, row, 3, "DType", header_format);
     worksheet_write_string(gray_sheet, row, 4, "Batch Size", header_format);
-    worksheet_write_string(gray_sheet, row, 5, "Runs", header_format);
-    worksheet_write_string(gray_sheet, row, 6, opencvHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 7, rppHostHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 8, rppHostBatchHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 9, "RPP HIP (avg ms)", header_format);
-    worksheet_write_string(gray_sheet, row++, 10, "RPP HIP BATCH (avg ms)", header_format);
+    worksheet_write_string(gray_sheet, row, 5, "WARMUP Runs", header_format);
+    worksheet_write_string(gray_sheet, row, 6, "PERF Runs", header_format);
+    worksheet_write_string(gray_sheet, row, 7, opencvHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 8, rppHostHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 9, rppHostBatchHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 10, "RPP HIP (avg ms)", header_format);
+    worksheet_write_string(gray_sheet, row++, 11, "RPP HIP BATCH (avg ms)", header_format);
 
     for (const auto& result : grayResults) {
         worksheet_write_string(gray_sheet, row, 0, result.operationName.c_str(), NULL);
@@ -761,12 +765,13 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
         worksheet_write_string(gray_sheet, row, 2, result.imageSize.c_str(), NULL);
         worksheet_write_string(gray_sheet, row, 3, result.dtype.c_str(), NULL);
         worksheet_write_number(gray_sheet, row, 4, result.batchSize, NULL);
-        worksheet_write_number(gray_sheet, row, 5, result.numRuns, NULL);
-        worksheet_write_number(gray_sheet, row, 6, result.opencvTime, time_format);
-        worksheet_write_number(gray_sheet, row, 7, result.rppHostTime, time_format);
-        worksheet_write_number(gray_sheet, row, 8, result.rppHostBatchTime, time_format);
-        worksheet_write_number(gray_sheet, row, 9, result.rppHipTime, time_format);
-        worksheet_write_number(gray_sheet, row, 10, result.rppHipBatchTime, time_format);
+        worksheet_write_number(gray_sheet, row, 5, WARMUP_RUNS, NULL);
+        worksheet_write_number(gray_sheet, row, 6, result.numRuns, NULL);
+        worksheet_write_number(gray_sheet, row, 7, result.opencvTime, time_format);
+        worksheet_write_number(gray_sheet, row, 8, result.rppHostTime, time_format);
+        worksheet_write_number(gray_sheet, row, 9, result.rppHostBatchTime, time_format);
+        worksheet_write_number(gray_sheet, row, 10, result.rppHipTime, time_format);
+        worksheet_write_number(gray_sheet, row, 11, result.rppHipBatchTime, time_format);
         row++;
     }
 
@@ -786,12 +791,13 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_write_string(rgb_sheet, row, 2, "Image Size", header_format);
     worksheet_write_string(rgb_sheet, row, 3, "DType", header_format);
     worksheet_write_string(rgb_sheet, row, 4, "Batch Size", header_format);
-    worksheet_write_string(rgb_sheet, row, 5, "Runs", header_format);
-    worksheet_write_string(rgb_sheet, row, 6, opencvHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 7, rppHostHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 8, rppHostBatchHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 9, "RPP HIP (avg ms)", header_format);
-    worksheet_write_string(rgb_sheet, row++, 10, "RPP HIP BATCH (avg ms)", header_format);
+    worksheet_write_string(rgb_sheet, row, 5, "WARMUP Runs", header_format);
+    worksheet_write_string(rgb_sheet, row, 6, "PERF Runs", header_format);
+    worksheet_write_string(rgb_sheet, row, 7, opencvHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 8, rppHostHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 9, rppHostBatchHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 10, "RPP HIP (avg ms)", header_format);
+    worksheet_write_string(rgb_sheet, row++, 11, "RPP HIP BATCH (avg ms)", header_format);
 
     for (const auto& result : colorResults) {
         worksheet_write_string(rgb_sheet, row, 0, result.operationName.c_str(), NULL);
@@ -799,12 +805,13 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
         worksheet_write_string(rgb_sheet, row, 2, result.imageSize.c_str(), NULL);
         worksheet_write_string(rgb_sheet, row, 3, result.dtype.c_str(), NULL);
         worksheet_write_number(rgb_sheet, row, 4, result.batchSize, NULL);
-        worksheet_write_number(rgb_sheet, row, 5, result.numRuns, NULL);
-        worksheet_write_number(rgb_sheet, row, 6, result.opencvTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 7, result.rppHostTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 8, result.rppHostBatchTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 9, result.rppHipTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 10, result.rppHipBatchTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 5, WARMUP_RUNS, NULL);
+        worksheet_write_number(rgb_sheet, row, 6, result.numRuns, NULL);
+        worksheet_write_number(rgb_sheet, row, 7, result.opencvTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 8, result.rppHostTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 9, result.rppHostBatchTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 10, result.rppHipTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 11, result.rppHipBatchTime, time_format);
         row++;
     }
 

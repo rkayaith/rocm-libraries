@@ -60,6 +60,33 @@ using namespace std;
 using namespace cv;
 using namespace chrono;
 
+// Performance monitoring class
+class PerformanceMonitor {
+private:
+    high_resolution_clock::time_point startTime;
+    high_resolution_clock::time_point endTime;
+    double totalTimeMs;
+
+public:
+    PerformanceMonitor() : totalTimeMs(0.0) {}
+
+    void start() {
+        startTime = high_resolution_clock::now();
+    }
+
+    void stop() {
+        endTime = high_resolution_clock::now();
+        totalTimeMs = duration<double, milli>(endTime - startTime).count();
+    }
+
+    double getTotalTime() const {
+        return totalTimeMs;
+    }
+};
+
+// Global performance monitor instance
+extern PerformanceMonitor perfMonitor;
+
 // Test image paths - can be overridden via command line
 #define DEFAULT_GRAY_IMAGE_PATH "input_images_dataset/"
 #define DEFAULT_RGB_IMAGE_PATH "input_images_dataset/"
