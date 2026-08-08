@@ -65,7 +65,9 @@ using namespace chrono;
 #define DEFAULT_RGB_IMAGE_PATH "input_images_dataset/"
 
 // Global configuration variables (set at runtime)
-extern int NUM_RUNS;
+extern int PERF_RUNS;
+extern int WARMUP_RUNS;
+extern int TOTAL_RUNS;
 extern int NUM_THREADS;
 extern string GRAY_IMAGE_PATH;
 extern string RGB_IMAGE_PATH;

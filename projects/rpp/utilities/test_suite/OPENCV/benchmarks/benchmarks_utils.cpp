@@ -25,7 +25,9 @@ SOFTWARE.
 #include "benchmarks_common.h"
 
 // Global configuration variables (defined here, declared extern in header)
-int NUM_RUNS = 100;   // Default number of runs, can be overridden via command line
+int PERF_RUNS = 10;   // Default number of runs, can be overridden via command line
+int WARMUP_RUNS = 50;       // Default number of warmup runs, can be overridden via command line
+int TOTAL_RUNS = 0;         // Will be computed as WARMUP_RUNS + PERF_RUNS after initialization
 int NUM_THREADS = 0;  // Will be set at runtime
 string GRAY_IMAGE_PATH = DEFAULT_GRAY_IMAGE_PATH;
 string RGB_IMAGE_PATH = DEFAULT_RGB_IMAGE_PATH;
@@ -110,8 +112,9 @@ static bool currentIsColor;
 
 void printResult(const string& name, int batchSize, bool isColor, double totalMs,
                  const string& params) {
-    double avgTime = totalMs / NUM_RUNS;
-    cout << name << " (Avg per run, " << batchSize << " images, "
+    double avgTime = totalMs / PERF_RUNS;
+    cout << name << " (Avg per run, WARMUP_RUNS=" << WARMUP_RUNS
+         << ", PERF_RUNS=" << PERF_RUNS << ", " << batchSize << " images, "
          << (isColor ? "RGB" : "Grayscale");
     if (!params.empty()) cout << ", " << params;
     cout << "): " << avgTime << " ms" << endl;
@@ -196,13 +199,13 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
         if (isColor) {
             rgbResults.emplace_back(displayName, data.parameters, data.opencvTime,
                                     data.rppHostTime, data.rppHipTime, rgbImageSize,
-                                    rgbImageDtype, rgbBatchSize, NUM_RUNS,
+                                    rgbImageDtype, rgbBatchSize, PERF_RUNS,
                                     data.rppHostBatchTime, data.rppHipBatchTime);
             data.resultIndex = rgbResults.size() - 1;
         } else {
             grayscaleResults.emplace_back(displayName, data.parameters, data.opencvTime,
                                           data.rppHostTime, data.rppHipTime, grayImageSize,
-                                          grayImageDtype, grayBatchSize, NUM_RUNS,
+                                          grayImageDtype, grayBatchSize, PERF_RUNS,
                                           data.rppHostBatchTime, data.rppHipBatchTime);
             data.resultIndex = grayscaleResults.size() - 1;
         }

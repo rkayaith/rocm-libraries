@@ -29,7 +29,8 @@ set -e
 
 # Default values
 NUM_THREADS=""
-NUM_RUNS=""
+PERF_RUNS=""
+WARMUP_RUNS=""
 CLEAN_BUILD=1  # Default to fresh build
 OPENCV_INSTALL_DIR="$HOME/.local/opencv-5.0.0"
 
@@ -40,6 +41,7 @@ usage() {
     echo "Options:"
     echo "  -t, --threads <N>          Number of threads to use (default: auto-detect)"
     echo "  -n, --num-runs <N>         Number of benchmark runs (default: 100)"
+    echo "  -w, --warmup-runs <N>      Number of warmup runs (default: 50)"
     echo "  --opencv-dir <PATH>        Custom OpenCV installation directory"
     echo "                             (default: \$HOME/.local/opencv-5.0.0)"
     echo "  --no-clean                 Skip clean build (use existing build)"
@@ -49,6 +51,7 @@ usage() {
     echo "Examples:"
     echo "  $0                                    # Fresh build, install OpenCV locally"
     echo "  $0 -t 64                              # Build with 64 threads"
+    echo "  $0 -t 32 -n 200 -w 100                # 32 threads, 200 runs, 100 warmup runs"
     echo "  $0 --opencv-dir ~/my-opencv           # Use custom OpenCV location"
     echo "  $0 --skip-opencv                      # Skip OpenCV build (already installed)"
     echo ""
@@ -64,7 +67,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -n|--num-runs)
-            NUM_RUNS="$2"
+            PERF_RUNS="$2"
+            shift 2
+            ;;
+        -w|--warmup-runs)
+            WARMUP_RUNS="$2"
             shift 2
             ;;
         --opencv-dir)
@@ -99,7 +106,8 @@ echo ""
 echo "Configuration:"
 echo "  OpenCV Install: $OPENCV_INSTALL_DIR"
 [ -n "$NUM_THREADS" ] && echo "  Threads: $NUM_THREADS"
-[ -n "$NUM_RUNS" ] && echo "  Runs: $NUM_RUNS"
+[ -n "$PERF_RUNS" ] && echo "  Runs: $PERF_RUNS"
+[ -n "$WARMUP_RUNS" ] && echo "  Warmup Runs: $WARMUP_RUNS"
 echo ""
 
 # Check for required system dependencies
@@ -408,9 +416,11 @@ cmd="$WRAPPER_SCRIPT"
 cmd_args=""
 
 [ -n "$NUM_THREADS" ] && cmd_args="$cmd_args --threads $NUM_THREADS"
-[ -n "$NUM_RUNS" ] && cmd_args="$cmd_args --num-runs $NUM_RUNS"
+[ -n "$PERF_RUNS" ] && cmd_args="$cmd_args --num-runs $PERF_RUNS"
+[ -n "$WARMUP_RUNS" ] && cmd_args="$cmd_args --warmup-runs $WARMUP_RUNS"
 
-runs_text="${NUM_RUNS:-100}"
+runs_text="${PERF_RUNS:-100}"
+warmup_text="${WARMUP_RUNS:-50}"
 threads_text="${NUM_THREADS:-auto-detect}"
 
 echo "========================================"
@@ -420,6 +430,7 @@ echo ""
 echo "Configuration:"
 echo "  Threads: $threads_text"
 echo "  Runs: $runs_text"
+echo "  Warmup Runs: $warmup_text"
 echo "  OpenCV: $OPENCV_INSTALL_DIR"
 echo ""
 echo "This will take several minutes..."

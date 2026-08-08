@@ -212,7 +212,11 @@ void benchmark_RPP_HIP_Brightness(const vector<Mat>& imgs, bool isColor, float a
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_brightness(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                             &alphaTensor[i], &betaTensor[i],
@@ -290,7 +294,11 @@ void benchmark_RPP_HIP_GammaCorrection(const vector<Mat>& imgs, bool isColor, fl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gamma_correction(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                   &gammaTensor[i], &roiTensor[i], RpptRoiType::XYWH,
@@ -376,7 +384,11 @@ void benchmark_RPP_HIP_Blend(const vector<Mat>& imgs, bool isColor, float alpha,
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_blend(d_inputs1[i], d_inputs2[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                        &alphaTensor[i], &roiTensor[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -457,7 +469,11 @@ void benchmark_RPP_HIP_Contrast(const vector<Mat>& imgs, bool isColor, float con
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_contrast(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           &contrastFactorTensor[i], &contrastCenterTensor[i],
@@ -535,7 +551,11 @@ void benchmark_RPP_HIP_Exposure(const vector<Mat>& imgs, bool isColor, float exp
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_exposure(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           &exposureTensor[i], &roiTensor[i], RpptRoiType::XYWH,
@@ -610,7 +630,11 @@ void benchmark_RPP_HIP_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t 
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_hue(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                      &hueTensor[i], &roiTensor[i], RpptRoiType::XYWH,
@@ -685,7 +709,11 @@ void benchmark_RPP_HIP_Saturation(const vector<Mat>& imgs, float satFactor, rppH
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_saturation(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                             &satTensor[i], &roiTensor[i], RpptRoiType::XYWH,
@@ -739,7 +767,11 @@ void benchmark_RPP_HIP_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t han
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_to_greyscale(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                      RpptSubpixelLayout::BGRtype, handle, RPP_HIP_BACKEND),
@@ -819,7 +851,11 @@ void benchmark_RPP_HIP_ColorJitter(const vector<Mat>& imgs, float brightness, fl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_jitter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                               &brightnessTensor[i], &contrastTensor[i],
@@ -903,7 +939,11 @@ void benchmark_RPP_HIP_BoxFilter(const vector<Mat>& imgs, bool isColor, int kern
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_box_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                             kSize, borderType, &roiTensor[i], RpptRoiType::XYWH,
@@ -982,7 +1022,11 @@ void benchmark_RPP_HIP_MedianFilter(const vector<Mat>& imgs, bool isColor, int k
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_median_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                kSize, borderType, &roiTensor[i], RpptRoiType::XYWH,
@@ -1065,7 +1109,11 @@ void benchmark_RPP_HIP_GaussianFilter(const vector<Mat>& imgs, bool isColor, int
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gaussian_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                   &stdDevTensor[i], kSize, borderType,
@@ -1131,7 +1179,11 @@ void benchmark_RPP_HIP_SobelFilter(const vector<Mat>& imgs, bool isColor, int so
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_sobel_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                               sobelType, kernelSize, &roiTensor[i], RpptRoiType::XYWH,
@@ -1205,7 +1257,11 @@ void benchmark_RPP_HIP_Erode(const vector<Mat>& imgs, bool isColor, int kernelSi
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_erode(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                        kernelSize, &roiTensor[i], RpptRoiType::XYWH,
@@ -1278,7 +1334,11 @@ void benchmark_RPP_HIP_Dilate(const vector<Mat>& imgs, bool isColor, int kernelS
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_dilate(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                         kernelSize, &roiTensor[i], RpptRoiType::XYWH,
@@ -1359,7 +1419,11 @@ void benchmark_RPP_HIP_Emboss(const vector<Mat>& imgs, bool isColor, int kernelS
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_emboss(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                         &strengthTensor[i], kSize, borderType,
@@ -1437,7 +1501,11 @@ void benchmark_RPP_HIP_Crop(const vector<Mat>& imgs, bool isColor, int cropWidth
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                       &roiTensor[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -1519,7 +1587,11 @@ void benchmark_RPP_HIP_Resize(const vector<Mat>& imgs, bool isColor, int dstW, i
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_resize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1605,7 +1677,11 @@ void benchmark_RPP_HIP_Flip(const vector<Mat>& imgs, bool isColor, int flipCode,
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         // CRITICAL: Sync before resetting ROI to prevent CPU-GPU race
         // The GPU may still be reading roiTensor from the previous iteration
         if (k > 0) {
@@ -1698,7 +1774,11 @@ void benchmark_RPP_HIP_Rotate(const vector<Mat>& imgs, bool isColor, float angle
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_rotate(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1783,7 +1863,11 @@ void benchmark_RPP_HIP_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHand
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_warp_affine(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1865,7 +1949,11 @@ void benchmark_RPP_HIP_WarpPerspective(const vector<Mat>& imgs, bool isColor, rp
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_warp_perspective(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1938,7 +2026,11 @@ void benchmark_RPP_HIP_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle_
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_fisheye(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -2037,7 +2129,11 @@ void benchmark_RPP_HIP_LensCorrection(const vector<Mat>& imgs, bool isColor, rpp
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_lens_correction(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -2143,7 +2239,12 @@ void benchmark_RPP_HIP_AddScalar(const vector<Mat>& imgs, bool isColor, float ad
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
+
         CHECK_RPP_STATUS(rppt_add_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
                                         &dstGenericDesc, addTensor, roiTensor,
                                         RpptRoi3DType::XYZWHD, handle, RPP_HIP_BACKEND),
@@ -2243,7 +2344,12 @@ void benchmark_RPP_HIP_SubtractScalar(const vector<Mat>& imgs, bool isColor, flo
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
+
         CHECK_RPP_STATUS(rppt_subtract_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
                                               &dstGenericDesc, subtractTensor, roiTensor,
                                               RpptRoi3DType::XYZWHD, handle, RPP_HIP_BACKEND),
@@ -2343,7 +2449,12 @@ void benchmark_RPP_HIP_MultiplyScalar(const vector<Mat>& imgs, bool isColor, flo
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
+
         CHECK_RPP_STATUS(rppt_multiply_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
                                               &dstGenericDesc, mulTensor, roiTensor,
                                               RpptRoi3DType::XYZWHD, handle, RPP_HIP_BACKEND),
@@ -2424,7 +2535,11 @@ void benchmark_RPP_HIP_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_and(d_inputs1[i], d_inputs2[i], &srcDescs[i],
                                              d_outputs[i], &dstDescs[i], &roiTensor[i],
@@ -2505,7 +2620,11 @@ void benchmark_RPP_HIP_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_or(d_inputs1[i], d_inputs2[i], &srcDescs[i],
                                             d_outputs[i], &dstDescs[i], &roiTensor[i],
@@ -2572,7 +2691,11 @@ void benchmark_RPP_HIP_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_not(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                              &roiTensor[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -2651,7 +2774,11 @@ void benchmark_RPP_HIP_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_xor(d_inputs1[i], d_inputs2[i], &srcDescs[i],
                                              d_outputs[i], &dstDescs[i], &roiTensor[i],
@@ -2733,7 +2860,11 @@ void benchmark_RPP_HIP_Threshold(const vector<Mat>& imgs, bool isColor, double t
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_threshold(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                            &minTensor[i], &maxTensor[i],
@@ -2805,7 +2936,11 @@ void benchmark_RPP_HIP_HistogramEqualize(const vector<Mat>& imgs, bool isColor, 
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_histogram_equalize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                      &roiTensor[i], RpptRoiType::XYWH,
@@ -2886,7 +3021,11 @@ void benchmark_RPP_HIP_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t ha
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_lut(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                      d_lut, &roiTensor[i], RpptRoiType::XYWH,
@@ -2967,7 +3106,11 @@ void benchmark_RPP_HIP_Magnitude(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Magnitude: sqrt(src1^2 + src2^2)
             CHECK_RPP_STATUS(rppt_magnitude(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -3050,7 +3193,11 @@ void benchmark_RPP_HIP_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Phase: atan2(src2, src1) in degrees
             CHECK_RPP_STATUS(rppt_phase(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -3162,7 +3309,11 @@ void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_remap(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -3235,7 +3386,11 @@ void benchmark_RPP_HIP_TensorMin(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
             CHECK_RPP_STATUS(rppt_tensor_min(d_inputs[i], &srcDescs[i],
@@ -3301,7 +3456,11 @@ void benchmark_RPP_HIP_TensorMax(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
             CHECK_RPP_STATUS(rppt_tensor_max(d_inputs[i], &srcDescs[i],
@@ -3367,7 +3526,11 @@ void benchmark_RPP_HIP_TensorSum(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
             CHECK_RPP_STATUS(rppt_tensor_sum(d_inputs[i], &srcDescs[i],
@@ -3433,7 +3596,11 @@ void benchmark_RPP_HIP_TensorMean(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
             CHECK_RPP_STATUS(rppt_tensor_mean(d_inputs[i], &srcDescs[i],
@@ -3516,7 +3683,11 @@ void benchmark_RPP_HIP_TensorStddev(const vector<Mat>& imgs, bool isColor, rppHa
     CHECK_HIP_STATUS(hipMemcpy(h_meanOutputs, d_meanOutputs, outputLength * sizeof(Rpp32f), hipMemcpyDeviceToHost));
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
             CHECK_RPP_STATUS(rppt_tensor_stddev(d_inputs[i], &srcDescs[i],
@@ -3599,7 +3770,11 @@ void benchmark_RPP_HIP_GaussianNoise(const vector<Mat>& imgs, bool isColor, floa
     Rpp32u seed = 12345;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gaussian_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                 &meanTensor[i], &stdDevTensor[i], seed,
@@ -3686,7 +3861,11 @@ void benchmark_RPP_HIP_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor,
     Rpp32u seed = 12345;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_salt_and_pepper_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                        &noiseProbabilityTensor[i], &saltProbabilityTensor[i],
@@ -3774,7 +3953,11 @@ void benchmark_RPP_HIP_NoiseShot(const vector<Mat>& imgs, bool isColor, float sh
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_shot_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                             &shotNoiseFactorTensor[i], seed,
@@ -3852,7 +4035,11 @@ void benchmark_RPP_HIP_Posterize(const vector<Mat>& imgs, bool isColor, int bits
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_posterize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           &posterizeLevelBits[i],
@@ -3930,7 +4117,11 @@ void benchmark_RPP_HIP_Solarize(const vector<Mat>& imgs, bool isColor, int thres
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_solarize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           &thresholdTensor[i],
@@ -4020,7 +4211,11 @@ void benchmark_RPP_HIP_ColorCast(const vector<Mat>& imgs, bool isColor, float r,
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_cast(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                             &rgbTensor[i], &alphaTensor[i],
@@ -4105,7 +4300,11 @@ void benchmark_RPP_HIP_ColorTemperature(const vector<Mat>& imgs, bool isColor, i
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_temperature(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                     &adjustmentValueTensor[i],
@@ -4195,7 +4394,11 @@ void benchmark_RPP_HIP_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_twist(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                              &brightnessTensor[i], &contrastTensor[i],
@@ -4277,7 +4480,11 @@ void benchmark_RPP_HIP_Vignette(const vector<Mat>& imgs, bool isColor, float str
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_vignette(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           &vignetteIntensityTensor[i],
@@ -4377,7 +4584,11 @@ void benchmark_RPP_HIP_NonLinearBlend(const vector<Mat>& imgs, bool isColor, flo
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_non_linear_blend(d_inputs1[i], d_inputs2[i], &srcDescs[i],
                                                    d_outputs[i], &dstDescs[i],
@@ -4481,7 +4692,11 @@ void benchmark_RPP_HIP_Erase(const vector<Mat>& imgs, bool isColor, int numBoxes
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_erase(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                        &anchorBoxInfoTensor[i * maxBoxesPerImage],
@@ -4591,7 +4806,11 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_random_erase(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                &anchorBoxInfoTensor[i * maxEraseBoxes],
@@ -4702,7 +4921,11 @@ void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp3
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_coarse_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                  &anchorBoxInfoTensor[i * maxBoxesPerImage],
@@ -4805,7 +5028,11 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_grid_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                &anchorBoxInfoTensor[i * boxesInEachImage],
@@ -4892,7 +5119,11 @@ void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileW
     (void)hipGetLastError();
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gridmask(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                           gridTileWidth, gridRatio, gridAngle, translateVector,
@@ -4987,7 +5218,11 @@ void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, flo
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_channel_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                   &dropoutTensor[i * 3],
@@ -5090,7 +5325,11 @@ void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp3
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_cutout_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                  &anchorBoxInfoTensor[i * maxBoxesPerImage],
@@ -5177,7 +5416,11 @@ void benchmark_RPP_HIP_JpegCompressionDistortion(const vector<Mat>& imgs, bool i
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_jpeg_compression_distortion(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                              &qualityTensor[i],
@@ -5241,7 +5484,11 @@ void benchmark_RPP_HIP_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t h
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_copy(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                       handle, RPP_HIP_BACKEND),
@@ -5316,7 +5563,11 @@ void benchmark_RPP_HIP_ChannelPermute(const vector<Mat>& imgs, bool isColor, rpp
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_channel_permute(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                   &permutationTensor[i * 3],
@@ -5453,7 +5704,11 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_slice(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                        anchorTensor + i * 4, shapeTensor + i * 4,
@@ -5592,7 +5847,11 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_transpose(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                            permTensor + i * 4, &roiTensor[i],
@@ -5712,7 +5971,11 @@ void benchmark_RPP_HIP_Normalize(const vector<Mat>& imgs, bool isColor, rppHandl
     Rpp32f shift = 0.0f;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // axisMask = 0x7 (normalize across HWC dimensions)
             // computeMeanStddev = 3 (auto-compute both mean and stddev)
@@ -5825,7 +6088,11 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isCo
     }
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Output = (Input * mulTensor) + addTensor
             CHECK_RPP_STATUS(rppt_fused_multiply_add_scalar(d_inputs[i], &genericDesc,
@@ -5945,7 +6212,11 @@ void benchmark_RPP_HIP_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppHa
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images - 1; ++i) {  // Process num_images-1 pairs (same as others)
             CHECK_RPP_STATUS(rppt_crop_and_patch(d_inputs1[i], d_inputs2[i], &srcDescs[i],
                                                  d_outputs[i], &dstDescs[i],
@@ -6061,7 +6332,11 @@ void benchmark_RPP_HIP_CropMirrorNormalize(const vector<Mat>& imgs, bool isColor
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop_mirror_normalize(d_inputs[i], &srcDescs[i],
                                                         d_outputs[i], &dstDescs[i],
@@ -6182,7 +6457,11 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isCol
     rppSetBatchSize(handle, 1);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
             CHECK_RPP_STATUS(rppt_resize_mirror_normalize(d_inputs[i], &srcDescs[i],
@@ -6294,7 +6573,7 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
     }
 
     // NOTE: rppt_resize_crop_mirror has handle corruption bug similar to rppt_flip
-    // Run only once to avoid memory corruption, then multiply time by NUM_RUNS
+    // Run only once to avoid memory corruption, then multiply time by PERF_RUNS
     auto start = high_resolution_clock::now();
     for (int i = 0; i < num_images; ++i) {
         // Pass pointer to the i-th 256-element ROI block
@@ -6310,9 +6589,9 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
     CHECK_HIP_STATUS(hipStreamSynchronize(stream));
     auto end = high_resolution_clock::now();
 
-    // Multiply by NUM_RUNS to normalize with other benchmarks
+    // Multiply by PERF_RUNS to normalize with other benchmarks
     double singleRunTime = duration<double, milli>(end - start).count();
-    double adjustedTime = singleRunTime * NUM_RUNS;
+    double adjustedTime = singleRunTime * PERF_RUNS;
 
     for (int i = 0; i < num_images; ++i) {
         CHECK_HIP_STATUS(hipFree(d_inputs[i]));
@@ -6410,7 +6689,11 @@ void benchmark_RPP_HIP_Flip_Batched(const vector<Mat>& imgs, bool isColor, int f
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         // CRITICAL: Sync before resetting ROI to prevent CPU-GPU race
         // The GPU may still be reading roiTensor from the previous iteration
         if (k > 0) {
@@ -6507,7 +6790,11 @@ void benchmark_RPP_HIP_Resize_Batched(const vector<Mat>& imgs, bool isColor, int
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_resize(d_input, &srcDesc, d_output, &dstDesc,
                                      dstImgSizes, interpType, roiTensor, RpptRoiType::XYWH,
                                      handle, RPP_HIP_BACKEND),
@@ -6590,7 +6877,11 @@ void benchmark_RPP_HIP_Crop_Batched(const vector<Mat>& imgs, bool isColor, int c
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_crop(d_input, &srcDesc, d_output, &dstDesc,
                                    roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Crop");
@@ -6664,7 +6955,11 @@ void benchmark_RPP_HIP_Rotate_Batched(const vector<Mat>& imgs, bool isColor, flo
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_rotate(d_input, &srcDesc, d_output, &dstDesc,
                                      angleTensor, RpptInterpolationType::BILINEAR,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -6742,7 +7037,11 @@ void benchmark_RPP_HIP_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor, 
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_box_filter(d_input, &srcDesc, d_output, &dstDesc,
                                          kSize, borderType, roiTensor, RpptRoiType::XYWH,
                                          handle, RPP_HIP_BACKEND),
@@ -6821,7 +7120,11 @@ void benchmark_RPP_HIP_GaussianFilter_Batched(const vector<Mat>& imgs, bool isCo
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_gaussian_filter(d_input, &srcDesc, d_output, &dstDesc,
                                               stdDevTensor, kSize, borderType,
                                               roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -6897,7 +7200,11 @@ void benchmark_RPP_HIP_MedianFilter_Batched(const vector<Mat>& imgs, bool isColo
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_median_filter(d_input, &srcDesc, d_output, &dstDesc,
                                             kSize, borderType, roiTensor, RpptRoiType::XYWH,
                                             handle, RPP_HIP_BACKEND),
@@ -6987,7 +7294,11 @@ void benchmark_RPP_HIP_SobelFilter_Batched(const vector<Mat>& imgs, bool isColor
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_sobel_filter(d_input, &srcDesc, d_output, &dstDesc,
                                            sobelType, kernelSize, roiTensor, RpptRoiType::XYWH,
                                            handle, RPP_HIP_BACKEND),
@@ -7073,7 +7384,11 @@ void benchmark_RPP_HIP_HistogramEqualize_Batched(const vector<Mat>& imgs, bool i
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_histogram_equalize(d_input, &srcDesc, d_output, &dstDesc,
                                                  roiTensor, RpptRoiType::XYWH,
                                                  handle, RPP_HIP_BACKEND),
@@ -7149,7 +7464,11 @@ void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_hue(d_input, &srcDesc, d_output, &dstDesc,
                                   hueTensor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Hue");
@@ -7224,7 +7543,11 @@ void benchmark_RPP_HIP_Saturation_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_saturation(d_input, &srcDesc, d_output, &dstDesc,
                                          satTensor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Saturation");
@@ -7294,7 +7617,11 @@ void benchmark_RPP_HIP_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool is
 
     RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_color_to_greyscale(d_input, &srcDesc, d_output, &dstDesc,
                                                  srcSubpixelLayout,
                                                  handle, RPP_HIP_BACKEND),
@@ -7368,7 +7695,11 @@ void benchmark_RPP_HIP_Brightness_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_brightness(d_input, &srcDesc, d_output, &dstDesc,
                                          alphaTensor, betaTensor,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -7447,7 +7778,11 @@ void benchmark_RPP_HIP_Contrast_Batched(const vector<Mat>& imgs, bool isColor, f
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_contrast(d_input, &srcDesc, d_output, &dstDesc,
                                        contrastFactorTensor, contrastCenterTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -7539,7 +7874,11 @@ void benchmark_RPP_HIP_Emboss_Batched(const vector<Mat>& imgs, bool isColor, int
     // REQUIRED: rppt_emboss only supports REPLICATE border type (validated in implementation)
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_emboss(d_input, &srcDesc, d_output, &dstDesc,
                                      strengthTensor, kernelSize,
                                      borderType, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -7644,7 +7983,11 @@ void benchmark_RPP_HIP_AddScalar_Batched(const vector<Mat>& imgs, bool isColor, 
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_add_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                          addTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
                                          handle, RPP_HIP_BACKEND),
@@ -7748,7 +8091,11 @@ void benchmark_RPP_HIP_SubtractScalar_Batched(const vector<Mat>& imgs, bool isCo
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_subtract_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                               subTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
                                               handle, RPP_HIP_BACKEND),
@@ -7852,7 +8199,11 @@ void benchmark_RPP_HIP_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isCo
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_multiply_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                               mulTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
                                               handle, RPP_HIP_BACKEND),
@@ -7938,7 +8289,11 @@ void benchmark_RPP_HIP_GaussianNoise_Batched(const vector<Mat>& imgs, bool isCol
 
     unsigned long long seed = 12345;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_gaussian_noise(d_input, &srcDesc, d_output, &dstDesc, meanTensor, stddevTensor,
                                              seed, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "GaussianNoise");
@@ -8027,7 +8382,11 @@ void benchmark_RPP_HIP_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool 
 
     Rpp32u seed = 12345;
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_salt_and_pepper_noise(d_input, &srcDesc, d_output, &dstDesc, noiseProbTensor,
                                                      saltProbTensor, saltValueTensor, pepperValueTensor,
                                                      seed, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8113,7 +8472,11 @@ void benchmark_RPP_HIP_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_shot_noise(d_input, &srcDesc, d_output, &dstDesc, shotNoiseTensor, 12345,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "NoiseShot");
@@ -8200,7 +8563,11 @@ void benchmark_RPP_HIP_ColorCast_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_color_cast(d_input, &srcDesc, d_output, &dstDesc, rgbTensor, alphaTensor,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "ColorCast");
@@ -8282,7 +8649,11 @@ void benchmark_RPP_HIP_ColorTemperature_Batched(const vector<Mat>& imgs, bool is
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_color_temperature(d_input, &srcDesc, d_output, &dstDesc, adjustmentTensor,
                                                  roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "ColorTemperature");
@@ -8365,7 +8736,11 @@ void benchmark_RPP_HIP_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_color_twist(d_input, &srcDesc, d_output, &dstDesc, alpha, beta, hueShift,
                                           satFactor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "ColorTwist");
@@ -8449,7 +8824,11 @@ void benchmark_RPP_HIP_Vignette_Batched(const vector<Mat>& imgs, bool isColor, f
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_vignette(d_input, &srcDesc, d_output, &dstDesc, intensityTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Vignette");
@@ -8539,7 +8918,11 @@ void benchmark_RPP_HIP_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isCo
     delete[] h_tempBuffer2;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_non_linear_blend(d_input1, d_input2, &srcDesc, d_output, &dstDesc, stdDevTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "NonLinearBlend");
@@ -8622,7 +9005,11 @@ void benchmark_RPP_HIP_Posterize_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_posterize(d_input, &srcDesc, d_output, &dstDesc, posterizeLevelBits,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Posterize");
@@ -8704,7 +9091,12 @@ void benchmark_RPP_HIP_Solarize_Batched(const vector<Mat>& imgs, bool isColor, i
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
+
         CHECK_RPP_STATUS(rppt_solarize(d_input, &srcDesc, d_output, &dstDesc, thresholdTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Solarize");
@@ -8786,7 +9178,11 @@ void benchmark_RPP_HIP_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rpp
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_glitch(d_input, &srcDesc, d_output, &dstDesc, rgbOffsets,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Glitch");
@@ -8865,7 +9261,11 @@ void benchmark_RPP_HIP_JpegCompressionDistortion_Batched(const vector<Mat>& imgs
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_jpeg_compression_distortion(d_input, &srcDesc, d_output, &dstDesc, qualityTensor,
                                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "JpegCompressionDistortion");
@@ -8944,7 +9344,11 @@ void benchmark_RPP_HIP_TensorMin_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_tensor_min(d_input, &srcDesc, minOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "TensorMin");
@@ -9020,7 +9424,11 @@ void benchmark_RPP_HIP_TensorMax_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_tensor_max(d_input, &srcDesc, maxOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "TensorMax");
@@ -9096,7 +9504,11 @@ void benchmark_RPP_HIP_TensorSum_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_tensor_sum(d_input, &srcDesc, sumOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "TensorSum");
@@ -9172,7 +9584,11 @@ void benchmark_RPP_HIP_TensorMean_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_tensor_mean(d_input, &srcDesc, meanOutputs, outputLength,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "TensorMean");
@@ -9253,7 +9669,11 @@ void benchmark_RPP_HIP_TensorStddev_Batched(const vector<Mat>& imgs, bool isColo
                     "TensorMean");
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_tensor_stddev(d_input, &srcDesc, stddevOutputs, outputLength, meanOutputs,
                                             roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "TensorStddev");
@@ -9332,7 +9752,11 @@ void benchmark_RPP_HIP_Threshold_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_threshold(d_input, &srcDesc, d_output, &dstDesc, minTensor, maxTensor,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Threshold");
@@ -9421,7 +9845,11 @@ void benchmark_RPP_HIP_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_warp_affine(d_input, &srcDesc, d_output, &dstDesc, affineTensor,
                                           RpptInterpolationType::BILINEAR, roiTensor,
                                           RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9510,7 +9938,11 @@ void benchmark_RPP_HIP_WarpPerspective_Batched(const vector<Mat>& imgs, bool isC
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_warp_perspective(d_input, &srcDesc, d_output, &dstDesc, perspectiveTensor,
                                                RpptInterpolationType::BILINEAR, roiTensor,
                                                RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9587,7 +10019,11 @@ void benchmark_RPP_HIP_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, rp
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_fisheye(d_input, &srcDesc, d_output, &dstDesc, roiTensor,
                                       RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Fisheye");
@@ -9696,7 +10132,11 @@ void benchmark_RPP_HIP_LensCorrection_Batched(const vector<Mat>& imgs, bool isCo
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_lens_correction(d_input, &srcDesc, d_output, &dstDesc, d_rowRemapTable,
                                               d_colRemapTable, &tableDesc, cameraMatrix,
                                               distortionCoeffs, roiTensor, RpptRoiType::XYWH,
@@ -9780,7 +10220,11 @@ void benchmark_RPP_HIP_GammaCorrection_Batched(const vector<Mat>& imgs, bool isC
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_gamma_correction(d_input, &srcDesc, d_output, &dstDesc, gammaTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "GammaCorrection");
@@ -9861,7 +10305,11 @@ void benchmark_RPP_HIP_Exposure_Batched(const vector<Mat>& imgs, bool isColor, f
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_exposure(d_input, &srcDesc, d_output, &dstDesc, exposureTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "Exposure");
@@ -9945,7 +10393,11 @@ void benchmark_RPP_HIP_Blend_Batched(const vector<Mat>& imgs, bool isColor, floa
     delete[] h_tempBuffer2;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_blend(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                     alphaTensor, roiTensor, RpptRoiType::XYWH,
                                     handle, RPP_HIP_BACKEND),
@@ -10035,7 +10487,11 @@ void benchmark_RPP_HIP_Erode_Batched(const vector<Mat>& imgs, bool isColor, int 
 
     Rpp32u kSize = static_cast<Rpp32u>(kernelSize);
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         // Pass roiTensor directly (first element of 256-element buffer per image)
         CHECK_RPP_STATUS(rppt_erode(d_input, &srcDesc, d_output, &dstDesc,
                                     kSize, roiTensor, RpptRoiType::XYWH,
@@ -10123,7 +10579,11 @@ void benchmark_RPP_HIP_Dilate_Batched(const vector<Mat>& imgs, bool isColor, int
 
     Rpp32u kSize = static_cast<Rpp32u>(kernelSize);
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         // Pass roiTensor directly (first element of 256-element buffer per image)
         CHECK_RPP_STATUS(rppt_dilate(d_input, &srcDesc, d_output, &dstDesc,
                                      kSize, roiTensor, RpptRoiType::XYWH,
@@ -10209,7 +10669,11 @@ void benchmark_RPP_HIP_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer2;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_bitwise_and(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "BitwiseAnd");
@@ -10288,7 +10752,11 @@ void benchmark_RPP_HIP_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer2;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_bitwise_or(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "BitwiseOr");
@@ -10358,7 +10826,11 @@ void benchmark_RPP_HIP_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_bitwise_not(d_input, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "BitwiseNot");
@@ -10436,7 +10908,11 @@ void benchmark_RPP_HIP_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer2;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_bitwise_xor(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                         "BitwiseXor");
@@ -10539,7 +11015,11 @@ void benchmark_RPP_HIP_Erase_Batched(const vector<Mat>& imgs, bool isColor, int 
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_erase(d_input, &srcDesc, d_output, &dstDesc,
                                     anchorBoxInfoTensor, colorsTensor, numBoxesTensor,
                                     roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10649,7 +11129,11 @@ void benchmark_RPP_HIP_RandomErase_Batched(const vector<Mat>& imgs, bool isColor
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_random_erase(d_input, &srcDesc, d_output, &dstDesc,
                                            anchorBoxInfoTensor, d_noiseBuffer,
                                            roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10765,7 +11249,11 @@ void benchmark_RPP_HIP_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCol
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_coarse_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                              anchorBoxInfoTensor, numBoxesTensor, maxBoxesPerImage,
                                              roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10869,7 +11357,11 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_grid_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                            anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH,
                                            roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10974,7 +11466,11 @@ void benchmark_RPP_HIP_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, i
     (void)hipGetLastError();
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_gridmask(d_input, &srcDesc, d_output, &dstDesc,
                                        tileWidthVal, gridRatio, gridAngle, translateVector,
                                        d_roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11055,7 +11551,11 @@ void benchmark_RPP_HIP_ChannelDropout_Batched(const vector<Mat>& imgs, bool isCo
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_channel_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                               dropoutTensor,
                                               roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11162,7 +11662,11 @@ void benchmark_RPP_HIP_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCol
     delete[] h_tempBuffer;
 
     auto start = high_resolution_clock::now();
-    for (int k = 0; k < NUM_RUNS; ++k) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_cutout_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                              anchorBoxInfoTensor, colorsTensor, numBoxesTensor,
                                              roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11223,7 +11727,11 @@ void benchmark_RPP_HIP_Copy_Batched(const vector<Mat>& imgs, bool isColor, rppHa
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_copy((RppPtr_t)d_input, &srcDesc, (RppPtr_t)d_output, &dstDesc,
                                    handle, RPP_HIP_BACKEND),
                         "Copy");
@@ -11303,7 +11811,11 @@ void benchmark_RPP_HIP_Slice_Batched(const vector<Mat>& imgs, bool isColor, rppH
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_slice((RppPtr_t)d_input, &srcGenericDesc, (RppPtr_t)d_output, &dstGenericDesc,
                                     anchorTensor, shapeTensor, (RppPtr_t)&fillValue, false, roiTensor,
                                     handle, RPP_HIP_BACKEND),
@@ -11382,7 +11894,11 @@ void benchmark_RPP_HIP_ChannelPermute_Batched(const vector<Mat>& imgs, bool isCo
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_channel_permute((RppPtr_t)d_input, &srcDesc, (RppPtr_t)d_output, &dstDesc,
                                               permutationTensor, handle, RPP_HIP_BACKEND),
                         "ChannelPermute");
@@ -11488,7 +12004,11 @@ void benchmark_RPP_HIP_Transpose_Batched(const vector<Mat>& imgs, bool isColor, 
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_transpose((RppPtr_t)d_input, srcGenericDesc, (RppPtr_t)d_output, dstGenericDesc,
                                         permTensor, roiTensor, handle, RPP_HIP_BACKEND),
                         "Transpose");
@@ -11561,7 +12081,11 @@ void benchmark_RPP_HIP_LUT_Batched(const vector<Mat>& imgs, bool isColor, rppHan
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_lut((RppPtr_t)d_input, srcDesc, (RppPtr_t)d_output, dstDesc,
                                   (RppPtr_t)d_lut, roiTensorPtrSrc, RpptRoiType::XYWH,
                                   handle, RPP_HIP_BACKEND),
@@ -11631,7 +12155,11 @@ void benchmark_RPP_HIP_Magnitude_Batched(const vector<Mat>& imgs, bool isColor, 
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_magnitude((RppPtr_t)d_input1, (RppPtr_t)d_input2, srcDesc,
                                         (RppPtr_t)d_output, dstDesc,
                                         roiTensorPtrSrc, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11714,7 +12242,11 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar_Batched(const vector<Mat>& imgs, b
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_fused_multiply_add_scalar((RppPtr_t)d_inputF32, srcDesc,
                                                          (RppPtr_t)d_outputF32, dstDesc,
                                                          mulTensor, addTensor,
@@ -11817,7 +12349,11 @@ void benchmark_RPP_HIP_Remap_Batched(const vector<Mat>& imgs, bool isColor, rppH
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_remap((RppPtr_t)d_input, d_srcDesc, (RppPtr_t)d_output, d_dstDesc,
                                     d_rowRemapTable, d_colRemapTable, d_tableDesc, interpolationType,
                                     d_roiTensorPtrSrc, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11915,7 +12451,11 @@ void benchmark_RPP_HIP_Phase_Batched(const vector<Mat>& imgs, bool isColor, rppH
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_phase((RppPtr_t)d_input1, (RppPtr_t)d_input2, d_srcDesc,
                                     (RppPtr_t)d_output, d_dstDesc,
                                     d_roiTensorPtrSrc, RpptRoiType::XYWH,
@@ -12007,7 +12547,11 @@ void benchmark_RPP_HIP_Normalize_Batched(const vector<Mat>& imgs, bool isColor, 
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_normalize((RppPtr_t)d_inputBuffer, genericDesc,
                                         (RppPtr_t)d_outputBuffer, genericDesc,
                                         axisMask, meanTensor, stdDevTensor, computeMeanStddev,
@@ -12114,7 +12658,11 @@ void benchmark_RPP_HIP_CropAndPatch_Batched(const vector<Mat>& imgs, bool isColo
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_crop_and_patch((RppPtr_t)d_input1, (RppPtr_t)d_input2, d_srcDesc,
                                              (RppPtr_t)d_output, d_dstDesc,
                                              dstRoiTensor, cropRoiTensor, patchRoiTensor,
@@ -12227,7 +12775,11 @@ void benchmark_RPP_HIP_CropMirrorNormalize_Batched(const vector<Mat>& imgs, bool
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_crop_mirror_normalize((RppPtr_t)d_input, d_srcDesc,
                                                     (RppPtr_t)d_output, d_dstDesc,
                                                     offsetTensor, multiplierTensor, mirrorTensor,
@@ -12337,7 +12889,11 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize_Batched(const vector<Mat>& imgs, bo
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_resize_mirror_normalize((RppPtr_t)d_input, d_srcDesc,
                                                       (RppPtr_t)d_output, d_dstDesc,
                                                       dstImgSizes, RpptInterpolationType::BILINEAR,
@@ -12446,7 +13002,11 @@ void benchmark_RPP_HIP_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool is
 
     // Benchmark loop
     auto start = high_resolution_clock::now();
-    for (int i = 0; i < NUM_RUNS; i++) {
+    for (int k = 0; k < TOTAL_RUNS; ++k) {
+        if (k == WARMUP_RUNS) {
+            CHECK_HIP_STATUS(hipStreamSynchronize(stream));
+            start = high_resolution_clock::now();
+        }
         CHECK_RPP_STATUS(rppt_resize_crop_mirror((RppPtr_t)d_input, d_srcDesc,
                                                  (RppPtr_t)d_output, d_dstDesc,
                                                  dstImgSizes, RpptInterpolationType::BILINEAR,

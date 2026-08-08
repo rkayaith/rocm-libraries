@@ -171,15 +171,17 @@ The executable will be created at `build/opencv_vs_rpp_host_hip_benchmarking`
 
 Options:
   -t, --threads <N>        Number of threads to use (default: auto-detect)
-  -n, --num-runs <N>       Number of benchmark runs (default: 100)
+  -n, --num-runs <N>       Number of benchmark runs (default: 10)
+  -w, --warmup-runs <N>    Number of warmup runs (default: 50)
   -g, --gray-path <PATH>   Path to grayscale images (default: 1080p_128images_dataset/)
   -r, --rgb-path <PATH>    Path to RGB images (default: 1080p_128images_dataset/)
   -h, --help               Display help message
 
 Examples:
-  ./build/opencv_vs_rpp_host_hip_benchmarking                           # Auto-detect threads, 100 runs (default)
+  ./build/opencv_vs_rpp_host_hip_benchmarking                           # Auto-detect threads, 10 runs (default)
   ./build/opencv_vs_rpp_host_hip_benchmarking --threads 64              # Use 64 threads
   ./build/opencv_vs_rpp_host_hip_benchmarking -t 32 -n 50               # Use 32 threads with 50 runs
+  ./build/opencv_vs_rpp_host_hip_benchmarking -t 32 -n 50 -w 25         # 32 threads, 50 runs, 25 warmup runs
   ./build/opencv_vs_rpp_host_hip_benchmarking -t 32 -g ./my_images/     # Use 32 threads with custom dataset
 ```
 
@@ -328,10 +330,36 @@ You can configure the number of benchmark runs (iterations) at runtime using the
 ```
 
 **Alternative: Build-time configuration:**
-You can also set a default value by editing `benchmarks_common.h`:
+You can also set a default value by editing `benchmarks_utils.cpp`:
 
 ```cpp
-extern int NUM_RUNS;  // Default is 100, but can be overridden via command-line
+int PERF_RUNS = 100;  // Default is 100, but can be overridden via command-line
+```
+
+The runtime command-line option will always override the default value.
+
+### Configuring Number of Warmup Runs
+
+Warmup runs are executed before the actual benchmark runs to ensure CPU/GPU caches are warmed up and to get more stable performance measurements. You can configure the number of warmup runs at runtime using the `-w` or `--warmup-runs` option:
+
+**Runtime configuration (recommended):**
+```bash
+# Default 50 warmup runs
+./build/opencv_vs_rpp_host_hip_benchmarking
+
+# Custom number of warmup runs
+./build/opencv_vs_rpp_host_hip_benchmarking --warmup-runs 25
+./build/opencv_vs_rpp_host_hip_benchmarking -w 100
+
+# Combine with other options
+./build/opencv_vs_rpp_host_hip_benchmarking -t 32 -n 200 -w 100
+```
+
+**Alternative: Build-time configuration:**
+You can also set a default value by editing `benchmarks_utils.cpp`:
+
+```cpp
+int WARMUP_RUNS = 50;  // Default is 50, but can be overridden via command-line
 ```
 
 The runtime command-line option will always override the default value.
@@ -499,10 +527,18 @@ python3 generate_test_dataset.py
   - Adjustable at runtime via `-n` or `--num-runs` command-line option (no rebuild required)
   - Example: `./build/opencv_vs_rpp_host_hip_benchmarking -n 200` runs each benchmark 200 times
 
+- **Warmup Runs:**
+  - 50 warmup runs are executed by default before actual benchmarking
+  - Warmup runs ensure CPU/GPU caches are warmed up for consistent performance measurements
+  - Adjustable at runtime via `-w` or `--warmup-runs` command-line option (no rebuild required)
+  - Example: `./build/opencv_vs_rpp_host_hip_benchmarking -w 100` runs 100 warmup iterations
+  - Set to 0 to disable warmup: `./build/opencv_vs_rpp_host_hip_benchmarking -w 0`
+
 - **Performance Variability:**
   - Results vary based on CPU architecture, memory bandwidth, and system load
   - Close other resource-intensive applications for accurate comparisons
   - Test with different thread counts to find optimal performance for your system
+  - Warmup runs help reduce measurement variability from cold cache effects
 
 - **Parallel vs Single-threaded Comparison:**
   - Build with `ENABLE_PARALLEL_THREADS=ON` and run with different `--threads` values

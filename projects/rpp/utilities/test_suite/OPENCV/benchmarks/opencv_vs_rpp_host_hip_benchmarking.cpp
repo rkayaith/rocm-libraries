@@ -31,6 +31,7 @@ void printUsage(const char* programName) {
     cout << "Options:" << endl;
     cout << "  -t, --threads <N>        Number of threads to use (default: auto-detect)" << endl;
     cout << "  -n, --num-runs <N>       Number of benchmark runs (default: 100)" << endl;
+    cout << "  -w, --warmup-runs <N>    Number of warmup runs (default: 50)" << endl;
     cout << "  -g, --gray-path <PATH>   Path to grayscale images (default: "
          << DEFAULT_GRAY_IMAGE_PATH << ")" << endl;
     cout << "  -r, --rgb-path <PATH>    Path to RGB images (default: " << DEFAULT_RGB_IMAGE_PATH
@@ -41,6 +42,8 @@ void printUsage(const char* programName) {
          << "                           # Auto-detect threads, 100 runs (default)" << endl;
     cout << "  " << programName << " --threads 64              # Use 64 threads" << endl;
     cout << "  " << programName << " -t 32 -n 50               # Use 32 threads with 50 runs"
+         << endl;
+    cout << "  " << programName << " -t 32 -n 50 -w 25         # Use 32 threads, 50 runs, 25 warmup runs"
          << endl;
     cout << "  " << programName << " -t 32 -g ./my_images/     # Use 32 threads with custom dataset"
          << endl;
@@ -67,13 +70,25 @@ int main(int argc, char* argv[]) {
             }
         } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--num-runs") == 0) {
             if (i + 1 < argc) {
-                NUM_RUNS = atoi(argv[++i]);
-                if (NUM_RUNS <= 0) {
+                PERF_RUNS = atoi(argv[++i]);
+                if (PERF_RUNS <= 0) {
                     cerr << "Error: Number of runs must be a positive integer" << endl;
                     return 1;
                 }
             } else {
                 cerr << "Error: --num-runs requires a value" << endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+        } else if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--warmup-runs") == 0) {
+            if (i + 1 < argc) {
+                WARMUP_RUNS = atoi(argv[++i]);
+                if (WARMUP_RUNS < 0) {
+                    cerr << "Error: Number of warmup runs must be a non-negative integer" << endl;
+                    return 1;
+                }
+            } else {
+                cerr << "Error: --warmup-runs requires a value" << endl;
                 printUsage(argv[0]);
                 return 1;
             }
@@ -252,7 +267,12 @@ int main(int argc, char* argv[]) {
     cout << "\n--- Benchmark Configuration ---" << endl;
     cout << "Number of Threads: " << NUM_THREADS << " (max available: " << maxAvailableThreads
          << ")" << endl;
-    cout << "Number of Runs: " << NUM_RUNS << endl;
+    cout << "Number of Runs: " << PERF_RUNS << endl;
+    cout << "Number of Warmup Runs: " << WARMUP_RUNS << endl;
+
+    // Initialize TOTAL_RUNS after command-line arguments are processed
+    TOTAL_RUNS = WARMUP_RUNS + PERF_RUNS;
+
     cout << "Grayscale Dataset: " << GRAY_IMAGE_PATH << endl;
     cout << "RGB Dataset: " << RGB_IMAGE_PATH << endl;
     cout << "========================================" << endl;
