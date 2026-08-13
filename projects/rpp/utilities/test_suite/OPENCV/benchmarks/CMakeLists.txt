@@ -69,11 +69,32 @@ endif()
 find_package(OpenMP REQUIRED)
 
 # Find libxlsxwriter (for Excel output)
-find_library(XLSXWRITER_LIBRARY
+# Support both system and local installations
+if(DEFINED XLSXWRITER_ROOT)
+    # Look for local installation first
+    find_library(XLSXWRITER_LIBRARY
+        NAMES xlsxwriter libxlsxwriter
+        PATHS ${XLSXWRITER_ROOT}/lib
+        NO_DEFAULT_PATH
+    )
+    find_path(XLSXWRITER_INCLUDE_DIR
+        NAMES xlsxwriter.h
+        PATHS ${XLSXWRITER_ROOT}/include
+        NO_DEFAULT_PATH
+    )
+else()
+    # Look for system installation
+    find_library(XLSXWRITER_LIBRARY
     NAMES xlsxwriter libxlsxwriter
-    PATHS /usr/lib /usr/local/lib ${ROCM_PATH}/lib
-    PATH_SUFFIXES lib lib64
-)
+        PATHS /usr/lib /usr/local/lib ${ROCM_PATH}/lib $ENV{HOME}/.local/libxlsxwriter/lib
+        PATH_SUFFIXES lib lib64
+    )
+    find_path(XLSXWRITER_INCLUDE_DIR
+        NAMES xlsxwriter.h
+        PATHS /usr/include /usr/local/include ${ROCM_PATH}/include $ENV{HOME}/.local/libxlsxwriter/include
+    )
+endif()
+
 
 # Find RPP library
 find_package(rpp 3.1.2 QUIET)
@@ -101,9 +122,16 @@ endif()
 
 if(XLSXWRITER_LIBRARY)
     message("-- ${Green}xlsxwriter found at ${XLSXWRITER_LIBRARY}${ColourReset}")
+    if(XLSXWRITER_INCLUDE_DIR)
+        message("-- ${Green}xlsxwriter headers at ${XLSXWRITER_INCLUDE_DIR}${ColourReset}")
+    endif()
 else()
     message(FATAL_ERROR
-        "-- ${Red}${PROJECT_NAME} requires libxlsxwriter for Excel output. Install with: sudo apt-get install libxlsxwriter-dev${ColourReset}")
+        "-- ${Red}${PROJECT_NAME} requires libxlsxwriter for Excel output.\n"
+        "   Install with one of:\n"
+        "   1. System-wide (requires sudo): sudo apt-get install libxlsxwriter-dev\n"
+        "   2. Local (no sudo): Run ./run_benchmarking.sh which will build it locally\n"
+        "   3. Manual local build: Set -DXLSXWRITER_ROOT=/path/to/libxlsxwriter${ColourReset}")
 endif()
 
 # Create executable from separated source files
@@ -116,13 +144,22 @@ add_executable(opencv_vs_rpp_host_hip_benchmarking
 )
 
 # Include directories
-target_include_directories(opencv_vs_rpp_host_hip_benchmarking
-    PRIVATE
+set(BENCHMARK_INCLUDE_DIRS
         ${OpenCV_INCLUDE_DIRS}
         ${rpp_INCLUDE_DIR}
         ${rpp_INCLUDE_DIR}/rpp
         ${ROCM_PATH}/include
         ${CMAKE_CURRENT_SOURCE_DIR}/..
+)
+
+# Add xlsxwriter include directory if found
+if(XLSXWRITER_INCLUDE_DIR)
+    list(APPEND BENCHMARK_INCLUDE_DIRS ${XLSXWRITER_INCLUDE_DIR})
+endif()
+
+target_include_directories(opencv_vs_rpp_host_hip_benchmarking
+    PRIVATE
+        ${BENCHMARK_INCLUDE_DIRS}
 )
 
 # Link libraries

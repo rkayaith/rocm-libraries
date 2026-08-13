@@ -101,12 +101,11 @@ struct BenchmarkData {
     bool rppHostBatchCalled;
     bool rppHipBatchCalled;
     bool resultCreated;
-    int resultIndex;  // Index in results vector, -1 if not created
 
     BenchmarkData()
         : rppHostTime(0), rppHipTime(0), opencvTime(0), rppHostBatchTime(0), rppHipBatchTime(0),
           parameters(""), rppHostCalled(false), rppHipCalled(false), opencvCalled(false),
-          rppHostBatchCalled(false), rppHipBatchCalled(false), resultCreated(false), resultIndex(-1) {}
+          rppHostBatchCalled(false), rppHipBatchCalled(false), resultCreated(false) {}
 };
 
 static map<string, BenchmarkData> benchmarkTimes;  // operationName -> data
@@ -197,34 +196,47 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
             data.parameters = params;
     }
 
-    // Create result when we have the base three benchmarks
-    if (data.opencvCalled && data.rppHostCalled && data.rppHipCalled && !data.resultCreated) {
-        if (isColor) {
-            rgbResults.emplace_back(displayName, data.parameters, data.opencvTime,
-                                    data.rppHostTime, data.rppHipTime, rgbImageSize,
-                                    rgbImageDtype, rgbBatchSize, PERF_RUNS,
-                                    data.rppHostBatchTime, data.rppHipBatchTime);
-            data.resultIndex = rgbResults.size() - 1;
-        } else {
-            grayscaleResults.emplace_back(displayName, data.parameters, data.opencvTime,
-                                          data.rppHostTime, data.rppHipTime, grayImageSize,
-                                          grayImageDtype, grayBatchSize, PERF_RUNS,
-                                          data.rppHostBatchTime, data.rppHipBatchTime);
-            data.resultIndex = grayscaleResults.size() - 1;
-        }
+    // Create result when we have at least one benchmark result from any backend
+    bool shouldCreateResult = data.opencvCalled || data.rppHostCalled || data.rppHipCalled ||
+                              data.rppHostBatchCalled || data.rppHipBatchCalled;
+
+    if (shouldCreateResult && !data.resultCreated) {
+        // Use actual values if backend was called, otherwise use 0
+        double opencvTime = data.opencvCalled ? data.opencvTime : 0.0;
+        double rppHostTime = data.rppHostCalled ? data.rppHostTime : 0.0;
+        double rppHipTime = data.rppHipCalled ? data.rppHipTime : 0.0;
+        double rppHostBatchTime = data.rppHostBatchCalled ? data.rppHostBatchTime : 0.0;
+        double rppHipBatchTime = data.rppHipBatchCalled ? data.rppHipBatchTime : 0.0;
+
+        auto& results = isColor ? rgbResults : grayscaleResults;
+        const auto& imageSize = isColor ? rgbImageSize : grayImageSize;
+        const auto& imageDtype = isColor ? rgbImageDtype : grayImageDtype;
+        int batchSize = isColor ? rgbBatchSize : grayBatchSize;
+
+        results.emplace_back(displayName, data.parameters, opencvTime,
+                             rppHostTime, rppHipTime, imageSize,
+                             imageDtype, batchSize, PERF_RUNS,
+                             rppHostBatchTime, rppHipBatchTime);
         data.resultCreated = true;
     }
-    // Update existing result if batch times are added later
-    else if (data.resultCreated && data.resultIndex >= 0) {
-        if (prefix == RPP_HOST_BATCH_PREFIX || prefix == RPP_HIP_BATCH_PREFIX) {
-            if (isColor && data.resultIndex < (int)rgbResults.size()) {
-                auto& result = rgbResults[data.resultIndex];
-                result.rppHostBatchTime = data.rppHostBatchTime;
-                result.rppHipBatchTime = data.rppHipBatchTime;
-            } else if (!isColor && data.resultIndex < (int)grayscaleResults.size()) {
-                auto& result = grayscaleResults[data.resultIndex];
-                result.rppHostBatchTime = data.rppHostBatchTime;
-                result.rppHipBatchTime = data.rppHipBatchTime;
+    // Update existing result if any backend times are added later
+    else if (data.resultCreated) {
+        auto& results = isColor ? rgbResults : grayscaleResults;
+        // Find the result with matching operation name
+        for (auto& result : results) {
+            if (result.operationName == displayName) {
+                if (prefix == OPENCV_PREFIX) {
+                    result.opencvTime = data.opencvTime;
+                } else if (prefix == RPP_HOST_PREFIX) {
+                    result.rppHostTime = data.rppHostTime;
+                } else if (prefix == RPP_HIP_PREFIX) {
+                    result.rppHipTime = data.rppHipTime;
+                } else if (prefix == RPP_HOST_BATCH_PREFIX) {
+                    result.rppHostBatchTime = data.rppHostBatchTime;
+                } else if (prefix == RPP_HIP_BATCH_PREFIX) {
+                    result.rppHipBatchTime = data.rppHipBatchTime;
+                }
+                break;  // Found and updated, exit loop
             }
         }
     }

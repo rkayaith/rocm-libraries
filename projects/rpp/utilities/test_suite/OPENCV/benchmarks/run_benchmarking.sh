@@ -130,12 +130,7 @@ if ! ldconfig -p 2>/dev/null | grep -q libgomp.so; then
     MISSING_DEPS+=("libgomp1")
 fi
 
-# Check for libxlsxwriter-dev
-if ! dpkg -l 2>/dev/null | grep -q "^ii.*libxlsxwriter-dev"; then
-    if ! pkg-config --exists xlsxwriter 2>/dev/null; then
-        MISSING_DEPS+=("libxlsxwriter-dev")
-    fi
-fi
+# libxlsxwriter will be built locally - no need to check for system package
 
 # Check for python3-pip
 if ! command -v pip3 &> /dev/null; then
@@ -165,12 +160,86 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo "2. If you don't have sudo access:"
     echo "   Contact your system administrator to install: ${MISSING_DEPS[*]}"
     echo ""
+    echo "Note: libxlsxwriter will be built locally if not found in the system."
+    echo ""
     echo "Press Enter to continue anyway (may fail), or Ctrl+C to exit..."
     read -r
 else
     echo "✓ All required system dependencies found"
 fi
 echo ""
+
+# Function to check if libxlsxwriter is installed locally
+check_libxlsxwriter() {
+    local install_dir="$1"
+
+    if [ -f "$install_dir/lib/libxlsxwriter.so" ] && \
+       [ -f "$install_dir/include/xlsxwriter.h" ]; then
+        return 0  # Found
+    else
+        return 1  # Not found
+    fi
+}
+
+# Function to build and install libxlsxwriter locally
+install_libxlsxwriter_local() {
+    local install_dir="$1"
+    local version="1.1.7"
+
+    echo ""
+    echo "Building libxlsxwriter $version locally..."
+    echo "--------------------------------------"
+    echo "Install location: $install_dir"
+    echo ""
+
+    # Create installation directory
+    mkdir -p "$install_dir"
+
+    # Create temporary build directory
+    BUILD_DIR=$(mktemp -d /tmp/libxlsxwriter-build.XXXXXX)
+    cd "$BUILD_DIR"
+
+    echo "Downloading libxlsxwriter $version..."
+    wget -q --show-progress -O libxlsxwriter.tar.gz \
+        https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/RELEASE_${version}.tar.gz
+
+    echo "Extracting..."
+    tar -xzf libxlsxwriter.tar.gz
+    cd libxlsxwriter-RELEASE_${version}
+
+    # Build using make
+    echo "Building libxlsxwriter..."
+    make -j$(nproc)
+
+    echo "Installing to $install_dir..."
+    # Manual installation since we don't have sudo for 'make install'
+    mkdir -p "$install_dir/lib"
+    mkdir -p "$install_dir/include"
+
+    # Copy library
+    cp -v lib/libxlsxwriter.so* "$install_dir/lib/" 2>/dev/null || \
+    cp -v lib/libxlsxwriter.a "$install_dir/lib/"
+
+    # Copy headers
+    cp -rv include/* "$install_dir/include/"
+
+    # Create symlink for .so if needed
+    if [ -f "$install_dir/lib/libxlsxwriter.so.$version" ]; then
+        cd "$install_dir/lib"
+        ln -sf libxlsxwriter.so.$version libxlsxwriter.so.1
+        ln -sf libxlsxwriter.so.1 libxlsxwriter.so
+        cd "$SCRIPT_DIR"
+    fi
+
+    # Clean up
+    cd "$SCRIPT_DIR"
+    rm -rf "$BUILD_DIR"
+
+    echo ""
+    echo "✓ libxlsxwriter $version installed successfully to:"
+    echo "  $install_dir"
+    echo ""
+}
 
 # Function to check if OpenCV 5.0.0 is already installed
 check_opencv_5() {
@@ -265,6 +334,27 @@ install_opencv_5_local() {
     echo "  $install_dir"
     echo ""
 }
+
+# Install libxlsxwriter locally
+XLSX_INSTALL_DIR="$HOME/.local/libxlsxwriter"
+
+echo "Checking libxlsxwriter installation..."
+echo "--------------------------------------"
+
+if check_libxlsxwriter "$XLSX_INSTALL_DIR"; then
+    echo "✓ libxlsxwriter already installed at:"
+    echo "  $XLSX_INSTALL_DIR"
+    echo ""
+else
+    # Check if system has it
+    if pkg-config --exists xlsxwriter 2>/dev/null; then
+        echo "✓ Using system libxlsxwriter"
+        XLSX_INSTALL_DIR=""  # Use system installation
+        echo ""
+    else
+        install_libxlsxwriter_local "$XLSX_INSTALL_DIR"
+    fi
+fi
 
 # Check if we need to install OpenCV
 if [ $SKIP_OPENCV -eq 0 ]; then
@@ -380,13 +470,23 @@ export OpenCV_DIR="$OPENCV_INSTALL_DIR/lib/cmake/opencv5"
 export PKG_CONFIG_PATH="$OPENCV_INSTALL_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
 export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:$LD_LIBRARY_PATH"
 
+# Add libxlsxwriter paths if using local installation
+if [ -n "$XLSX_INSTALL_DIR" ]; then
+    export PKG_CONFIG_PATH="$XLSX_INSTALL_DIR/lib/pkgconfig:$PKG_CONFIG_PATH"
+    export LD_LIBRARY_PATH="$XLSX_INSTALL_DIR/lib:$LD_LIBRARY_PATH"
+    CMAKE_EXTRA_ARGS="-D XLSXWRITER_ROOT=$XLSX_INSTALL_DIR"
+else
+    CMAKE_EXTRA_ARGS=""
+fi
+
 if [ $CLEAN_BUILD -eq 1 ]; then
     echo "Performing fresh build..."
     echo "  OpenCV_DIR: $OpenCV_DIR"
+    [ -n "$XLSX_INSTALL_DIR" ] && echo "  XLSXWRITER_ROOT: $XLSX_INSTALL_DIR"
     rm -rf build
     mkdir -p build
     cd build
-    cmake -D OpenCV_DIR="$OpenCV_DIR" ..
+    cmake -D OpenCV_DIR="$OpenCV_DIR" $CMAKE_EXTRA_ARGS ..
     make -j$(nproc)
     cd ..
     echo "✓ Fresh build complete"
@@ -394,7 +494,7 @@ else
     echo "Using existing build (incremental)..."
     mkdir -p build
     cd build
-    [ ! -f Makefile ] && cmake -D OpenCV_DIR="$OpenCV_DIR" ..
+    [ ! -f Makefile ] && cmake -D OpenCV_DIR="$OpenCV_DIR" $CMAKE_EXTRA_ARGS ..
     make -j$(nproc)
     cd ..
     echo "✓ Incremental build complete"
@@ -403,12 +503,21 @@ echo ""
 
 # Create a wrapper script that sets LD_LIBRARY_PATH
 WRAPPER_SCRIPT="build/run_benchmark_wrapper.sh"
-cat > "$WRAPPER_SCRIPT" << EOF
+if [ -n "$XLSX_INSTALL_DIR" ]; then
+    cat > "$WRAPPER_SCRIPT" << EOF
+#!/bin/bash
+# Auto-generated wrapper to set library paths
+export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:$XLSX_INSTALL_DIR/lib:\$LD_LIBRARY_PATH"
+exec "\$(dirname "\$0")/opencv_vs_rpp_host_hip_benchmarking" "\$@"
+EOF
+else
+    cat > "$WRAPPER_SCRIPT" << EOF
 #!/bin/bash
 # Auto-generated wrapper to set library paths
 export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:\$LD_LIBRARY_PATH"
 exec "\$(dirname "\$0")/opencv_vs_rpp_host_hip_benchmarking" "\$@"
 EOF
+fi
 chmod +x "$WRAPPER_SCRIPT"
 
 # Build command with optional arguments
@@ -437,7 +546,11 @@ echo "This will take several minutes..."
 echo ""
 
 # Set library path for this session
-export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:$LD_LIBRARY_PATH"
+if [ -n "$XLSX_INSTALL_DIR" ]; then
+    export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:$XLSX_INSTALL_DIR/lib:$LD_LIBRARY_PATH"
+else
+    export LD_LIBRARY_PATH="$OPENCV_INSTALL_DIR/lib:$LD_LIBRARY_PATH"
+fi
 
 ./build/opencv_vs_rpp_host_hip_benchmarking $cmd_args
 
@@ -446,7 +559,13 @@ echo "========================================"
 echo "Benchmark Complete!"
 echo "========================================"
 echo ""
-echo "Note: To run the benchmark manually later, use:"
-echo "  export LD_LIBRARY_PATH=$OPENCV_INSTALL_DIR/lib:\$LD_LIBRARY_PATH"
-echo "  ./build/opencv_vs_rpp_host_hip_benchmarking"
+if [ -n "$XLSX_INSTALL_DIR" ]; then
+    echo "Note: To run the benchmark manually later, use:"
+    echo "  export LD_LIBRARY_PATH=$OPENCV_INSTALL_DIR/lib:$XLSX_INSTALL_DIR/lib:\$LD_LIBRARY_PATH"
+    echo "  ./build/opencv_vs_rpp_host_hip_benchmarking"
+else
+    echo "Note: To run the benchmark manually later, use:"
+    echo "  export LD_LIBRARY_PATH=$OPENCV_INSTALL_DIR/lib:\$LD_LIBRARY_PATH"
+    echo "  ./build/opencv_vs_rpp_host_hip_benchmarking"
+fi
 echo ""
