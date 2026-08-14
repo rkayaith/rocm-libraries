@@ -4187,7 +4187,7 @@ void benchmark_RPP_HIP_ColorCast(const vector<Mat>& imgs, bool isColor, float r,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     ostringstream params;
-    params << "r=" << r << ", g=" << g << ", b=" << b;
+    params << "R=" << r << ", G=" << g << ", B=" << b;
     printResult("RPP HIP ColorCast", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), params.str());
 }

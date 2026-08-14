@@ -1283,7 +1283,7 @@ void benchmark_OpenCV_ColorCast(const vector<Mat>& imgs, bool isColor, Rpp32f rS
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "r=" << rShift << ", g=" << gShift << ", b=" << bShift;
+    params << "R=" << rShift << ", G=" << gShift << ", B=" << bShift;
     printResult("OpenCV ColorCast", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), params.str());
 }
