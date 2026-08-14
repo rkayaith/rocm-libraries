@@ -50,9 +50,9 @@ void benchmark_RPP_HOST_Brightness(const vector<Mat>& imgs, bool isColor, float 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -65,7 +65,7 @@ void benchmark_RPP_HOST_Brightness(const vector<Mat>& imgs, bool isColor, float 
     ostringstream params;
     params << "alpha=" << alpha << ", beta=" << beta;
     printResult("RPP HOST Brightness", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_GammaCorrection(const vector<Mat>& imgs, bool isColor, float gamma,
@@ -83,9 +83,9 @@ void benchmark_RPP_HOST_GammaCorrection(const vector<Mat>& imgs, bool isColor, f
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -99,7 +99,7 @@ void benchmark_RPP_HOST_GammaCorrection(const vector<Mat>& imgs, bool isColor, f
     ostringstream params;
     params << "gamma=" << gamma;
     printResult("RPP HOST GammaCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Blend(const vector<Mat>& imgs, bool isColor, float alpha, rppHandle_t handle) {
@@ -117,9 +117,9 @@ void benchmark_RPP_HOST_Blend(const vector<Mat>& imgs, bool isColor, float alpha
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -133,7 +133,7 @@ void benchmark_RPP_HOST_Blend(const vector<Mat>& imgs, bool isColor, float alpha
     ostringstream params;
     params << "alpha=" << alpha;
     printResult("RPP HOST Blend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Contrast(const vector<Mat>& imgs, bool isColor, float contrastFactor,
@@ -151,9 +151,9 @@ void benchmark_RPP_HOST_Contrast(const vector<Mat>& imgs, bool isColor, float co
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_contrast(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -167,7 +167,7 @@ void benchmark_RPP_HOST_Contrast(const vector<Mat>& imgs, bool isColor, float co
     ostringstream params;
     params << "factor=" << contrastFactor << ", center=" << contrastCenter;
     printResult("RPP HOST Contrast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Exposure(const vector<Mat>& imgs, bool isColor, float exposureFactor,
@@ -185,9 +185,9 @@ void benchmark_RPP_HOST_Exposure(const vector<Mat>& imgs, bool isColor, float ex
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_exposure(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -201,7 +201,7 @@ void benchmark_RPP_HOST_Exposure(const vector<Mat>& imgs, bool isColor, float ex
     ostringstream params;
     params << "factor=" << exposureFactor;
     printResult("RPP HOST Exposure", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t handle) {
@@ -218,9 +218,9 @@ void benchmark_RPP_HOST_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -234,7 +234,7 @@ void benchmark_RPP_HOST_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t
     ostringstream params;
     params << "hue=" << hueDelta;
     printResult("RPP HOST Hue", imgs.size(), true, perfMonitor.getTotalTime(),
-                params.str());
+                perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Saturation(const vector<Mat>& imgs, float satFactor, rppHandle_t handle) {
@@ -251,9 +251,9 @@ void benchmark_RPP_HOST_Saturation(const vector<Mat>& imgs, float satFactor, rpp
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -267,7 +267,7 @@ void benchmark_RPP_HOST_Saturation(const vector<Mat>& imgs, float satFactor, rpp
     ostringstream params;
     params << "factor=" << satFactor;
     printResult("RPP HOST Saturation", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t handle) {
@@ -282,9 +282,9 @@ void benchmark_RPP_HOST_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t ha
         dstDescs[i] = createRppDescriptor(out[i], RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -295,7 +295,7 @@ void benchmark_RPP_HOST_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t ha
     }
     perfMonitor.stop();
     printResult("RPP HOST ColorToGreyscale", imgs.size(), true,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_ColorJitter(const vector<Mat>& imgs, float brightness, float contrast,
@@ -313,9 +313,9 @@ void benchmark_RPP_HOST_ColorJitter(const vector<Mat>& imgs, float brightness, f
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -330,7 +330,7 @@ void benchmark_RPP_HOST_ColorJitter(const vector<Mat>& imgs, float brightness, f
     params << "brightness=" << brightness << ", contrast=" << contrast
            << ", saturation=" << saturation << ", hue=" << hue;
     printResult("RPP HOST ColorJitter", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_BoxFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -349,9 +349,9 @@ void benchmark_RPP_HOST_BoxFilter(const vector<Mat>& imgs, bool isColor, int ker
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -364,7 +364,7 @@ void benchmark_RPP_HOST_BoxFilter(const vector<Mat>& imgs, bool isColor, int ker
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST BoxFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_MedianFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -383,9 +383,9 @@ void benchmark_RPP_HOST_MedianFilter(const vector<Mat>& imgs, bool isColor, int 
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_median_filter(imgs[i].data, &srcDescs[i], out[i].data,
@@ -398,7 +398,7 @@ void benchmark_RPP_HOST_MedianFilter(const vector<Mat>& imgs, bool isColor, int 
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST MedianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_GaussianFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -418,9 +418,9 @@ void benchmark_RPP_HOST_GaussianFilter(const vector<Mat>& imgs, bool isColor, in
 
     float stdDev = static_cast<float>(sigma);
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -434,7 +434,7 @@ void benchmark_RPP_HOST_GaussianFilter(const vector<Mat>& imgs, bool isColor, in
     ostringstream params;
     params << "kernel=" << kernelSize << ", sigma=" << sigma;
     printResult("RPP HOST GaussianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SobelFilter(const vector<Mat>& imgs, bool isColor, int sobelType,
@@ -453,9 +453,9 @@ void benchmark_RPP_HOST_SobelFilter(const vector<Mat>& imgs, bool isColor, int s
     }
 
     Rpp32u kernelSize = 3;  // Sobel uses 3x3 kernel
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_sobel_filter(imgs[i].data, &srcDescs[i], out[i].data,
@@ -469,7 +469,7 @@ void benchmark_RPP_HOST_SobelFilter(const vector<Mat>& imgs, bool isColor, int s
     ostringstream params;
     params << "type=" << sobelType;
     printResult("RPP HOST SobelFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Emboss(const vector<Mat>& imgs, bool isColor, int kernelSize, float strength,
@@ -490,9 +490,9 @@ void benchmark_RPP_HOST_Emboss(const vector<Mat>& imgs, bool isColor, int kernel
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_emboss(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -505,7 +505,7 @@ void benchmark_RPP_HOST_Emboss(const vector<Mat>& imgs, bool isColor, int kernel
     ostringstream params;
     params << "kernel=" << kernelSize << ", strength=" << strength;
     printResult("RPP HOST Emboss", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Crop(const vector<Mat>& imgs, bool isColor, int cropWidth, int cropHeight,
@@ -526,9 +526,9 @@ void benchmark_RPP_HOST_Crop(const vector<Mat>& imgs, bool isColor, int cropWidt
         rois[i].xywhROI.roiHeight = cropHeight;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -540,7 +540,7 @@ void benchmark_RPP_HOST_Crop(const vector<Mat>& imgs, bool isColor, int cropWidt
     ostringstream params;
     params << "size=" << cropWidth << "x" << cropHeight;
     printResult("RPP HOST Crop", imgs.size(), isColor, perfMonitor.getTotalTime(),
-                params.str());
+                perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Resize(const vector<Mat>& imgs, bool isColor, int dstW, int dstH,
@@ -562,9 +562,9 @@ void benchmark_RPP_HOST_Resize(const vector<Mat>& imgs, bool isColor, int dstW, 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -577,7 +577,7 @@ void benchmark_RPP_HOST_Resize(const vector<Mat>& imgs, bool isColor, int dstW, 
     ostringstream params;
     params << "type=" << interpName << ", size=" << dstW << "x" << dstH;
     printResult("RPP HOST Resize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Flip(const vector<Mat>& imgs, bool isColor, int flipCode, rppHandle_t handle) {
@@ -597,9 +597,9 @@ void benchmark_RPP_HOST_Flip(const vector<Mat>& imgs, bool isColor, int flipCode
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -613,7 +613,7 @@ void benchmark_RPP_HOST_Flip(const vector<Mat>& imgs, bool isColor, int flipCode
     ostringstream params;
     params << "type=" << name;
     printResult("RPP HOST Flip", imgs.size(), isColor, perfMonitor.getTotalTime(),
-                params.str());
+                perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Rotate(const vector<Mat>& imgs, bool isColor, float angleDeg,
@@ -632,9 +632,9 @@ void benchmark_RPP_HOST_Rotate(const vector<Mat>& imgs, bool isColor, float angl
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_rotate(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -647,7 +647,7 @@ void benchmark_RPP_HOST_Rotate(const vector<Mat>& imgs, bool isColor, float angl
     ostringstream params;
     params << "angle=" << angleDeg << "deg";
     printResult("RPP HOST Rotate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -667,9 +667,9 @@ void benchmark_RPP_HOST_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_warp_affine(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -680,7 +680,7 @@ void benchmark_RPP_HOST_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHan
     }
     perfMonitor.stop();
     printResult("RPP HOST WarpAffine", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -697,9 +697,9 @@ void benchmark_RPP_HOST_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_fisheye(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -709,7 +709,7 @@ void benchmark_RPP_HOST_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle
     }
     perfMonitor.stop();
     printResult("RPP HOST Fisheye", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_LensCorrection(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -763,9 +763,9 @@ void benchmark_RPP_HOST_LensCorrection(const vector<Mat>& imgs, bool isColor, rp
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -778,7 +778,7 @@ void benchmark_RPP_HOST_LensCorrection(const vector<Mat>& imgs, bool isColor, rp
     }
     perfMonitor.stop();
     printResult("RPP HOST LensCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Erode(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -796,9 +796,9 @@ void benchmark_RPP_HOST_Erode(const vector<Mat>& imgs, bool isColor, int kernelS
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_erode_host(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -810,7 +810,7 @@ void benchmark_RPP_HOST_Erode(const vector<Mat>& imgs, bool isColor, int kernelS
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST Erode", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Dilate(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -828,9 +828,9 @@ void benchmark_RPP_HOST_Dilate(const vector<Mat>& imgs, bool isColor, int kernel
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_dilate_host(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -842,7 +842,7 @@ void benchmark_RPP_HOST_Dilate(const vector<Mat>& imgs, bool isColor, int kernel
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST Dilate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_AddScalar(const vector<Mat>& imgs, bool isColor, float addVal,
@@ -914,9 +914,9 @@ void benchmark_RPP_HOST_AddScalar(const vector<Mat>& imgs, bool isColor, float a
     // Create addTensor array (one value per image)
     vector<Rpp32f> addTensor(num_images, addVal);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_add_scalar(inputBuffer.data(), &srcGenericDesc, outputBuffer.data(),
@@ -929,7 +929,7 @@ void benchmark_RPP_HOST_AddScalar(const vector<Mat>& imgs, bool isColor, float a
     ostringstream params;
     params << "value=" << addVal;
     printResult("RPP HOST AddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SubtractScalar(const vector<Mat>& imgs, bool isColor, float subVal,
@@ -1001,9 +1001,9 @@ void benchmark_RPP_HOST_SubtractScalar(const vector<Mat>& imgs, bool isColor, fl
     // Create subtractTensor array (one value per image)
     vector<Rpp32f> subtractTensor(num_images, subVal);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
 
         CHECK_RPP_STATUS(
@@ -1017,7 +1017,7 @@ void benchmark_RPP_HOST_SubtractScalar(const vector<Mat>& imgs, bool isColor, fl
     ostringstream params;
     params << "value=" << subVal;
     printResult("RPP HOST SubtractScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_MultiplyScalar(const vector<Mat>& imgs, bool isColor, float mulVal,
@@ -1089,9 +1089,9 @@ void benchmark_RPP_HOST_MultiplyScalar(const vector<Mat>& imgs, bool isColor, fl
     // Create multiplyTensor array (one value per image)
     vector<Rpp32f> multiplyTensor(num_images, mulVal);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
 
         CHECK_RPP_STATUS(
@@ -1105,7 +1105,7 @@ void benchmark_RPP_HOST_MultiplyScalar(const vector<Mat>& imgs, bool isColor, fl
     ostringstream params;
     params << "value=" << mulVal;
     printResult("RPP HOST MultiplyScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1123,9 +1123,9 @@ void benchmark_RPP_HOST_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_and(imgs[i].data, imgs2[i].data, &srcDescs[i],
@@ -1136,7 +1136,7 @@ void benchmark_RPP_HOST_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHan
     }
     perfMonitor.stop();
     printResult("RPP HOST BitwiseAnd", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1154,9 +1154,9 @@ void benchmark_RPP_HOST_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHand
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_or(imgs[i].data, imgs2[i].data, &srcDescs[i], out[i].data,
@@ -1167,7 +1167,7 @@ void benchmark_RPP_HOST_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHand
     }
     perfMonitor.stop();
     printResult("RPP HOST BitwiseOr", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1184,9 +1184,9 @@ void benchmark_RPP_HOST_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1197,7 +1197,7 @@ void benchmark_RPP_HOST_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHan
     }
     perfMonitor.stop();
     printResult("RPP HOST BitwiseNot", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorMin(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1214,9 +1214,9 @@ void benchmark_RPP_HOST_TensorMin(const vector<Mat>& imgs, bool isColor, rppHand
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -1228,7 +1228,7 @@ void benchmark_RPP_HOST_TensorMin(const vector<Mat>& imgs, bool isColor, rppHand
     }
     perfMonitor.stop();
     printResult("RPP HOST TensorMin", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorMax(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1245,9 +1245,9 @@ void benchmark_RPP_HOST_TensorMax(const vector<Mat>& imgs, bool isColor, rppHand
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -1259,7 +1259,7 @@ void benchmark_RPP_HOST_TensorMax(const vector<Mat>& imgs, bool isColor, rppHand
     }
     perfMonitor.stop();
     printResult("RPP HOST TensorMax", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorSum(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1276,9 +1276,9 @@ void benchmark_RPP_HOST_TensorSum(const vector<Mat>& imgs, bool isColor, rppHand
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -1290,7 +1290,7 @@ void benchmark_RPP_HOST_TensorSum(const vector<Mat>& imgs, bool isColor, rppHand
     }
     perfMonitor.stop();
     printResult("RPP HOST TensorSum", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorMean(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1306,9 +1306,9 @@ void benchmark_RPP_HOST_TensorMean(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -1321,7 +1321,7 @@ void benchmark_RPP_HOST_TensorMean(const vector<Mat>& imgs, bool isColor, rppHan
     }
     perfMonitor.stop();
     printResult("RPP HOST TensorMean", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorStddev(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1346,9 +1346,9 @@ void benchmark_RPP_HOST_TensorStddev(const vector<Mat>& imgs, bool isColor, rppH
                          "tensor_mean");
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -1361,7 +1361,7 @@ void benchmark_RPP_HOST_TensorStddev(const vector<Mat>& imgs, bool isColor, rppH
     }
     perfMonitor.stop();
     printResult("RPP HOST TensorStddev", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Threshold(const vector<Mat>& imgs, bool isColor, double thresh,
@@ -1388,9 +1388,9 @@ void benchmark_RPP_HOST_Threshold(const vector<Mat>& imgs, bool isColor, double 
         rois[i] = createFullImageROI(grayImgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1404,7 +1404,7 @@ void benchmark_RPP_HOST_Threshold(const vector<Mat>& imgs, bool isColor, double 
     ostringstream params;
     params << "threshold=" << thresh;
     printResult("RPP HOST Threshold", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_GaussianNoise(const vector<Mat>& imgs, bool isColor, float mean, float stddev,
@@ -1423,9 +1423,9 @@ void benchmark_RPP_HOST_GaussianNoise(const vector<Mat>& imgs, bool isColor, flo
     }
 
     unsigned long long seed = 12345;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gaussian_noise(imgs[i].data, &srcDescs[i], out[i].data,
@@ -1439,7 +1439,7 @@ void benchmark_RPP_HOST_GaussianNoise(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "mean=" << mean << ", stddev=" << stddev;
     printResult("RPP HOST GaussianNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor, float noiseProb,
@@ -1462,9 +1462,9 @@ void benchmark_RPP_HOST_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1479,7 +1479,7 @@ void benchmark_RPP_HOST_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "probability=" << noiseProb;
     printResult("RPP HOST SaltAndPepperNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1494,9 +1494,9 @@ void benchmark_RPP_HOST_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_copy(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -1508,7 +1508,7 @@ void benchmark_RPP_HOST_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     ostringstream params;
     params << "layout=NHWC";
     printResult("RPP HOST Copy", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1525,9 +1525,9 @@ void benchmark_RPP_HOST_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             int idx1 = i;
@@ -1540,7 +1540,7 @@ void benchmark_RPP_HOST_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHan
     }
     perfMonitor.stop();
     printResult("RPP HOST BitwiseXor", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_HistogramEqualize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1557,9 +1557,9 @@ void benchmark_RPP_HOST_HistogramEqualize(const vector<Mat>& imgs, bool isColor,
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1570,7 +1570,7 @@ void benchmark_RPP_HOST_HistogramEqualize(const vector<Mat>& imgs, bool isColor,
     }
     perfMonitor.stop();
     printResult("RPP HOST HistogramEqualize", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Transpose(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1643,9 +1643,9 @@ void benchmark_RPP_HOST_Transpose(const vector<Mat>& imgs, bool isColor, rppHand
     for (int i = 0; i < num_images; ++i)
         memcpy(inputBuffer.data() + i * imageSize, imgs[i].data, imageSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
 
         CHECK_RPP_STATUS(
@@ -1657,7 +1657,7 @@ void benchmark_RPP_HOST_Transpose(const vector<Mat>& imgs, bool isColor, rppHand
     ostringstream params;
     params << "permutation=0,2,1,3";
     printResult("RPP HOST Transpose", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1678,9 +1678,9 @@ void benchmark_RPP_HOST_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t h
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_lut(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i], lut,
@@ -1691,7 +1691,7 @@ void benchmark_RPP_HOST_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t h
     perfMonitor.stop();
     ostringstream params;
     params << "lut=inverse";
-    printResult("RPP HOST LUT", imgs.size(), isColor, perfMonitor.getTotalTime(), params.str());
+    printResult("RPP HOST LUT", imgs.size(), isColor, perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Magnitude(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1717,9 +1717,9 @@ void benchmark_RPP_HOST_Magnitude(const vector<Mat>& imgs, bool isColor, rppHand
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1732,7 +1732,7 @@ void benchmark_RPP_HOST_Magnitude(const vector<Mat>& imgs, bool isColor, rppHand
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HOST Magnitude", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1758,9 +1758,9 @@ void benchmark_RPP_HOST_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1773,7 +1773,7 @@ void benchmark_RPP_HOST_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HOST Phase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Normalize(const vector<Mat>& imgs, bool isColor,
@@ -1827,9 +1827,9 @@ void benchmark_RPP_HOST_Normalize(const vector<Mat>& imgs, bool isColor,
     Rpp32f scale = 1.0f;
     Rpp32f shift = 0.0f;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1844,7 +1844,7 @@ void benchmark_RPP_HOST_Normalize(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "mode=auto_compute, scale=" << scale << ", shift=" << shift;
     printResult("RPP HOST Normalize", num_images, isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_WarpPerspective(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1864,9 +1864,9 @@ void benchmark_RPP_HOST_WarpPerspective(const vector<Mat>& imgs, bool isColor, r
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -1878,7 +1878,7 @@ void benchmark_RPP_HOST_WarpPerspective(const vector<Mat>& imgs, bool isColor, r
     }
     perfMonitor.stop();
     printResult("RPP HOST WarpPerspective", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -1923,9 +1923,9 @@ void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_remap(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -1939,7 +1939,7 @@ void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t
     ostringstream params;
     params << "transform=sine_wave, interpolation=bilinear";
     printResult("RPP HOST Remap", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isColor, Rpp32f mul,
@@ -2009,9 +2009,9 @@ void benchmark_RPP_HOST_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isC
         roiTensor[i].xyzwhdROI.roiDepth = 1;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_fused_multiply_add_scalar(
@@ -2024,7 +2024,7 @@ void benchmark_RPP_HOST_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "mul=" << mul << ", add=" << add;
     printResult("RPP HOST FusedMultiplyAddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Posterize(const vector<Mat>& imgs, bool isColor, Rpp32u bits,
@@ -2043,9 +2043,9 @@ void benchmark_RPP_HOST_Posterize(const vector<Mat>& imgs, bool isColor, Rpp32u 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_posterize(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2058,7 +2058,7 @@ void benchmark_RPP_HOST_Posterize(const vector<Mat>& imgs, bool isColor, Rpp32u 
     stringstream ss;
     ss << "bits=" << bits;
     printResult("RPP HOST Posterize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_Solarize(const vector<Mat>& imgs, bool isColor, Rpp8u threshold,
@@ -2077,9 +2077,9 @@ void benchmark_RPP_HOST_Solarize(const vector<Mat>& imgs, bool isColor, Rpp8u th
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_solarize(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2092,7 +2092,7 @@ void benchmark_RPP_HOST_Solarize(const vector<Mat>& imgs, bool isColor, Rpp8u th
     ostringstream params;
     params << "threshold=" << (int)threshold;
     printResult("RPP HOST Solarize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_NoiseShot(const vector<Mat>& imgs, bool isColor, Rpp32f shot_noise_factor,
@@ -2111,9 +2111,9 @@ void benchmark_RPP_HOST_NoiseShot(const vector<Mat>& imgs, bool isColor, Rpp32f 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -2127,7 +2127,7 @@ void benchmark_RPP_HOST_NoiseShot(const vector<Mat>& imgs, bool isColor, Rpp32f 
     stringstream ss;
     ss << "factor=" << shot_noise_factor;
     printResult("RPP HOST NoiseShot", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_Gridmask(const vector<Mat>& imgs, bool isColor, Rpp32u tileWidth,
@@ -2147,9 +2147,9 @@ void benchmark_RPP_HOST_Gridmask(const vector<Mat>& imgs, bool isColor, Rpp32u t
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -2163,7 +2163,7 @@ void benchmark_RPP_HOST_Gridmask(const vector<Mat>& imgs, bool isColor, Rpp32u t
     stringstream ss;
     ss << "tileWidth=" << tileWidth << ", ratio=" << gridRatio;
     printResult("RPP HOST Gridmask", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_ColorCast(const vector<Mat>& imgs, bool isColor, Rpp32f rShift, Rpp32f gShift,
@@ -2187,9 +2187,9 @@ void benchmark_RPP_HOST_ColorCast(const vector<Mat>& imgs, bool isColor, Rpp32f 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_cast(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2202,7 +2202,7 @@ void benchmark_RPP_HOST_ColorCast(const vector<Mat>& imgs, bool isColor, Rpp32f 
     stringstream ss;
     ss << "R=" << rShift << ", G=" << gShift << ", B=" << bShift;
     printResult("RPP HOST ColorCast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_ColorTemperature(const vector<Mat>& imgs, bool isColor, Rpp32s adjustmentValue,
@@ -2221,9 +2221,9 @@ void benchmark_RPP_HOST_ColorTemperature(const vector<Mat>& imgs, bool isColor, 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_temperature(imgs[i].data, &srcDescs[i], out[i].data,
@@ -2236,7 +2236,7 @@ void benchmark_RPP_HOST_ColorTemperature(const vector<Mat>& imgs, bool isColor, 
     stringstream ss;
     ss << "adjustment=" << adjustmentValue;
     printResult("RPP HOST ColorTemperature", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_Vignette(const vector<Mat>& imgs, bool isColor, Rpp32f vignetteIntensity,
@@ -2255,9 +2255,9 @@ void benchmark_RPP_HOST_Vignette(const vector<Mat>& imgs, bool isColor, Rpp32f v
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_vignette(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2270,7 +2270,7 @@ void benchmark_RPP_HOST_Vignette(const vector<Mat>& imgs, bool isColor, Rpp32f v
     stringstream ss;
     ss << "intensity=" << vignetteIntensity;
     printResult("RPP HOST Vignette", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_NonLinearBlend(const vector<Mat>& imgs, bool isColor, Rpp32f stdDev,
@@ -2294,9 +2294,9 @@ void benchmark_RPP_HOST_NonLinearBlend(const vector<Mat>& imgs, bool isColor, Rp
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images - 1; ++i) {
             CHECK_RPP_STATUS(
@@ -2310,7 +2310,7 @@ void benchmark_RPP_HOST_NonLinearBlend(const vector<Mat>& imgs, bool isColor, Rp
     stringstream ss;
     ss << "stdDev=" << stdDev;
     printResult("RPP HOST NonLinearBlend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_Erase(const vector<Mat>& imgs, bool isColor, Rpp32u boxesPerImage,
@@ -2329,9 +2329,9 @@ void benchmark_RPP_HOST_Erase(const vector<Mat>& imgs, bool isColor, Rpp32u boxe
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             int h = imgs[i].rows;
@@ -2368,7 +2368,7 @@ void benchmark_RPP_HOST_Erase(const vector<Mat>& imgs, bool isColor, Rpp32u boxe
     ostringstream params;
     params << "numBoxes=" << boxesPerImage;
     printResult("RPP HOST Erase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp32u maxBoxesPerImage,
@@ -2386,9 +2386,9 @@ void benchmark_RPP_HOST_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             int h = imgs[i].rows;
@@ -2431,7 +2431,7 @@ void benchmark_RPP_HOST_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp
     stringstream ss;
     ss << "maxBoxes=" << maxBoxesPerImage;
     printResult("RPP HOST CoarseDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), ss.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), ss.str());
 }
 
 void benchmark_RPP_HOST_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow,
@@ -2456,9 +2456,9 @@ void benchmark_RPP_HOST_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32
     Rpp32f holeRatio = 0.4f;
     int seed = 12345;  // Fixed seed for reproducibility
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         // Initialize anchor boxes for entire batch using proper helper function
         vector<RpptRoiLtrb> anchorBoxInfoTensor(totalBoxes);
@@ -2482,7 +2482,7 @@ void benchmark_RPP_HOST_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32
     ostringstream params;
     params << "tileWidth=" << numGridsPerRow << ", tileHeight=" << numGridsPerColumn;
     printResult("RPP HOST GridDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_RandomErase(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle) {
@@ -2500,9 +2500,9 @@ void benchmark_RPP_HOST_RandomErase(const vector<Mat>& imgs, bool isColor, int n
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             int h = imgs[i].rows;
@@ -2539,7 +2539,7 @@ void benchmark_RPP_HOST_RandomErase(const vector<Mat>& imgs, bool isColor, int n
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HOST RandomErase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -2567,9 +2567,9 @@ void benchmark_RPP_HOST_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHan
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_twist(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2583,7 +2583,7 @@ void benchmark_RPP_HOST_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHan
     ostringstream params;
     params << "hue=" << hueShift[0] << ", saturation=" << saturationFactor[0];
     printResult("RPP HOST ColorTwist", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -2620,9 +2620,9 @@ void benchmark_RPP_HOST_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppH
         patchRois[i] = cropRois[i];
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images - 1; ++i) {
             // Crop from img[i], patch into img[i+1]
@@ -2638,7 +2638,7 @@ void benchmark_RPP_HOST_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppH
     ostringstream params;
     params << "crop=center_quarter, patch=center_quarter";
     printResult("RPP HOST CropAndPatch", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_CropMirrorNormalize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -2688,9 +2688,9 @@ void benchmark_RPP_HOST_CropMirrorNormalize(const vector<Mat>& imgs, bool isColo
         dstRois[i].xywhROI.roiHeight = h / 2;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop_mirror_normalize(
@@ -2705,7 +2705,7 @@ void benchmark_RPP_HOST_CropMirrorNormalize(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "crop=half, mirror=horizontal, mean=60/80/100, stddev=0.9";
     printResult("RPP HOST CropMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isColor,
@@ -2755,9 +2755,9 @@ void benchmark_RPP_HOST_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isCo
         dstRois[i].xywhROI.roiHeight = h / 2;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -2773,7 +2773,7 @@ void benchmark_RPP_HOST_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "resize=half, mirror=horizontal, mean=60/80/100, stddev=1";
     printResult("RPP HOST ResizeMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -2811,9 +2811,9 @@ void benchmark_RPP_HOST_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, 
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_resize_crop_mirror(
@@ -2827,7 +2827,7 @@ void benchmark_RPP_HOST_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "crop=80%,resize=224x224,mirror";
     printResult("RPP HOST ResizeCropMirror", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_RICAP(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -2856,9 +2856,9 @@ void benchmark_RPP_HOST_RICAP(const vector<Mat>& imgs, bool isColor, rppHandle_t
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_ricap(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
@@ -2869,7 +2869,7 @@ void benchmark_RPP_HOST_RICAP(const vector<Mat>& imgs, bool isColor, rppHandle_t
     }
     perfMonitor.stop();
     printResult("RPP HOST RICAP", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "4way_cutmix");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "4way_cutmix");
 }
 
 // Forward declaration of helper functions from dropout_helpers.cpp
@@ -2908,9 +2908,9 @@ void benchmark_RPP_HOST_ChannelDropout(const vector<Mat>& imgs, bool isColor, fl
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_channel_dropout(imgs[i].data, &srcDescs[i], out[i].data,
@@ -2924,7 +2924,7 @@ void benchmark_RPP_HOST_ChannelDropout(const vector<Mat>& imgs, bool isColor, fl
     ostringstream params;
     params << "dropoutProb=" << dropoutProb;
     printResult("RPP HOST ChannelDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp32u numBoxes,
@@ -2957,9 +2957,9 @@ void benchmark_RPP_HOST_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -2975,7 +2975,7 @@ void benchmark_RPP_HOST_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HOST CutoutDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_JpegCompressionDistortion(const vector<Mat>& imgs, bool isColor, Rpp32s quality,
@@ -2995,9 +2995,9 @@ void benchmark_RPP_HOST_JpegCompressionDistortion(const vector<Mat>& imgs, bool 
         rois[i] = createFullImageROI(imgs[i]);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -3012,7 +3012,7 @@ void benchmark_RPP_HOST_JpegCompressionDistortion(const vector<Mat>& imgs, bool 
     ostringstream params;
     params << "quality=" << quality;
     printResult("RPP HOST JpegCompressionDistortion", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ChannelPermute(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -3041,9 +3041,9 @@ void benchmark_RPP_HOST_ChannelPermute(const vector<Mat>& imgs, bool isColor, rp
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
@@ -3056,7 +3056,7 @@ void benchmark_RPP_HOST_ChannelPermute(const vector<Mat>& imgs, bool isColor, rp
     ostringstream params;
     params << "permutation=BGR->RGB";
     printResult("RPP HOST ChannelPermute", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -3133,9 +3133,9 @@ void benchmark_RPP_HOST_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t
         memcpy(inputBuffer.data() + i * imageSize, imgs[i].data, imageSize);
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(
             rppt_slice(inputBuffer.data(), &genericDesc, outputBuffer.data(), &genericDesc,
@@ -3167,7 +3167,7 @@ void benchmark_RPP_HOST_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t
     ostringstream params;
     params << "slice=center_50%";
     printResult("RPP HOST Slice", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 // ==================== BATCHED RPP HOST BENCHMARK FUNCTIONS ====================
@@ -3273,9 +3273,9 @@ void benchmark_RPP_HOST_Flip_Batched(const vector<Mat>& imgs, bool isColor, int 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_flip(input, &srcDesc, output, &dstDesc, horizontalTensor, verticalTensor, 
                                    roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Flip");
@@ -3292,7 +3292,7 @@ void benchmark_RPP_HOST_Flip_Batched(const vector<Mat>& imgs, bool isColor, int 
     ostringstream params;
     params << "type=" << name;
     printResult("RPP HOST BATCH Flip", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 // This file contains the batched implementations to match HIP backend
@@ -3344,9 +3344,9 @@ void benchmark_RPP_HOST_Resize_Batched(const vector<Mat>& imgs, bool isColor, in
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_resize(input, &srcDesc, output, &dstDesc, dstImgSizes, interpType,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Resize");
@@ -3361,7 +3361,7 @@ void benchmark_RPP_HOST_Resize_Batched(const vector<Mat>& imgs, bool isColor, in
     ostringstream params;
     params << "type=" << interpName << ", size=" << dstW << "x" << dstH;
     printResult("RPP HOST BATCH Resize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Crop_Batched(const vector<Mat>& imgs, bool isColor, int cropW, int cropH,
@@ -3408,9 +3408,9 @@ void benchmark_RPP_HOST_Crop_Batched(const vector<Mat>& imgs, bool isColor, int 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_crop(input, &srcDesc, output, &dstDesc,
                                    roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Crop");
@@ -3424,7 +3424,7 @@ void benchmark_RPP_HOST_Crop_Batched(const vector<Mat>& imgs, bool isColor, int 
     ostringstream params;
     params << "size=" << cropW << "x" << cropH;
     printResult("RPP HOST BATCH Crop", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Rotate_Batched(const vector<Mat>& imgs, bool isColor, float angleDeg,
@@ -3469,9 +3469,9 @@ void benchmark_RPP_HOST_Rotate_Batched(const vector<Mat>& imgs, bool isColor, fl
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_rotate(input, &srcDesc, output, &dstDesc, angleTensor,
                                      RpptInterpolationType::BILINEAR, roiTensor, RpptRoiType::XYWH,
@@ -3487,7 +3487,7 @@ void benchmark_RPP_HOST_Rotate_Batched(const vector<Mat>& imgs, bool isColor, fl
     ostringstream params;
     params << "angle=" << angleDeg << "deg";
     printResult("RPP HOST BATCH Rotate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -3531,9 +3531,9 @@ void benchmark_RPP_HOST_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor,
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_box_filter(input, &srcDesc, output, &dstDesc, kernelSize, borderType,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "BoxFilter");
@@ -3548,7 +3548,7 @@ void benchmark_RPP_HOST_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST BATCH BoxFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_GaussianFilter_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize, float sigma,
@@ -3594,9 +3594,9 @@ void benchmark_RPP_HOST_GaussianFilter_Batched(const vector<Mat>& imgs, bool isC
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gaussian_filter(input, &srcDesc, output, &dstDesc, stdDevTensor, kernelSize,
                                               borderType, roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -3613,7 +3613,7 @@ void benchmark_RPP_HOST_GaussianFilter_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "kernel=" << kernelSize << ", sigma=" << sigma;
     printResult("RPP HOST BATCH GaussianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_MedianFilter_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -3657,9 +3657,9 @@ void benchmark_RPP_HOST_MedianFilter_Batched(const vector<Mat>& imgs, bool isCol
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_median_filter(input, &srcDesc, output, &dstDesc, kernelSize, borderType,
                                             roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -3675,7 +3675,7 @@ void benchmark_RPP_HOST_MedianFilter_Batched(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST BATCH MedianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SobelFilter_Batched(const vector<Mat>& imgs, bool isColor, int sobelType,
@@ -3721,9 +3721,9 @@ void benchmark_RPP_HOST_SobelFilter_Batched(const vector<Mat>& imgs, bool isColo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_sobel_filter(input, &srcDesc, output, &dstDesc, sobelType, kernelSize,
                                            roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -3739,7 +3739,7 @@ void benchmark_RPP_HOST_SobelFilter_Batched(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "type=" << sobelType;
     printResult("RPP HOST BATCH SobelFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_HistogramEqualize_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -3781,9 +3781,9 @@ void benchmark_RPP_HOST_HistogramEqualize_Batched(const vector<Mat>& imgs, bool 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_histogram_equalize(input, &srcDesc, output, &dstDesc,
                                                  roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -3796,7 +3796,7 @@ void benchmark_RPP_HOST_HistogramEqualize_Batched(const vector<Mat>& imgs, bool 
     free(roiTensor);
 
     printResult("RPP HOST BATCH HistogramEqualize", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Hue_Batched(const vector<Mat>& imgs, bool isColor, float hueDelta, rppHandle_t handle) {
@@ -3840,9 +3840,9 @@ void benchmark_RPP_HOST_Hue_Batched(const vector<Mat>& imgs, bool isColor, float
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_hue(input, &srcDesc, output, &dstDesc, hueTensor,
                                   roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Hue");
@@ -3857,7 +3857,7 @@ void benchmark_RPP_HOST_Hue_Batched(const vector<Mat>& imgs, bool isColor, float
     ostringstream params;
     params << "hue=" << hueDelta;
     printResult("RPP HOST BATCH Hue", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Saturation_Batched(const vector<Mat>& imgs, bool isColor, float satFactor, rppHandle_t handle) {
@@ -3901,9 +3901,9 @@ void benchmark_RPP_HOST_Saturation_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_saturation(input, &srcDesc, output, &dstDesc, saturationTensor,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Saturation");
@@ -3918,7 +3918,7 @@ void benchmark_RPP_HOST_Saturation_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "factor=" << satFactor;
     printResult("RPP HOST BATCH Saturation", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -3953,9 +3953,9 @@ void benchmark_RPP_HOST_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool i
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_to_greyscale(input, &srcDesc, output, &dstDesc, RpptSubpixelLayout::BGRtype,
                                                  handle, RPP_HOST_BACKEND), "ColorToGreyscale");
@@ -3966,7 +3966,7 @@ void benchmark_RPP_HOST_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool i
     free(output);
 
     printResult("RPP HOST BATCH ColorToGreyscale", imgs.size(), true,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Brightness_Batched(const vector<Mat>& imgs, bool isColor, float alpha, float beta,
@@ -4013,9 +4013,9 @@ void benchmark_RPP_HOST_Brightness_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_brightness(input, &srcDesc, output, &dstDesc, alphaTensor, betaTensor,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Brightness");
@@ -4031,7 +4031,7 @@ void benchmark_RPP_HOST_Brightness_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "alpha=" << alpha << ", beta=" << beta;
     printResult("RPP HOST BATCH Brightness", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Contrast_Batched(const vector<Mat>& imgs, bool isColor, float contrastFactor, float contrastCenter,
@@ -4078,9 +4078,9 @@ void benchmark_RPP_HOST_Contrast_Batched(const vector<Mat>& imgs, bool isColor, 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_contrast(input, &srcDesc, output, &dstDesc, contrastFactorTensor, contrastCenterTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Contrast");
@@ -4096,7 +4096,7 @@ void benchmark_RPP_HOST_Contrast_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "factor=" << contrastFactor << ", center=" << contrastCenter;
     printResult("RPP HOST BATCH Contrast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Emboss_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize, float strength,
@@ -4142,9 +4142,9 @@ void benchmark_RPP_HOST_Emboss_Batched(const vector<Mat>& imgs, bool isColor, in
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_emboss(input, &srcDesc, output, &dstDesc, strengthTensor, kernelSize, borderType,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Emboss");
@@ -4159,7 +4159,7 @@ void benchmark_RPP_HOST_Emboss_Batched(const vector<Mat>& imgs, bool isColor, in
     ostringstream params;
     params << "kernel=" << kernelSize << ", strength=" << strength;
     printResult("RPP HOST BATCH Emboss", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_AddScalar_Batched(const vector<Mat>& imgs, bool isColor, float addVal,
@@ -4221,9 +4221,9 @@ void benchmark_RPP_HOST_AddScalar_Batched(const vector<Mat>& imgs, bool isColor,
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_add_scalar(input, &srcGenDesc, output, &dstGenDesc, addTensor,
                                         roi3dTensor, RpptRoi3DType::XYZWHD, handle, RPP_HOST_BACKEND),
@@ -4241,7 +4241,7 @@ void benchmark_RPP_HOST_AddScalar_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "value=" << (int)addVal;
     printResult("RPP HOST BATCH AddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SubtractScalar_Batched(const vector<Mat>& imgs, bool isColor, float subVal,
@@ -4303,9 +4303,9 @@ void benchmark_RPP_HOST_SubtractScalar_Batched(const vector<Mat>& imgs, bool isC
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_subtract_scalar(input, &srcGenDesc, output, &dstGenDesc, subTensor,
                                               roi3dTensor, RpptRoi3DType::XYZWHD, handle, RPP_HOST_BACKEND),
@@ -4323,7 +4323,7 @@ void benchmark_RPP_HOST_SubtractScalar_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "value=" << (int)subVal;
     printResult("RPP HOST BATCH SubtractScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isColor, float mulVal,
@@ -4385,9 +4385,9 @@ void benchmark_RPP_HOST_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isC
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_multiply_scalar(input, &srcGenDesc, output, &dstGenDesc, mulTensor,
                                               roi3dTensor, RpptRoi3DType::XYZWHD, handle, RPP_HOST_BACKEND),
@@ -4405,7 +4405,7 @@ void benchmark_RPP_HOST_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "value=" << mulVal;
     printResult("RPP HOST BATCH MultiplyScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_GaussianNoise_Batched(const vector<Mat>& imgs, bool isColor, float mean,
@@ -4453,9 +4453,9 @@ void benchmark_RPP_HOST_GaussianNoise_Batched(const vector<Mat>& imgs, bool isCo
     }
 
     unsigned long long seed = 12345;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gaussian_noise(input, &srcDesc, output, &dstDesc, meanTensor, stddevTensor,
                                              seed, roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4474,7 +4474,7 @@ void benchmark_RPP_HOST_GaussianNoise_Batched(const vector<Mat>& imgs, bool isCo
     params << "mean=" << mean << ", stddev=" << stddev;
     printResult("RPP HOST BATCH GaussianNoise", imgs.size(), isColor,
                 perfMonitor.getTotalTime(),
-                params.str());
+                perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool isColor, float noiseProb,
@@ -4526,9 +4526,9 @@ void benchmark_RPP_HOST_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool
     }
 
     Rpp32u seed = 12345;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_salt_and_pepper_noise(input, &srcDesc, output, &dstDesc, noiseProbTensor,
                                                      saltProbTensor, saltValueTensor, pepperValueTensor,
@@ -4550,7 +4550,7 @@ void benchmark_RPP_HOST_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool
     ostringstream params;
     params << "probability=" << noiseProb;
     printResult("RPP HOST BATCH SaltAndPepperNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor, float shotNoiseFactor,
@@ -4595,9 +4595,9 @@ void benchmark_RPP_HOST_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_shot_noise(input, &srcDesc, output, &dstDesc, shotNoiseTensor, 12345,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4614,7 +4614,7 @@ void benchmark_RPP_HOST_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "factor=" << shotNoiseFactor;
     printResult("RPP HOST BATCH NoiseShot", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorCast_Batched(const vector<Mat>& imgs, bool isColor, float rShift, float gShift,
@@ -4663,9 +4663,9 @@ void benchmark_RPP_HOST_ColorCast_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_cast(input, &srcDesc, output, &dstDesc, rgbTensor, alphaTensor,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4682,7 +4682,7 @@ void benchmark_RPP_HOST_ColorCast_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "R=" << rShift << ", G=" << gShift << ", B=" << bShift;
     printResult("RPP HOST BATCH ColorCast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorTemperature_Batched(const vector<Mat>& imgs, bool isColor, int adjustmentValue,
@@ -4727,9 +4727,9 @@ void benchmark_RPP_HOST_ColorTemperature_Batched(const vector<Mat>& imgs, bool i
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_temperature(input, &srcDesc, output, &dstDesc, adjustmentTensor,
                                                  roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4746,7 +4746,7 @@ void benchmark_RPP_HOST_ColorTemperature_Batched(const vector<Mat>& imgs, bool i
     ostringstream params;
     params << "adjustment=" << adjustmentValue;
     printResult("RPP HOST BATCH ColorTemperature", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -4796,9 +4796,9 @@ void benchmark_RPP_HOST_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_twist(input, &srcDesc, output, &dstDesc, alpha, beta, hueShift,
                                           satFactor, roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4809,7 +4809,7 @@ void benchmark_RPP_HOST_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "hue=" << hueShift[0] << ", saturation=" << satFactor[0];
     printResult("RPP HOST BATCH ColorTwist", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -4862,9 +4862,9 @@ void benchmark_RPP_HOST_Vignette_Batched(const vector<Mat>& imgs, bool isColor, 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_vignette(input, &srcDesc, output, &dstDesc, intensityTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4881,7 +4881,7 @@ void benchmark_RPP_HOST_Vignette_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "intensity=" << vignetteIntensity;
     printResult("RPP HOST BATCH Vignette", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isColor, float stdDev,
@@ -4931,9 +4931,9 @@ void benchmark_RPP_HOST_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isC
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_non_linear_blend(input1, input2, &srcDesc, output, &dstDesc, stdDevTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -4951,7 +4951,7 @@ void benchmark_RPP_HOST_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "stdDev=" << stdDev;
     printResult("RPP HOST BATCH NonLinearBlend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Posterize_Batched(const vector<Mat>& imgs, bool isColor, int levelBits,
@@ -4996,9 +4996,9 @@ void benchmark_RPP_HOST_Posterize_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_posterize(input, &srcDesc, output, &dstDesc, posterizeLevelBits,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5015,7 +5015,7 @@ void benchmark_RPP_HOST_Posterize_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "bits=" << levelBits;
     printResult("RPP HOST BATCH Posterize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Solarize_Batched(const vector<Mat>& imgs, bool isColor, int threshold,
@@ -5060,9 +5060,9 @@ void benchmark_RPP_HOST_Solarize_Batched(const vector<Mat>& imgs, bool isColor, 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_solarize(input, &srcDesc, output, &dstDesc, thresholdTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5079,7 +5079,7 @@ void benchmark_RPP_HOST_Solarize_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "threshold=" << threshold;
     printResult("RPP HOST BATCH Solarize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5128,9 +5128,9 @@ void benchmark_RPP_HOST_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rp
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_glitch(input, &srcDesc, output, &dstDesc, rgbOffsets,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5144,7 +5144,7 @@ void benchmark_RPP_HOST_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rp
     free(roiTensor);
 
     printResult("RPP HOST BATCH Glitch", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_JpegCompressionDistortion_Batched(const vector<Mat>& imgs, bool isColor, Rpp32s quality,
@@ -5189,9 +5189,9 @@ void benchmark_RPP_HOST_JpegCompressionDistortion_Batched(const vector<Mat>& img
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_jpeg_compression_distortion(input, &srcDesc, output, &dstDesc, qualityTensor,
                                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5202,7 +5202,7 @@ void benchmark_RPP_HOST_JpegCompressionDistortion_Batched(const vector<Mat>& img
     ostringstream params;
     params << "quality=" << quality;
     printResult("RPP HOST BATCH JpegCompressionDistortion", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -5247,9 +5247,9 @@ void benchmark_RPP_HOST_TensorMin_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_min(input, &srcDesc, minOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5262,7 +5262,7 @@ void benchmark_RPP_HOST_TensorMin_Batched(const vector<Mat>& imgs, bool isColor,
     free(roiTensor);
 
     printResult("RPP HOST BATCH TensorMin", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorMax_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5302,9 +5302,9 @@ void benchmark_RPP_HOST_TensorMax_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_max(input, &srcDesc, maxOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5317,7 +5317,7 @@ void benchmark_RPP_HOST_TensorMax_Batched(const vector<Mat>& imgs, bool isColor,
     free(roiTensor);
 
     printResult("RPP HOST BATCH TensorMax", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorSum_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5357,9 +5357,9 @@ void benchmark_RPP_HOST_TensorSum_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_sum(input, &srcDesc, sumOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5372,7 +5372,7 @@ void benchmark_RPP_HOST_TensorSum_Batched(const vector<Mat>& imgs, bool isColor,
     free(roiTensor);
 
     printResult("RPP HOST BATCH TensorSum", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorMean_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5412,9 +5412,9 @@ void benchmark_RPP_HOST_TensorMean_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_mean(input, &srcDesc, meanOutputs, outputLength,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5427,7 +5427,7 @@ void benchmark_RPP_HOST_TensorMean_Batched(const vector<Mat>& imgs, bool isColor
     free(roiTensor);
 
     printResult("RPP HOST BATCH TensorMean", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_TensorStddev_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5472,9 +5472,9 @@ void benchmark_RPP_HOST_TensorStddev_Batched(const vector<Mat>& imgs, bool isCol
                                       roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
                     "TensorMean");
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_stddev(input, &srcDesc, stddevOutputs, outputLength, meanOutputs,
                                             roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5488,7 +5488,7 @@ void benchmark_RPP_HOST_TensorStddev_Batched(const vector<Mat>& imgs, bool isCol
     free(roiTensor);
 
     printResult("RPP HOST BATCH TensorStddev", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Threshold_Batched(const vector<Mat>& imgs, bool isColor, float thresh,
@@ -5541,9 +5541,9 @@ void benchmark_RPP_HOST_Threshold_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_threshold(input, &srcDesc, output, &dstDesc, minTensor, maxTensor,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5561,7 +5561,7 @@ void benchmark_RPP_HOST_Threshold_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "threshold=" << thresh;
     printResult("RPP HOST BATCH Threshold", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5611,9 +5611,9 @@ void benchmark_RPP_HOST_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_warp_affine(input, &srcDesc, output, &dstDesc, affineTensor,
                                           RpptInterpolationType::BILINEAR, roiTensor,
@@ -5628,7 +5628,7 @@ void benchmark_RPP_HOST_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor
     free(roiTensor);
 
     printResult("RPP HOST BATCH WarpAffine", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_WarpPerspective_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5681,9 +5681,9 @@ void benchmark_RPP_HOST_WarpPerspective_Batched(const vector<Mat>& imgs, bool is
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_warp_perspective(input, &srcDesc, output, &dstDesc, perspectiveTensor,
                                                RpptInterpolationType::BILINEAR, roiTensor,
@@ -5698,7 +5698,7 @@ void benchmark_RPP_HOST_WarpPerspective_Batched(const vector<Mat>& imgs, bool is
     free(roiTensor);
 
     printResult("RPP HOST BATCH WarpPerspective", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5740,9 +5740,9 @@ void benchmark_RPP_HOST_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, r
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_fisheye(input, &srcDesc, output, &dstDesc, roiTensor,
                                       RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5755,7 +5755,7 @@ void benchmark_RPP_HOST_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, r
     free(roiTensor);
 
     printResult("RPP HOST BATCH Fisheye", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_LensCorrection_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -5830,9 +5830,9 @@ void benchmark_RPP_HOST_LensCorrection_Batched(const vector<Mat>& imgs, bool isC
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_lens_correction(input, &srcDesc, output, &dstDesc, rowRemapTable,
                                               colRemapTable, &tableDesc, cameraMatrix,
@@ -5851,7 +5851,7 @@ void benchmark_RPP_HOST_LensCorrection_Batched(const vector<Mat>& imgs, bool isC
     free(colRemapTable);
 
     printResult("RPP HOST BATCH LensCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_GammaCorrection_Batched(const vector<Mat>& imgs, bool isColor, float gamma,
@@ -5896,9 +5896,9 @@ void benchmark_RPP_HOST_GammaCorrection_Batched(const vector<Mat>& imgs, bool is
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gamma_correction(input, &srcDesc, output, &dstDesc, gammaTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5914,7 +5914,7 @@ void benchmark_RPP_HOST_GammaCorrection_Batched(const vector<Mat>& imgs, bool is
     ostringstream params;
     params << "gamma=" << gamma;
     printResult("RPP HOST BATCH GammaCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Exposure_Batched(const vector<Mat>& imgs, bool isColor, float exposureFactor,
@@ -5959,9 +5959,9 @@ void benchmark_RPP_HOST_Exposure_Batched(const vector<Mat>& imgs, bool isColor, 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_exposure(input, &srcDesc, output, &dstDesc, exposureTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -5977,7 +5977,7 @@ void benchmark_RPP_HOST_Exposure_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "factor=" << exposureFactor;
     printResult("RPP HOST BATCH Exposure", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Blend_Batched(const vector<Mat>& imgs, bool isColor, float alpha, rppHandle_t handle) {
@@ -6031,9 +6031,9 @@ void benchmark_RPP_HOST_Blend_Batched(const vector<Mat>& imgs, bool isColor, flo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_blend(input1, input2, &srcDesc, output, &dstDesc, alphaTensor,
                                     roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND), "Blend");
@@ -6050,7 +6050,7 @@ void benchmark_RPP_HOST_Blend_Batched(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "alpha=" << alpha;
     printResult("RPP HOST BATCH Blend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Erode_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -6093,9 +6093,9 @@ void benchmark_RPP_HOST_Erode_Batched(const vector<Mat>& imgs, bool isColor, int
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_erode_host(input, &srcDesc, output, &dstDesc, kernelSize,
                                         roiTensor, RpptRoiType::XYWH, handle), "Erode");
@@ -6110,7 +6110,7 @@ void benchmark_RPP_HOST_Erode_Batched(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST BATCH Erode", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_Dilate_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -6153,9 +6153,9 @@ void benchmark_RPP_HOST_Dilate_Batched(const vector<Mat>& imgs, bool isColor, in
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_dilate_host(input, &srcDesc, output, &dstDesc, kernelSize,
                                           roiTensor, RpptRoiType::XYWH, handle), "Dilate");
@@ -6170,7 +6170,7 @@ void benchmark_RPP_HOST_Dilate_Batched(const vector<Mat>& imgs, bool isColor, in
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HOST BATCH Dilate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HOST_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -6216,9 +6216,9 @@ void benchmark_RPP_HOST_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_and(input1, input2, &srcDesc, output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -6232,7 +6232,7 @@ void benchmark_RPP_HOST_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor
     free(roiTensor);
 
     printResult("RPP HOST BATCH BitwiseAnd", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -6278,9 +6278,9 @@ void benchmark_RPP_HOST_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_or(input1, input2, &srcDesc, output, &dstDesc,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -6294,7 +6294,7 @@ void benchmark_RPP_HOST_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
     free(roiTensor);
 
     printResult("RPP HOST BATCH BitwiseOr", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -6336,9 +6336,9 @@ void benchmark_RPP_HOST_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_not(input, &srcDesc, output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -6351,7 +6351,7 @@ void benchmark_RPP_HOST_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor
     free(roiTensor);
 
     printResult("RPP HOST BATCH BitwiseNot", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HOST_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle) {
@@ -6397,9 +6397,9 @@ void benchmark_RPP_HOST_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_xor(input1, input2, &srcDesc, output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -6413,7 +6413,7 @@ void benchmark_RPP_HOST_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor
     free(roiTensor);
 
     printResult("RPP HOST BATCH BitwiseXor", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 // ==================== DROPOUT AUGMENTATIONS - BATCHED (WORKING SUBSET) ====================
@@ -6489,9 +6489,9 @@ void benchmark_RPP_HOST_GridDropout_Batched(const vector<Mat>& imgs, bool isColo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_grid_dropout(input, &srcDesc, output, &dstDesc, anchorBoxInfoTensor,
                                           boxesInEachImage, maxHoleW, maxHoleH, roiTensor,
@@ -6503,7 +6503,7 @@ void benchmark_RPP_HOST_GridDropout_Batched(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", tileHeight=" << tileHeight;
     printResult("RPP HOST BATCH GridDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6558,9 +6558,9 @@ void benchmark_RPP_HOST_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, 
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gridmask(input, &srcDesc, output, &dstDesc, tileWidthVal, gridRatio,
                                       gridAngle, translateVector, roiTensor, RpptRoiType::XYWH,
@@ -6572,7 +6572,7 @@ void benchmark_RPP_HOST_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", ratio=" << ratio;
     printResult("RPP HOST BATCH Gridmask", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6624,9 +6624,9 @@ void benchmark_RPP_HOST_ChannelDropout_Batched(const vector<Mat>& imgs, bool isC
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_channel_dropout(input, &srcDesc, output, &dstDesc, dropoutTensor,
                                              roiTensor, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
@@ -6637,7 +6637,7 @@ void benchmark_RPP_HOST_ChannelDropout_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "dropoutProb=" << dropoutProb;
     printResult("RPP HOST BATCH ChannelDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6707,9 +6707,9 @@ void benchmark_RPP_HOST_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_cutout_dropout(input, &srcDesc, output, &dstDesc, anchorBoxInfoTensor,
                                             colorsTensor, numOfBoxes, roiTensor, RpptRoiType::XYWH,
@@ -6721,7 +6721,7 @@ void benchmark_RPP_HOST_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HOST BATCH CutoutDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6796,9 +6796,9 @@ void benchmark_RPP_HOST_Erase_Batched(const vector<Mat>& imgs, bool isColor, int
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_erase(input, &srcDesc, output, &dstDesc, anchorBoxInfoTensor,
                                    (RppPtr_t)colorsTensor, numBoxesTensor, roiTensor,
@@ -6810,7 +6810,7 @@ void benchmark_RPP_HOST_Erase_Batched(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HOST BATCH Erase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6886,9 +6886,9 @@ void benchmark_RPP_HOST_RandomErase_Batched(const vector<Mat>& imgs, bool isColo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_random_erase(input, &srcDesc, output, &dstDesc, anchorBoxInfoTensor,
                                           (RppPtr_t)noiseBuf, roiTensor, RpptRoiType::XYWH,
@@ -6900,7 +6900,7 @@ void benchmark_RPP_HOST_RandomErase_Batched(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HOST BATCH RandomErase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -6984,9 +6984,9 @@ void benchmark_RPP_HOST_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCo
         }
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }
         CHECK_RPP_STATUS(rppt_coarse_dropout(input, &srcDesc, output, &dstDesc, anchorBoxInfoTensor,
                                             numBoxesTensor, maxBoxesPerImage, roiTensor,
@@ -6998,7 +6998,7 @@ void benchmark_RPP_HOST_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "maxBoxes=" << maxBoxesPerImage;
     printResult("RPP HOST BATCH CoarseDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7039,9 +7039,9 @@ void benchmark_RPP_HOST_Copy_Batched(const vector<Mat>& imgs, bool isColor, rppH
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_copy((RppPtr_t)input, &srcDesc, (RppPtr_t)output, &dstDesc, handle, RPP_HOST_BACKEND);
         CHECK_RPP_STATUS(status, "RPP HOST Copy failed with status");
@@ -7051,7 +7051,7 @@ void benchmark_RPP_HOST_Copy_Batched(const vector<Mat>& imgs, bool isColor, rppH
     ostringstream params;
     params << "layout=NHWC";
     printResult("RPP HOST BATCH Copy", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7127,9 +7127,9 @@ void benchmark_RPP_HOST_Slice_Batched(const vector<Mat>& imgs, bool isColor, rpp
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_slice((RppPtr_t)input, &srcGenericDesc, (RppPtr_t)output, &dstGenericDesc,
                                       anchorTensor, shapeTensor, (RppPtr_t)&fillValue, false, roiTensor,
@@ -7141,7 +7141,7 @@ void benchmark_RPP_HOST_Slice_Batched(const vector<Mat>& imgs, bool isColor, rpp
     ostringstream params;
     params << "slice=center_50%";
     printResult("RPP HOST BATCH Slice", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7196,9 +7196,9 @@ void benchmark_RPP_HOST_ChannelPermute_Batched(const vector<Mat>& imgs, bool isC
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_channel_permute((RppPtr_t)input, &srcDesc, (RppPtr_t)output, &dstDesc,
                                                 permutationTensor, handle, RPP_HOST_BACKEND);
@@ -7209,7 +7209,7 @@ void benchmark_RPP_HOST_ChannelPermute_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     if (isColor) params << "permutation=BGR->RGB";
     printResult("RPP HOST BATCH ChannelPermute", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7280,9 +7280,9 @@ void benchmark_RPP_HOST_Transpose_Batched(const vector<Mat>& imgs, bool isColor,
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_transpose((RppPtr_t)input, &srcGenericDesc, (RppPtr_t)output, &dstGenericDesc,
                                           permTensor, roiTensor, handle, RPP_HOST_BACKEND);
@@ -7293,7 +7293,7 @@ void benchmark_RPP_HOST_Transpose_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "permutation=0,2,1,3";
     printResult("RPP HOST BATCH Transpose", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7344,9 +7344,9 @@ void benchmark_RPP_HOST_LUT_Batched(const vector<Mat>& imgs, bool isColor, rppHa
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_lut((RppPtr_t)input, &srcDesc, (RppPtr_t)output, &dstDesc,
                                     lut, roiTensorPtrSrc, RpptRoiType::XYWH, handle, RPP_HOST_BACKEND);
@@ -7357,7 +7357,7 @@ void benchmark_RPP_HOST_LUT_Batched(const vector<Mat>& imgs, bool isColor, rppHa
     ostringstream params;
     params << "lut=inverse";
     printResult("RPP HOST BATCH LUT", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7409,9 +7409,9 @@ void benchmark_RPP_HOST_Magnitude_Batched(const vector<Mat>& imgs, bool isColor,
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_magnitude((RppPtr_t)input1, (RppPtr_t)input2, &srcDesc,
                                           (RppPtr_t)output, &dstDesc,
@@ -7423,7 +7423,7 @@ void benchmark_RPP_HOST_Magnitude_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HOST BATCH Magnitude", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input1);
     free(input2);
@@ -7482,9 +7482,9 @@ void benchmark_RPP_HOST_FusedMultiplyAddScalar_Batched(const vector<Mat>& imgs, 
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_fused_multiply_add_scalar((RppPtr_t)inputF32, &srcDesc,
                                                            (RppPtr_t)outputF32, &dstDesc,
@@ -7498,7 +7498,7 @@ void benchmark_RPP_HOST_FusedMultiplyAddScalar_Batched(const vector<Mat>& imgs, 
     ostringstream params;
     params << "mul=" << mulVal << ", add=" << addVal;
     printResult("RPP HOST BATCH FusedMultiplyAddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(inputF32);
     free(outputF32);
@@ -7559,9 +7559,9 @@ void benchmark_RPP_HOST_Remap_Batched(const vector<Mat>& imgs, bool isColor, rpp
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_remap((RppPtr_t)input, &srcDesc, (RppPtr_t)output, &dstDesc,
                                       rowRemapTable, colRemapTable, &tableDesc, interpolationType,
@@ -7573,7 +7573,7 @@ void benchmark_RPP_HOST_Remap_Batched(const vector<Mat>& imgs, bool isColor, rpp
     ostringstream params;
     params << "transform=sine_wave, interpolation=bilinear";
     printResult("RPP HOST BATCH Remap", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7629,9 +7629,9 @@ void benchmark_RPP_HOST_Phase_Batched(const vector<Mat>& imgs, bool isColor, rpp
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_phase((RppPtr_t)input1, (RppPtr_t)input2, &srcDesc,
                                       (RppPtr_t)output, &dstDesc,
@@ -7644,7 +7644,7 @@ void benchmark_RPP_HOST_Phase_Batched(const vector<Mat>& imgs, bool isColor, rpp
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HOST BATCH Phase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input1);
     free(input2);
@@ -7713,9 +7713,9 @@ void benchmark_RPP_HOST_Normalize_Batched(const vector<Mat>& imgs, bool isColor,
         memcpy(inputBuffer + i * imageSize, imgs[i].data, imageSize);
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_normalize((RppPtr_t)inputBuffer, &genericDesc,
                                           (RppPtr_t)outputBuffer, &genericDesc,
@@ -7729,7 +7729,7 @@ void benchmark_RPP_HOST_Normalize_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "mode=auto_compute, scale=" << scale << ", shift=" << shift;
     printResult("RPP HOST BATCH Normalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(inputBuffer);
     free(outputBuffer);
@@ -7802,9 +7802,9 @@ void benchmark_RPP_HOST_CropAndPatch_Batched(const vector<Mat>& imgs, bool isCol
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_crop_and_patch((RppPtr_t)input1, (RppPtr_t)input2, &srcDesc,
                                                (RppPtr_t)output, &dstDesc,
@@ -7817,7 +7817,7 @@ void benchmark_RPP_HOST_CropAndPatch_Batched(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "crop=center_quarter, patch=center_quarter";
     printResult("RPP HOST BATCH CropAndPatch", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input1);
     free(input2);
@@ -7899,9 +7899,9 @@ void benchmark_RPP_HOST_CropMirrorNormalize_Batched(const vector<Mat>& imgs, boo
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_crop_mirror_normalize((RppPtr_t)input, &srcDesc,
                                                       (RppPtr_t)output, &dstDesc,
@@ -7915,7 +7915,7 @@ void benchmark_RPP_HOST_CropMirrorNormalize_Batched(const vector<Mat>& imgs, boo
     ostringstream params;
     params << "crop=half, mirror=horizontal, mean=60/80/100, stddev=0.9";
     printResult("RPP HOST BATCH CropMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -7999,9 +7999,9 @@ void benchmark_RPP_HOST_ResizeMirrorNormalize_Batched(const vector<Mat>& imgs, b
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_resize_mirror_normalize((RppPtr_t)input, &srcDesc,
                                                         (RppPtr_t)output, &dstDesc,
@@ -8016,7 +8016,7 @@ void benchmark_RPP_HOST_ResizeMirrorNormalize_Batched(const vector<Mat>& imgs, b
     ostringstream params;
     params << "resize=half, mirror=horizontal, mean=60/80/100, stddev=1";
     printResult("RPP HOST BATCH ResizeMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);
@@ -8093,9 +8093,9 @@ void benchmark_RPP_HOST_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool i
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::CPU, 0);
         }        
         RppStatus status = rppt_resize_crop_mirror((RppPtr_t)input, &srcDesc,
                                                    (RppPtr_t)output, &dstDesc,
@@ -8109,7 +8109,7 @@ void benchmark_RPP_HOST_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool i
     ostringstream params;
     params << "crop=80%,resize=224x224,mirror";
     printResult("RPP HOST BATCH ResizeCropMirror", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     free(input);
     free(output);

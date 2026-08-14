@@ -26,6 +26,7 @@ SOFTWARE.
 #define BENCHMARKS_COMMON_H
 
 #include <dirent.h>
+#include <glob.h>
 #include <omp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -52,6 +53,7 @@ SOFTWARE.
 #include <vector>
 
 #include <hip/hip_runtime.h>
+#include <amd_smi/amdsmi.h>
 #include "rpp.h"
 #include "rpp_version.h"
 #include "xlsxwriter.h"
@@ -60,28 +62,67 @@ using namespace std;
 using namespace cv;
 using namespace chrono;
 
-// Performance monitoring class
+// Device type for energy measurement
+enum class DeviceType {
+    CPU,    // For OpenCV, RPP HOST, RPP HOST BATCH
+    GPU     // For RPP HIP, RPP HIP BATCH
+};
+
+// Performance monitoring class with energy measurement
 class PerformanceMonitor {
 private:
+    // Time measurement
     high_resolution_clock::time_point startTime;
     high_resolution_clock::time_point endTime;
     double totalTimeMs;
 
+    // Energy measurement
+    DeviceType device;
+
+    double totalEnergyJ;         // Total energy in Joules
+
+    // CPU-specific cached paths
+    string cpuEnergyPath;   // Cached path to CPU energy file
+    uint64_t startEnergyUj;      // Energy in microjoules at start
+    uint64_t endEnergyUj;        // Energy in microjoules at end
+    uint64_t cpuMaxEnergyRangeUj; // Energy counter max ranges
+    
+    // GPU-specific AMD SMI and sysfs
+    int gpuDeviceId;
+    amdsmi_socket_handle socketHandle;
+    amdsmi_processor_handle processorHandle;
+    bool amdSmiInitialized;
+    bool gpuEnergySupported;     // True if energy counters work, false if need power fallback
+    uint64_t startEnergyGpuUj;   // GPU energy in microjoules at start
+    uint64_t endEnergyGpuUj;     // GPU energy in microjoules at end
+    float gpuEnergyResolution;   // GPU energy counter resolution in μJ
+    uint64_t startPowerUw;       // GPU power in microwatts (fallback)
+    uint64_t endPowerUw;         // GPU power in microwatts (fallback)
+    string gpuPowerPath;         // sysfs path for power (final fallback)
+
+    // Helper methods - implemented in benchmarks_utils.cpp
+    void initializeCPU();
+    void initializeGPU(int deviceId);
+    void shutdownGPU();
+
+    uint64_t readCpuEnergy();
+    uint64_t readGpuEnergy();
+    uint64_t readGpuPower();     // Fallback for GPUs without energy counters
+
+    uint64_t calculateDelta(uint64_t start, uint64_t end, uint64_t maxRange);
+
 public:
-    PerformanceMonitor() : totalTimeMs(0.0) {}
+    PerformanceMonitor();
+    ~PerformanceMonitor();
 
-    void start() {
-        startTime = high_resolution_clock::now();
-    }
+    // Updated methods
+    void start(DeviceType type = DeviceType::CPU, int deviceId = 0);
+    void stop();
 
-    void stop() {
-        endTime = high_resolution_clock::now();
-        totalTimeMs = duration<double, milli>(endTime - startTime).count();
-    }
+    // Getters
+    double getTotalTime() const { return totalTimeMs; }
+    double getTotalEnergy() const { return totalEnergyJ; }
 
-    double getTotalTime() const {
-        return totalTimeMs;
-    }
 };
 
 // Global performance monitor instance
@@ -92,9 +133,11 @@ extern PerformanceMonitor perfMonitor;
 #define DEFAULT_RGB_IMAGE_PATH "input_images_dataset/"
 
 // Global configuration variables (set at runtime)
-extern int PERF_RUNS;
+extern int HOST_PERF_RUNS;
+extern int HIP_PERF_RUNS;
 extern int WARMUP_RUNS;
-extern int TOTAL_RUNS;
+extern int HOST_TOTAL_RUNS;
+extern int HIP_TOTAL_RUNS;
 extern int NUM_THREADS;
 extern string GRAY_IMAGE_PATH;
 extern string RGB_IMAGE_PATH;
@@ -106,28 +149,45 @@ struct BenchmarkResult {
     string imageSize;
     string dtype;
     int batchSize;
-    int numRuns;
+    int hostPerfRuns;
+    int hipPerfRuns;
+
+    // Time measurements
     double opencvTime;
     double rppHostTime;
     double rppHipTime;
     double rppHostBatchTime;
     double rppHipBatchTime;
 
+    // Energy measurements (in Joules)
+    double opencvEnergy;
+    double rppHostEnergy;
+    double rppHipEnergy;
+    double rppHostBatchEnergy;
+    double rppHipBatchEnergy;
+
     BenchmarkResult(const string& name, const string& params, double cvTime, double rHostTime,
                     double rHipTime, const string& imgSize = "", const string& dataType = "",
-                    int batch = 0, int runs = 0, double rHostBatchTime = 0.0,
-                    double rHipBatchTime = 0.0)
+                    int batch = 0, int hostRuns = 0, int hipRuns = 0, double rHostBatchTime = 0.0,
+                    double rHipBatchTime = 0.0, double cvEnergy = 0.0, double rHostEnergy = 0.0,
+                    double rHipEnergy = 0.0, double rHostBatchEnergy = 0.0, double rHipBatchEnergy = 0.0)
         : operationName(name),
           parameters(params),
           imageSize(imgSize),
           dtype(dataType),
           batchSize(batch),
-          numRuns(runs),
+          hostPerfRuns(hostRuns),
+          hipPerfRuns(hipRuns),
           opencvTime(cvTime),
           rppHostTime(rHostTime),
           rppHipTime(rHipTime),
           rppHostBatchTime(rHostBatchTime),
-          rppHipBatchTime(rHipBatchTime) {
+          rppHipBatchTime(rHipBatchTime),
+          opencvEnergy(cvEnergy),
+          rppHostEnergy(rHostEnergy),
+          rppHipEnergy(rHipEnergy),
+          rppHostBatchEnergy(rHostBatchEnergy),
+          rppHipBatchEnergy(rHipBatchEnergy) {
     }
 };
 
@@ -147,7 +207,7 @@ extern int rgbBatchSize;
 vector<Mat> loadBatchImages(const string& directory, int& batchSize, int& maxWidth, int& maxHeight,
                             bool isColor);
 void printResult(const string& name, int batchSize, bool isColor, double totalMs,
-                 const string& params = "");
+                 double totalEnergy = 0.0, const string& params = "");
 string getCPUInfo();
 string getMemoryInfo();
 string getOSInfo();

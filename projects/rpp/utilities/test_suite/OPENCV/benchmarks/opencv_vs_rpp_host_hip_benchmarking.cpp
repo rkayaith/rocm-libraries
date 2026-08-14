@@ -29,23 +29,24 @@ SOFTWARE.
 void printUsage(const char* programName) {
     cout << "Usage: " << programName << " [OPTIONS]\n" << endl;
     cout << "Options:" << endl;
-    cout << "  -t, --threads <N>        Number of threads to use (default: auto-detect)" << endl;
-    cout << "  -n, --num-runs <N>       Number of benchmark runs (default: 100)" << endl;
-    cout << "  -w, --warmup-runs <N>    Number of warmup runs (default: 50)" << endl;
-    cout << "  -g, --gray-path <PATH>   Path to grayscale images (default: "
+    cout << "  -t, --threads <N>           Number of threads to use (default: auto-detect)" << endl;
+    cout << "  -n, --host-runs <N>         Number of HOST/OPENCV benchmark runs (default: 50)" << endl;
+    cout << "  -N, --hip-runs <N>          Number of HIP benchmark runs (default: 500)" << endl;
+    cout << "  -w, --warmup-runs <N>       Number of warmup runs (default: 50)" << endl;
+    cout << "  -g, --gray-path <PATH>      Path to grayscale images (default: "
          << DEFAULT_GRAY_IMAGE_PATH << ")" << endl;
-    cout << "  -r, --rgb-path <PATH>    Path to RGB images (default: " << DEFAULT_RGB_IMAGE_PATH
+    cout << "  -r, --rgb-path <PATH>       Path to RGB images (default: " << DEFAULT_RGB_IMAGE_PATH
          << ")" << endl;
-    cout << "  -h, --help               Display this help message" << endl;
+    cout << "  -h, --help                  Display this help message" << endl;
     cout << "\nExamples:" << endl;
     cout << "  " << programName
-         << "                           # Auto-detect threads, 100 runs (default)" << endl;
-    cout << "  " << programName << " --threads 64              # Use 64 threads" << endl;
-    cout << "  " << programName << " -t 32 -n 50               # Use 32 threads with 50 runs"
+         << "                              # Auto-detect threads, 50 HOST runs, 500 HIP runs (default)" << endl;
+    cout << "  " << programName << " --threads 64                 # Use 64 threads" << endl;
+    cout << "  " << programName << " -t 32 -n 100 -N 1000         # 32 threads, 100 HOST runs, 1000 HIP runs"
          << endl;
-    cout << "  " << programName << " -t 32 -n 50 -w 25         # Use 32 threads, 50 runs, 25 warmup runs"
+    cout << "  " << programName << " -t 32 -n 50 -N 500 -w 25     # 32 threads, 50 HOST runs, 500 HIP runs, 25 warmup"
          << endl;
-    cout << "  " << programName << " -t 32 -g ./my_images/     # Use 32 threads with custom dataset"
+    cout << "  " << programName << " -t 32 -g ./my_images/        # Use 32 threads with custom dataset"
          << endl;
     cout << endl;
 }
@@ -68,15 +69,27 @@ int main(int argc, char* argv[]) {
                 printUsage(argv[0]);
                 return 1;
             }
-        } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--num-runs") == 0) {
+        } else if (strcmp(argv[i], "-n") == 0 || strcmp(argv[i], "--host-runs") == 0) {
             if (i + 1 < argc) {
-                PERF_RUNS = atoi(argv[++i]);
-                if (PERF_RUNS <= 0) {
-                    cerr << "Error: Number of runs must be a positive integer" << endl;
+                HOST_PERF_RUNS = atoi(argv[++i]);
+                if (HOST_PERF_RUNS <= 0) {
+                    cerr << "Error: Number of HOST runs must be a positive integer" << endl;
                     return 1;
                 }
             } else {
-                cerr << "Error: --num-runs requires a value" << endl;
+                cerr << "Error: --host-runs requires a value" << endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+        } else if (strcmp(argv[i], "-N") == 0 || strcmp(argv[i], "--hip-runs") == 0) {
+            if (i + 1 < argc) {
+                HIP_PERF_RUNS = atoi(argv[++i]);
+                if (HIP_PERF_RUNS <= 0) {
+                    cerr << "Error: Number of HIP runs must be a positive integer" << endl;
+                    return 1;
+                }
+            } else {
+                cerr << "Error: --hip-runs requires a value" << endl;
                 printUsage(argv[0]);
                 return 1;
             }
@@ -267,11 +280,13 @@ int main(int argc, char* argv[]) {
     cout << "\n--- Benchmark Configuration ---" << endl;
     cout << "Number of Threads: " << NUM_THREADS << " (max available: " << maxAvailableThreads
          << ")" << endl;
-    cout << "Number of Runs: " << PERF_RUNS << endl;
+    cout << "Number of HOST Runs (OPENCV, HOST, HOST BATCH): " << HOST_PERF_RUNS << endl;
+    cout << "Number of HIP Runs (HIP, HIP BATCH): " << HIP_PERF_RUNS << endl;
     cout << "Number of Warmup Runs: " << WARMUP_RUNS << endl;
 
-    // Initialize TOTAL_RUNS after command-line arguments are processed
-    TOTAL_RUNS = WARMUP_RUNS + PERF_RUNS;
+    // Initialize TOTAL_RUNS for each backend after command-line arguments are processed
+    HOST_TOTAL_RUNS = WARMUP_RUNS + HOST_PERF_RUNS;
+    HIP_TOTAL_RUNS = WARMUP_RUNS + HIP_PERF_RUNS;
 
     cout << "Grayscale Dataset: " << GRAY_IMAGE_PATH << endl;
     cout << "RGB Dataset: " << RGB_IMAGE_PATH << endl;

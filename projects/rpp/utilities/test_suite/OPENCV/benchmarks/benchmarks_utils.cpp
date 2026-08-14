@@ -24,14 +24,269 @@ SOFTWARE.
 
 #include "benchmarks_common.h"
 
+// ==========================================
+// PerformanceMonitor Implementation
+// ==========================================
+
+// Constructor
+PerformanceMonitor::PerformanceMonitor()
+    : totalTimeMs(0.0), totalEnergyJ(0.0), cpuMaxEnergyRangeUj(0),
+      gpuDeviceId(0), amdSmiInitialized(false), gpuEnergySupported(false),
+      startEnergyGpuUj(0), endEnergyGpuUj(0),
+      gpuEnergyResolution(0.0f), startPowerUw(0), endPowerUw(0) {
+    // Initialize all paths and max ranges at construction
+    initializeCPU();
+    initializeGPU(0);  // Default GPU 0
+}
+
+// Destructor
+PerformanceMonitor::~PerformanceMonitor() {
+    shutdownGPU();
+}
+
+// Initialize CPU energy paths
+void PerformanceMonitor::initializeCPU() {
+
+    // Fallback: typical RAPL max range
+    cpuMaxEnergyRangeUj = 262143328850ULL;  // ~262 kJ
+
+    // Try Intel RAPL
+    ifstream intelFile("/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj");
+    if (intelFile.is_open()) {
+        cpuEnergyPath = "/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj";
+        ifstream intelFileMax("/sys/class/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj");
+        if (intelFileMax.is_open()) {
+            intelFileMax >> cpuMaxEnergyRangeUj;
+        }
+        return;
+    }
+
+    // Not available - path remains empty
+}
+
+// Initialize GPU energy using AMD SMI
+void PerformanceMonitor::initializeGPU(int deviceId) {
+    amdSmiInitialized = false;
+    gpuDeviceId = deviceId;
+
+    // Find sysfs power path as final fallback
+    string powerPattern = "/sys/class/drm/card" + to_string(deviceId) + "/device/hwmon/hwmon*/power1_average";
+    glob_t powerGlob;
+    if (glob(powerPattern.c_str(), GLOB_NOSORT, nullptr, &powerGlob) == 0) {
+        if (powerGlob.gl_pathc > 0) {
+            gpuPowerPath = powerGlob.gl_pathv[0];
+        }
+        globfree(&powerGlob);
+    }
+
+    // Initialize AMD SMI
+    amdsmi_status_t status = amdsmi_init(AMDSMI_INIT_AMD_GPUS);
+    if (status != AMDSMI_STATUS_SUCCESS) {
+        return;
+    }
+
+    // Get socket handles
+    uint32_t socket_count = 0;
+    status = amdsmi_get_socket_handles(&socket_count, nullptr);
+    if (status != AMDSMI_STATUS_SUCCESS || socket_count == 0) {
+        amdsmi_shut_down();
+        return;
+    }
+
+    amdsmi_socket_handle* socket_handles = new amdsmi_socket_handle[socket_count];
+    status = amdsmi_get_socket_handles(&socket_count, socket_handles);
+    if (status != AMDSMI_STATUS_SUCCESS) {
+        delete[] socket_handles;
+        amdsmi_shut_down();
+        return;
+    }
+
+    socketHandle = socket_handles[0];  // Use first socket
+    delete[] socket_handles;
+
+    // Get processor handles from first socket
+    uint32_t num_devices = 0;
+    status = amdsmi_get_processor_handles(socketHandle, &num_devices, nullptr);
+    if (status != AMDSMI_STATUS_SUCCESS || num_devices == 0) {
+        amdsmi_shut_down();
+        return;
+    }
+
+    if (deviceId >= static_cast<int>(num_devices)) {
+        amdsmi_shut_down();
+        return;
+    }
+
+    amdsmi_processor_handle* processor_handles = new amdsmi_processor_handle[num_devices];
+    status = amdsmi_get_processor_handles(socketHandle, &num_devices, processor_handles);
+    if (status != AMDSMI_STATUS_SUCCESS) {
+        delete[] processor_handles;
+        amdsmi_shut_down();
+        return;
+    }
+
+    processorHandle = processor_handles[deviceId];
+    delete[] processor_handles;
+
+    amdSmiInitialized = true;
+
+    // Test if energy counters are supported by doing a test read
+    uint64_t test_energy = 0;
+    uint64_t test_timestamp = 0;
+    float test_resolution = 0.0f;
+    status = amdsmi_get_energy_count(processorHandle, &test_energy, &test_resolution, &test_timestamp);
+
+    if (status == AMDSMI_STATUS_SUCCESS && test_resolution > 0 && test_energy > 0) {
+        gpuEnergySupported = true;
+        cout << "GPU Energy supported. Test Energy: " << test_energy << " Test Resolution: " << test_resolution << endl;
+        return;
+    } else {
+        gpuEnergySupported = false;
+        cout << "GPU Energy not supported. Test Energy: " << test_energy << " Test Resolution: " << test_resolution << endl;  
+    }
+    
+}
+
+// Shutdown GPU AMD SMI
+void PerformanceMonitor::shutdownGPU() {
+    if (amdSmiInitialized) {
+        amdsmi_shut_down();
+        amdSmiInitialized = false;
+    }
+}
+
+// Read CPU energy from RAPL
+uint64_t PerformanceMonitor::readCpuEnergy() {
+    // Use cached path (discovered during initialization)
+    if (!cpuEnergyPath.empty()) {
+        ifstream file(cpuEnergyPath);
+        if (file.is_open()) {
+            uint64_t energy = 0;
+            file >> energy;
+            if (file.fail()) {
+                // Read failed - return 0
+                return 0;
+            }
+            return energy;
+        }
+    }
+
+    // Path not available (no RAPL support)
+    return 0;
+}
+
+// Read GPU energy using AMD SMI
+uint64_t PerformanceMonitor::readGpuEnergy() {
+    if (!amdSmiInitialized || !gpuEnergySupported) {
+        return 0;
+    }
+
+    uint64_t energy_counter = 0;
+    uint64_t timestamp = 0;
+
+    amdsmi_status_t status = amdsmi_get_energy_count(processorHandle, &energy_counter,
+                                                      &gpuEnergyResolution, &timestamp);
+    if (status != AMDSMI_STATUS_SUCCESS) {
+        return 0;
+    }
+
+    return energy_counter;
+}
+
+// Read GPU power 
+uint64_t PerformanceMonitor::readGpuPower() {
+    
+    uint64_t powerUw = 0;
+
+    if (!gpuPowerPath.empty()) {
+        ifstream file(gpuPowerPath);
+        if (file.is_open()) {
+            uint64_t powerUw_sysfs = 0;
+            file >> powerUw_sysfs;
+            if (!file.fail() && powerUw_sysfs > 0) {
+                powerUw = powerUw_sysfs;  // sysfs reports in microwatts
+            }
+        }
+    }
+
+    return powerUw;
+}
+
+// Calculate energy delta with wraparound handling
+uint64_t PerformanceMonitor::calculateDelta(uint64_t start, uint64_t end, uint64_t maxRange) {
+    if (end >= start) {
+        return end - start;
+    } else {
+        // Wraparound occurred
+        return (maxRange - start) + end;
+    }
+}
+
+// Start monitoring
+void PerformanceMonitor::start(DeviceType type, int deviceId) {
+    device = type;
+    gpuDeviceId = deviceId;
+
+    // Start time measurement
+    startTime = high_resolution_clock::now();
+
+    // Start energy measurement
+    if (device == DeviceType::CPU) {
+        startEnergyUj = readCpuEnergy();
+    } else { // GPU
+        if (gpuEnergySupported) {
+            startEnergyGpuUj = readGpuEnergy();
+        } else {
+            // Fall back to power-based measurement
+            startPowerUw = readGpuPower();
+        }
+    }
+}
+
+// Stop monitoring
+void PerformanceMonitor::stop() {
+    // Stop time measurement
+    endTime = high_resolution_clock::now();
+    totalTimeMs = duration<double, milli>(endTime - startTime).count();
+
+    uint64_t deltaUj = 0;
+
+    if (device == DeviceType::CPU) {
+        endEnergyUj = readCpuEnergy();
+        deltaUj = calculateDelta(startEnergyUj, endEnergyUj, cpuMaxEnergyRangeUj);
+    } else { // GPU
+        if (gpuEnergySupported) {
+            // Use energy counters if supported
+            endEnergyGpuUj = readGpuEnergy();
+            // Handle potential wrap-around with 64-bit counter max value
+            deltaUj = calculateDelta(startEnergyGpuUj, endEnergyGpuUj, UINT64_MAX);
+            // Convert to microjoules using the resolution
+            deltaUj = static_cast<uint64_t>(deltaUj * gpuEnergyResolution);
+        } else {
+            // Fall back to power-based estimation: Energy = Average_Power × Time
+            endPowerUw = readGpuPower();
+            // Take average of start and end power samples
+            double avgPowerW = ((startPowerUw + endPowerUw) / 2.0) / 1000000.0;
+            auto durationUs = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
+            deltaUj = static_cast<uint64_t>(avgPowerW * durationUs);
+        }
+    }
+
+    // Convert to Joules
+    totalEnergyJ = deltaUj / 1000000.0;
+
+}
+
 // Global performance monitor instance (defined here, declared extern in header)
 PerformanceMonitor perfMonitor;
 
 // Global configuration variables (defined here, declared extern in header)
-int PERF_RUNS = 10;   // Default number of runs, can be overridden via command line
+int HOST_PERF_RUNS = 50;    // Default number of runs for OPENCV, HOST, HOST BATCH backends
+int HIP_PERF_RUNS = 500;    // Default number of runs for HIP and HIP BATCH backends
 int WARMUP_RUNS = 50;       // Default number of warmup runs, can be overridden via command line
-int TOTAL_RUNS = 0;         // Will be computed as WARMUP_RUNS + PERF_RUNS after initialization
-int NUM_THREADS = 0;  // Will be set at runtime
+int HOST_TOTAL_RUNS = 0;    // Will be computed as WARMUP_RUNS + HOST_PERF_RUNS after initialization
+int HIP_TOTAL_RUNS = 0;     // Will be computed as WARMUP_RUNS + HIP_PERF_RUNS after initialization
+int NUM_THREADS = 0;        // Will be set at runtime
 string GRAY_IMAGE_PATH = DEFAULT_GRAY_IMAGE_PATH;
 string RGB_IMAGE_PATH = DEFAULT_RGB_IMAGE_PATH;
 
@@ -94,6 +349,11 @@ struct BenchmarkData {
     double opencvTime;
     double rppHostBatchTime;
     double rppHipBatchTime;
+    double rppHostEnergy;
+    double rppHipEnergy;
+    double opencvEnergy;
+    double rppHostBatchEnergy;
+    double rppHipBatchEnergy;
     string parameters;
     bool rppHostCalled;
     bool rppHipCalled;
@@ -104,6 +364,7 @@ struct BenchmarkData {
 
     BenchmarkData()
         : rppHostTime(0), rppHipTime(0), opencvTime(0), rppHostBatchTime(0), rppHipBatchTime(0),
+          rppHostEnergy(0), rppHipEnergy(0), opencvEnergy(0), rppHostBatchEnergy(0), rppHipBatchEnergy(0),
           parameters(""), rppHostCalled(false), rppHipCalled(false), opencvCalled(false),
           rppHostBatchCalled(false), rppHipBatchCalled(false), resultCreated(false) {}
 };
@@ -113,14 +374,8 @@ static string currentOperation;
 static bool currentIsColor;
 
 void printResult(const string& name, int batchSize, bool isColor, double totalMs,
-                 const string& params) {
-    double avgTime = totalMs / PERF_RUNS;
-    cout << name << " (Avg per run, WARMUP_RUNS=" << WARMUP_RUNS
-         << ", PERF_RUNS=" << PERF_RUNS << ", " << batchSize << " images, "
-         << (isColor ? "RGB" : "Grayscale");
-    if (!params.empty()) cout << ", " << params;
-    cout << "): " << avgTime << " ms" << endl;
-
+                 double totalEnergy, const string& params) {
+    // Determine which PERF_RUNS to use based on backend
     string opName = name;
     string prefix;
 
@@ -131,26 +386,44 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
     const string RPP_HOST_PREFIX = "RPP HOST ";
     const string OPENCV_PREFIX = "OpenCV ";
 
+    int PERF_RUNS;
     if (opName.find(RPP_HIP_BATCH_PREFIX) == 0) {
         prefix = RPP_HIP_BATCH_PREFIX;
         opName = opName.substr(RPP_HIP_BATCH_PREFIX.length());
+        PERF_RUNS = HIP_PERF_RUNS;
     } else if (opName.find(RPP_HIP_PREFIX) == 0) {
         prefix = RPP_HIP_PREFIX;
         opName = opName.substr(RPP_HIP_PREFIX.length());
+        PERF_RUNS = HIP_PERF_RUNS;
     } else if (opName.find(RPP_HOST_BATCH_PREFIX) == 0) {
         prefix = RPP_HOST_BATCH_PREFIX;
         opName = opName.substr(RPP_HOST_BATCH_PREFIX.length());
+        PERF_RUNS = HOST_PERF_RUNS;
     } else if (opName.find(RPP_HOST_PREFIX) == 0) {
         prefix = RPP_HOST_PREFIX;
         opName = opName.substr(RPP_HOST_PREFIX.length());
         currentOperation = opName;
         currentIsColor = isColor;
+        PERF_RUNS = HOST_PERF_RUNS;
     } else if (opName.find(OPENCV_PREFIX) == 0) {
         prefix = OPENCV_PREFIX;
         opName = opName.substr(OPENCV_PREFIX.length());
+        PERF_RUNS = HOST_PERF_RUNS;
     } else {
         return;
     }
+
+    double avgTime = totalMs / PERF_RUNS;
+    double avgEnergy = totalEnergy / PERF_RUNS;
+    cout << name << " (Avg per run, WARMUP_RUNS=" << WARMUP_RUNS
+         << ", PERF_RUNS=" << PERF_RUNS << ", " << batchSize << " images, "
+         << (isColor ? "RGB" : "Grayscale");
+    if (!params.empty()) cout << ", " << params;
+    cout << "): " << avgTime << " ms";
+    if (totalEnergy > 0.0) {
+        cout << ", " << fixed << setprecision(6) << avgEnergy << " J";
+    }
+    cout << endl;
 
     // Operations that use type parameter for unique naming (e.g., Resize_Bilinear, SobelFilter_0)
     static const unordered_set<string> opsWithTypeParameter = {"Resize", "Flip", "SobelFilter"};
@@ -172,25 +445,30 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
 
     if (prefix == RPP_HOST_PREFIX) {
         data.rppHostTime = avgTime;
+        data.rppHostEnergy = avgEnergy;
         data.rppHostCalled = true;
         data.parameters = params;
     } else if (prefix == RPP_HOST_BATCH_PREFIX) {
         data.rppHostBatchTime = avgTime;
+        data.rppHostBatchEnergy = avgEnergy;
         data.rppHostBatchCalled = true;
         if (data.parameters.empty())
             data.parameters = params;
     } else if (prefix == RPP_HIP_PREFIX) {
         data.rppHipTime = avgTime;
+        data.rppHipEnergy = avgEnergy;
         data.rppHipCalled = true;
         if (data.parameters.empty())
             data.parameters = params;
     } else if (prefix == RPP_HIP_BATCH_PREFIX) {
         data.rppHipBatchTime = avgTime;
+        data.rppHipBatchEnergy = avgEnergy;
         data.rppHipBatchCalled = true;
         if (data.parameters.empty())
             data.parameters = params;
     } else if (prefix == OPENCV_PREFIX) {
         data.opencvTime = avgTime;
+        data.opencvEnergy = avgEnergy;
         data.opencvCalled = true;
         if (data.parameters.empty())
             data.parameters = params;
@@ -208,6 +486,12 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
         double rppHostBatchTime = data.rppHostBatchCalled ? data.rppHostBatchTime : 0.0;
         double rppHipBatchTime = data.rppHipBatchCalled ? data.rppHipBatchTime : 0.0;
 
+        double opencvEnergy = data.opencvCalled ? data.opencvEnergy : 0.0;
+        double rppHostEnergy = data.rppHostCalled ? data.rppHostEnergy : 0.0;
+        double rppHipEnergy = data.rppHipCalled ? data.rppHipEnergy : 0.0;
+        double rppHostBatchEnergy = data.rppHostBatchCalled ? data.rppHostBatchEnergy : 0.0;
+        double rppHipBatchEnergy = data.rppHipBatchCalled ? data.rppHipBatchEnergy : 0.0;
+
         auto& results = isColor ? rgbResults : grayscaleResults;
         const auto& imageSize = isColor ? rgbImageSize : grayImageSize;
         const auto& imageDtype = isColor ? rgbImageDtype : grayImageDtype;
@@ -215,8 +499,10 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
 
         results.emplace_back(displayName, data.parameters, opencvTime,
                              rppHostTime, rppHipTime, imageSize,
-                             imageDtype, batchSize, PERF_RUNS,
-                             rppHostBatchTime, rppHipBatchTime);
+                             imageDtype, batchSize, HOST_PERF_RUNS, HIP_PERF_RUNS,
+                             rppHostBatchTime, rppHipBatchTime,
+                             opencvEnergy, rppHostEnergy, rppHipEnergy,
+                             rppHostBatchEnergy, rppHipBatchEnergy);
         data.resultCreated = true;
     }
     // Update existing result if any backend times are added later
@@ -227,14 +513,19 @@ void printResult(const string& name, int batchSize, bool isColor, double totalMs
             if (result.operationName == displayName) {
                 if (prefix == OPENCV_PREFIX) {
                     result.opencvTime = data.opencvTime;
+                    result.opencvEnergy = data.opencvEnergy;
                 } else if (prefix == RPP_HOST_PREFIX) {
                     result.rppHostTime = data.rppHostTime;
+                    result.rppHostEnergy = data.rppHostEnergy;
                 } else if (prefix == RPP_HIP_PREFIX) {
                     result.rppHipTime = data.rppHipTime;
+                    result.rppHipEnergy = data.rppHipEnergy;
                 } else if (prefix == RPP_HOST_BATCH_PREFIX) {
                     result.rppHostBatchTime = data.rppHostBatchTime;
+                    result.rppHostBatchEnergy = data.rppHostBatchEnergy;
                 } else if (prefix == RPP_HIP_BATCH_PREFIX) {
                     result.rppHipBatchTime = data.rppHipBatchTime;
+                    result.rppHipBatchEnergy = data.rppHipBatchEnergy;
                 }
                 break;  // Found and updated, exit loop
             }
@@ -698,6 +989,9 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     lxw_format* time_format = workbook_add_format(workbook);
     format_set_num_format(time_format, "0.00000");
 
+    lxw_format* energy_format = workbook_add_format(workbook);
+    format_set_num_format(energy_format, "0.000000");
+
     // Sheet 1: System Information
     lxw_worksheet* info_sheet = workbook_add_worksheet(workbook, "System Information");
 
@@ -748,14 +1042,19 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_set_column(gray_sheet, 1, 1, 40, NULL);
     worksheet_set_column(gray_sheet, 2, 2, 15, NULL);
     worksheet_set_column(gray_sheet, 3, 3, 12, NULL);
-    worksheet_set_column(gray_sheet, 4, 5, 12, NULL);
-    worksheet_set_column(gray_sheet, 6, 10, 22, NULL);
+    worksheet_set_column(gray_sheet, 4, 7, 12, NULL);
+    worksheet_set_column(gray_sheet, 8, 17, 22, NULL);
 
     // Create column headers with thread information
-    ostringstream opencvHeader, rppHostHeader, rppHostBatchHeader;
-    opencvHeader << "OpenCV (avg ms, " << NUM_THREADS << " threads)";
-    rppHostHeader << "RPP HOST (avg ms, " << NUM_THREADS << " threads)";
-    rppHostBatchHeader << "RPP HOST BATCH (avg ms, " << maxAvailableThreads << " threads)";
+    ostringstream opencvTimeHeader, rppHostTimeHeader, rppHostBatchTimeHeader;
+    opencvTimeHeader << "OpenCV (avg ms, " << NUM_THREADS << " threads)";
+    rppHostTimeHeader << "RPP HOST (avg ms, " << NUM_THREADS << " threads)";
+    rppHostBatchTimeHeader << "RPP HOST BATCH (avg ms, " << maxAvailableThreads << " threads)";
+
+    ostringstream opencvEnergyHeader, rppHostEnergyHeader, rppHostBatchEnergyHeader;
+    opencvEnergyHeader << "OpenCV (avg J, " << NUM_THREADS << " threads)";
+    rppHostEnergyHeader << "RPP HOST (avg J, " << NUM_THREADS << " threads)";
+    rppHostBatchEnergyHeader << "RPP HOST BATCH (avg J, " << maxAvailableThreads << " threads)";
 
     row = 0;
     worksheet_write_string(gray_sheet, row, 0, "Operation", header_format);
@@ -764,12 +1063,20 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_write_string(gray_sheet, row, 3, "DType", header_format);
     worksheet_write_string(gray_sheet, row, 4, "Batch Size", header_format);
     worksheet_write_string(gray_sheet, row, 5, "WARMUP Runs", header_format);
-    worksheet_write_string(gray_sheet, row, 6, "PERF Runs", header_format);
-    worksheet_write_string(gray_sheet, row, 7, opencvHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 8, rppHostHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 9, rppHostBatchHeader.str().c_str(), header_format);
-    worksheet_write_string(gray_sheet, row, 10, "RPP HIP (avg ms)", header_format);
-    worksheet_write_string(gray_sheet, row++, 11, "RPP HIP BATCH (avg ms)", header_format);
+    worksheet_write_string(gray_sheet, row, 6, "HOST PERF Runs", header_format);
+    worksheet_write_string(gray_sheet, row, 7, "HIP PERF Runs", header_format);
+    // Time columns
+    worksheet_write_string(gray_sheet, row, 8, opencvTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 9, rppHostTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 10, rppHostBatchTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 11, "RPP HIP (avg ms)", header_format);
+    worksheet_write_string(gray_sheet, row, 12, "RPP HIP BATCH (avg ms)", header_format);
+    // Energy columns
+    worksheet_write_string(gray_sheet, row, 13, opencvEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 14, rppHostEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 15, rppHostBatchEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(gray_sheet, row, 16, "RPP HIP Energy (J)", header_format);
+    worksheet_write_string(gray_sheet, row++, 17, "RPP HIP BATCH Energy (J)", header_format);
 
     for (const auto& result : grayResults) {
         worksheet_write_string(gray_sheet, row, 0, result.operationName.c_str(), NULL);
@@ -778,12 +1085,20 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
         worksheet_write_string(gray_sheet, row, 3, result.dtype.c_str(), NULL);
         worksheet_write_number(gray_sheet, row, 4, result.batchSize, NULL);
         worksheet_write_number(gray_sheet, row, 5, WARMUP_RUNS, NULL);
-        worksheet_write_number(gray_sheet, row, 6, result.numRuns, NULL);
-        worksheet_write_number(gray_sheet, row, 7, result.opencvTime, time_format);
-        worksheet_write_number(gray_sheet, row, 8, result.rppHostTime, time_format);
-        worksheet_write_number(gray_sheet, row, 9, result.rppHostBatchTime, time_format);
-        worksheet_write_number(gray_sheet, row, 10, result.rppHipTime, time_format);
-        worksheet_write_number(gray_sheet, row, 11, result.rppHipBatchTime, time_format);
+        worksheet_write_number(gray_sheet, row, 6, result.hostPerfRuns, NULL);
+        worksheet_write_number(gray_sheet, row, 7, result.hipPerfRuns, NULL);
+        // Time data
+        worksheet_write_number(gray_sheet, row, 8, result.opencvTime, time_format);
+        worksheet_write_number(gray_sheet, row, 9, result.rppHostTime, time_format);
+        worksheet_write_number(gray_sheet, row, 10, result.rppHostBatchTime, time_format);
+        worksheet_write_number(gray_sheet, row, 11, result.rppHipTime, time_format);
+        worksheet_write_number(gray_sheet, row, 12, result.rppHipBatchTime, time_format);
+        // Energy data
+        worksheet_write_number(gray_sheet, row, 13, result.opencvEnergy, energy_format);
+        worksheet_write_number(gray_sheet, row, 14, result.rppHostEnergy, energy_format);
+        worksheet_write_number(gray_sheet, row, 15, result.rppHostBatchEnergy, energy_format);
+        worksheet_write_number(gray_sheet, row, 16, result.rppHipEnergy, energy_format);
+        worksheet_write_number(gray_sheet, row, 17, result.rppHipBatchEnergy, energy_format);
         row++;
     }
 
@@ -794,8 +1109,8 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_set_column(rgb_sheet, 1, 1, 40, NULL);
     worksheet_set_column(rgb_sheet, 2, 2, 15, NULL);
     worksheet_set_column(rgb_sheet, 3, 3, 12, NULL);
-    worksheet_set_column(rgb_sheet, 4, 5, 12, NULL);
-    worksheet_set_column(rgb_sheet, 6, 10, 22, NULL);
+    worksheet_set_column(rgb_sheet, 4, 7, 12, NULL);
+    worksheet_set_column(rgb_sheet, 8, 17, 22, NULL);
 
     row = 0;
     worksheet_write_string(rgb_sheet, row, 0, "Operation", header_format);
@@ -804,12 +1119,20 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
     worksheet_write_string(rgb_sheet, row, 3, "DType", header_format);
     worksheet_write_string(rgb_sheet, row, 4, "Batch Size", header_format);
     worksheet_write_string(rgb_sheet, row, 5, "WARMUP Runs", header_format);
-    worksheet_write_string(rgb_sheet, row, 6, "PERF Runs", header_format);
-    worksheet_write_string(rgb_sheet, row, 7, opencvHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 8, rppHostHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 9, rppHostBatchHeader.str().c_str(), header_format);
-    worksheet_write_string(rgb_sheet, row, 10, "RPP HIP (avg ms)", header_format);
-    worksheet_write_string(rgb_sheet, row++, 11, "RPP HIP BATCH (avg ms)", header_format);
+    worksheet_write_string(rgb_sheet, row, 6, "HOST PERF Runs", header_format);
+    worksheet_write_string(rgb_sheet, row, 7, "HIP PERF Runs", header_format);
+    // Time columns
+    worksheet_write_string(rgb_sheet, row, 8, opencvTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 9, rppHostTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 10, rppHostBatchTimeHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 11, "RPP HIP (avg ms)", header_format);
+    worksheet_write_string(rgb_sheet, row, 12, "RPP HIP BATCH (avg ms)", header_format);
+    // Energy columns
+    worksheet_write_string(rgb_sheet, row, 13, opencvEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 14, rppHostEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 15, rppHostBatchEnergyHeader.str().c_str(), header_format);
+    worksheet_write_string(rgb_sheet, row, 16, "RPP HIP Energy (J)", header_format);
+    worksheet_write_string(rgb_sheet, row++, 17, "RPP HIP BATCH Energy (J)", header_format);
 
     for (const auto& result : colorResults) {
         worksheet_write_string(rgb_sheet, row, 0, result.operationName.c_str(), NULL);
@@ -818,12 +1141,20 @@ bool writeResultsToExcel(const string& filename, const vector<BenchmarkResult>& 
         worksheet_write_string(rgb_sheet, row, 3, result.dtype.c_str(), NULL);
         worksheet_write_number(rgb_sheet, row, 4, result.batchSize, NULL);
         worksheet_write_number(rgb_sheet, row, 5, WARMUP_RUNS, NULL);
-        worksheet_write_number(rgb_sheet, row, 6, result.numRuns, NULL);
-        worksheet_write_number(rgb_sheet, row, 7, result.opencvTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 8, result.rppHostTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 9, result.rppHostBatchTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 10, result.rppHipTime, time_format);
-        worksheet_write_number(rgb_sheet, row, 11, result.rppHipBatchTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 6, result.hostPerfRuns, NULL);
+        worksheet_write_number(rgb_sheet, row, 7, result.hipPerfRuns, NULL);
+        // Time data
+        worksheet_write_number(rgb_sheet, row, 8, result.opencvTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 9, result.rppHostTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 10, result.rppHostBatchTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 11, result.rppHipTime, time_format);
+        worksheet_write_number(rgb_sheet, row, 12, result.rppHipBatchTime, time_format);
+        // Energy data
+        worksheet_write_number(rgb_sheet, row, 13, result.opencvEnergy, energy_format);
+        worksheet_write_number(rgb_sheet, row, 14, result.rppHostEnergy, energy_format);
+        worksheet_write_number(rgb_sheet, row, 15, result.rppHostBatchEnergy, energy_format);
+        worksheet_write_number(rgb_sheet, row, 16, result.rppHipEnergy, energy_format);
+        worksheet_write_number(rgb_sheet, row, 17, result.rppHipBatchEnergy, energy_format);
         row++;
     }
 

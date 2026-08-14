@@ -211,10 +211,10 @@ void benchmark_RPP_HIP_Brightness(const vector<Mat>& imgs, bool isColor, float a
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_brightness(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -237,7 +237,7 @@ void benchmark_RPP_HIP_Brightness(const vector<Mat>& imgs, bool isColor, float a
     ostringstream params;
     params << "alpha=" << alpha << ", beta=" << beta;
     printResult("RPP HIP Brightness", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_GammaCorrection(const vector<Mat>& imgs, bool isColor, float gamma,
@@ -292,10 +292,10 @@ void benchmark_RPP_HIP_GammaCorrection(const vector<Mat>& imgs, bool isColor, fl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gamma_correction(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -317,7 +317,7 @@ void benchmark_RPP_HIP_GammaCorrection(const vector<Mat>& imgs, bool isColor, fl
     ostringstream params;
     params << "gamma=" << gamma;
     printResult("RPP HIP GammaCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 // ==================== TODO: REMAINING OPERATORS ====================
@@ -381,10 +381,10 @@ void benchmark_RPP_HIP_Blend(const vector<Mat>& imgs, bool isColor, float alpha,
         CHECK_HIP_STATUS(hipMemcpy(d_inputs2[i], imgs2[i].data, imageBufferSize, hipMemcpyHostToDevice));
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_blend(d_inputs1[i], d_inputs2[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -407,7 +407,7 @@ void benchmark_RPP_HIP_Blend(const vector<Mat>& imgs, bool isColor, float alpha,
     ostringstream params;
     params << "alpha=" << alpha;
     printResult("RPP HIP Blend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Contrast(const vector<Mat>& imgs, bool isColor, float contrastFactor,
@@ -465,10 +465,10 @@ void benchmark_RPP_HIP_Contrast(const vector<Mat>& imgs, bool isColor, float con
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_contrast(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -491,7 +491,7 @@ void benchmark_RPP_HIP_Contrast(const vector<Mat>& imgs, bool isColor, float con
     ostringstream params;
     params << "factor=" << contrastFactor << ", center=" << contrastCenter;
     printResult("RPP HIP Contrast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Exposure(const vector<Mat>& imgs, bool isColor, float exposureFactor,
@@ -546,10 +546,10 @@ void benchmark_RPP_HIP_Exposure(const vector<Mat>& imgs, bool isColor, float exp
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_exposure(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -571,7 +571,7 @@ void benchmark_RPP_HIP_Exposure(const vector<Mat>& imgs, bool isColor, float exp
     ostringstream params;
     params << "factor=" << exposureFactor;
     printResult("RPP HIP Exposure", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t handle, hipStream_t stream) {
@@ -624,10 +624,10 @@ void benchmark_RPP_HIP_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t 
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_hue(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -649,7 +649,7 @@ void benchmark_RPP_HIP_Hue(const vector<Mat>& imgs, float hueDelta, rppHandle_t 
     ostringstream params;
     params << "hue=" << hueDelta;
     printResult("RPP HIP Hue", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Saturation(const vector<Mat>& imgs, float satFactor, rppHandle_t handle, hipStream_t stream) {
@@ -702,10 +702,10 @@ void benchmark_RPP_HIP_Saturation(const vector<Mat>& imgs, float satFactor, rppH
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_saturation(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -727,7 +727,7 @@ void benchmark_RPP_HIP_Saturation(const vector<Mat>& imgs, float satFactor, rppH
     ostringstream params;
     params << "factor=" << satFactor;
     printResult("RPP HIP Saturation", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t handle, hipStream_t stream) {
@@ -759,10 +759,10 @@ void benchmark_RPP_HIP_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t han
         CHECK_HIP_STATUS(hipMemcpy(d_inputs[i], imgs[i].data, srcBufferSize, hipMemcpyHostToDevice));
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_to_greyscale(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -779,7 +779,7 @@ void benchmark_RPP_HIP_ColorToGreyscale(const vector<Mat>& imgs, rppHandle_t han
     }
 
     printResult("RPP HIP ColorToGreyscale", imgs.size(), true,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_ColorJitter(const vector<Mat>& imgs, float brightness, float contrast,
@@ -842,10 +842,10 @@ void benchmark_RPP_HIP_ColorJitter(const vector<Mat>& imgs, float brightness, fl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_jitter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -872,7 +872,7 @@ void benchmark_RPP_HIP_ColorJitter(const vector<Mat>& imgs, float brightness, fl
     params << "brightness=" << brightness << ", contrast=" << contrast
            << ", saturation=" << saturation << ", hue=" << hue;
     printResult("RPP HIP ColorJitter", imgs.size(), true,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_BoxFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -929,10 +929,10 @@ void benchmark_RPP_HIP_BoxFilter(const vector<Mat>& imgs, bool isColor, int kern
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_box_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -954,7 +954,7 @@ void benchmark_RPP_HIP_BoxFilter(const vector<Mat>& imgs, bool isColor, int kern
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP BoxFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_MedianFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -1011,10 +1011,10 @@ void benchmark_RPP_HIP_MedianFilter(const vector<Mat>& imgs, bool isColor, int k
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_median_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1036,7 +1036,7 @@ void benchmark_RPP_HIP_MedianFilter(const vector<Mat>& imgs, bool isColor, int k
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP MedianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_GaussianFilter(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -1097,10 +1097,10 @@ void benchmark_RPP_HIP_GaussianFilter(const vector<Mat>& imgs, bool isColor, int
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gaussian_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1123,7 +1123,7 @@ void benchmark_RPP_HIP_GaussianFilter(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "kernel=" << kernelSize << ", sigma=" << sigma;
     printResult("RPP HIP GaussianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SobelFilter(const vector<Mat>& imgs, bool isColor, int sobelType,
@@ -1166,10 +1166,10 @@ void benchmark_RPP_HIP_SobelFilter(const vector<Mat>& imgs, bool isColor, int so
         CHECK_HIP_STATUS(hipMemcpy(d_inputs[i], imgs[i].data, srcBufferSize, hipMemcpyHostToDevice));
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_sobel_filter(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1191,7 +1191,7 @@ void benchmark_RPP_HIP_SobelFilter(const vector<Mat>& imgs, bool isColor, int so
     ostringstream params;
     params << "type=" << sobelType;
     printResult("RPP HIP SobelFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Erode(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -1243,10 +1243,10 @@ void benchmark_RPP_HIP_Erode(const vector<Mat>& imgs, bool isColor, int kernelSi
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_erode(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1267,7 +1267,7 @@ void benchmark_RPP_HIP_Erode(const vector<Mat>& imgs, bool isColor, int kernelSi
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP Erode", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Dilate(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -1319,10 +1319,10 @@ void benchmark_RPP_HIP_Dilate(const vector<Mat>& imgs, bool isColor, int kernelS
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_dilate(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1343,7 +1343,7 @@ void benchmark_RPP_HIP_Dilate(const vector<Mat>& imgs, bool isColor, int kernelS
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP Dilate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Emboss(const vector<Mat>& imgs, bool isColor, int kernelSize, float strength,
@@ -1403,10 +1403,10 @@ void benchmark_RPP_HIP_Emboss(const vector<Mat>& imgs, bool isColor, int kernelS
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_emboss(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1428,7 +1428,7 @@ void benchmark_RPP_HIP_Emboss(const vector<Mat>& imgs, bool isColor, int kernelS
     ostringstream params;
     params << "kernel=" << kernelSize << ", strength=" << strength;
     printResult("RPP HIP Emboss", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Crop(const vector<Mat>& imgs, bool isColor, int cropWidth, int cropHeight,
@@ -1484,10 +1484,10 @@ void benchmark_RPP_HIP_Crop(const vector<Mat>& imgs, bool isColor, int cropWidth
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -1507,7 +1507,7 @@ void benchmark_RPP_HIP_Crop(const vector<Mat>& imgs, bool isColor, int cropWidth
     ostringstream params;
     params << "size=" << cropWidth << "x" << cropHeight;
     printResult("RPP HIP Crop", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Resize(const vector<Mat>& imgs, bool isColor, int dstW, int dstH,
@@ -1569,10 +1569,10 @@ void benchmark_RPP_HIP_Resize(const vector<Mat>& imgs, bool isColor, int dstW, i
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -1595,7 +1595,7 @@ void benchmark_RPP_HIP_Resize(const vector<Mat>& imgs, bool isColor, int dstW, i
     ostringstream params;
     params << "type=" << interpName << ", size=" << dstW << "x" << dstH;
     printResult("RPP HIP Resize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Flip(const vector<Mat>& imgs, bool isColor, int flipCode, rppHandle_t handle, hipStream_t stream) {
@@ -1658,10 +1658,10 @@ void benchmark_RPP_HIP_Flip(const vector<Mat>& imgs, bool isColor, int flipCode,
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         // CRITICAL: Sync before resetting ROI to prevent CPU-GPU race
         // The GPU may still be reading roiTensor from the previous iteration
@@ -1697,7 +1697,7 @@ void benchmark_RPP_HIP_Flip(const vector<Mat>& imgs, bool isColor, int flipCode,
 
     string name = (flipCode == 1) ? "Horizontal" : (flipCode == 0) ? "Vertical" : "Both";
     printResult("RPP HIP Flip", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "type=" + name);
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "type=" + name);
 }
 
 void benchmark_RPP_HIP_Rotate(const vector<Mat>& imgs, bool isColor, float angleDeg,
@@ -1754,10 +1754,10 @@ void benchmark_RPP_HIP_Rotate(const vector<Mat>& imgs, bool isColor, float angle
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -1780,7 +1780,7 @@ void benchmark_RPP_HIP_Rotate(const vector<Mat>& imgs, bool isColor, float angle
     ostringstream params;
     params << "angle=" << angleDeg << "deg";
     printResult("RPP HIP Rotate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -1842,10 +1842,10 @@ void benchmark_RPP_HIP_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHand
     }
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -1866,7 +1866,7 @@ void benchmark_RPP_HIP_WarpAffine(const vector<Mat>& imgs, bool isColor, rppHand
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP WarpAffine", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_WarpPerspective(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -1927,10 +1927,10 @@ void benchmark_RPP_HIP_WarpPerspective(const vector<Mat>& imgs, bool isColor, rp
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -1951,7 +1951,7 @@ void benchmark_RPP_HIP_WarpPerspective(const vector<Mat>& imgs, bool isColor, rp
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP WarpPerspective", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2003,10 +2003,10 @@ void benchmark_RPP_HIP_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle_
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -2025,7 +2025,7 @@ void benchmark_RPP_HIP_Fisheye(const vector<Mat>& imgs, bool isColor, rppHandle_
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP Fisheye", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_LensCorrection(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2105,10 +2105,10 @@ void benchmark_RPP_HIP_LensCorrection(const vector<Mat>& imgs, bool isColor, rpp
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -2133,7 +2133,7 @@ void benchmark_RPP_HIP_LensCorrection(const vector<Mat>& imgs, bool isColor, rpp
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP LensCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_AddScalar(const vector<Mat>& imgs, bool isColor, float addVal,
@@ -2214,10 +2214,10 @@ void benchmark_RPP_HIP_AddScalar(const vector<Mat>& imgs, bool isColor, float ad
         roiTensor[i].xyzwhdROI.roiDepth = 1;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_add_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
@@ -2237,7 +2237,7 @@ void benchmark_RPP_HIP_AddScalar(const vector<Mat>& imgs, bool isColor, float ad
     ostringstream params;
     params << "value=" << addVal;
     printResult("RPP HIP AddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SubtractScalar(const vector<Mat>& imgs, bool isColor, float subVal,
@@ -2318,10 +2318,10 @@ void benchmark_RPP_HIP_SubtractScalar(const vector<Mat>& imgs, bool isColor, flo
         roiTensor[i].xyzwhdROI.roiDepth = 1;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_subtract_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
@@ -2341,7 +2341,7 @@ void benchmark_RPP_HIP_SubtractScalar(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "value=" << subVal;
     printResult("RPP HIP SubtractScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_MultiplyScalar(const vector<Mat>& imgs, bool isColor, float mulVal,
@@ -2422,10 +2422,10 @@ void benchmark_RPP_HIP_MultiplyScalar(const vector<Mat>& imgs, bool isColor, flo
         roiTensor[i].xyzwhdROI.roiDepth = 1;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_multiply_scalar(d_inputBuffer, &srcGenericDesc, d_outputBuffer,
@@ -2445,7 +2445,7 @@ void benchmark_RPP_HIP_MultiplyScalar(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "value=" << mulVal;
     printResult("RPP HIP MultiplyScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2507,10 +2507,10 @@ void benchmark_RPP_HIP_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHand
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_and(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -2530,7 +2530,7 @@ void benchmark_RPP_HIP_BitwiseAnd(const vector<Mat>& imgs, bool isColor, rppHand
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BitwiseAnd", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2591,10 +2591,10 @@ void benchmark_RPP_HIP_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_or(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -2614,7 +2614,7 @@ void benchmark_RPP_HIP_BitwiseOr(const vector<Mat>& imgs, bool isColor, rppHandl
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BitwiseOr", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2661,10 +2661,10 @@ void benchmark_RPP_HIP_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHand
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_not(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -2682,7 +2682,7 @@ void benchmark_RPP_HIP_BitwiseNot(const vector<Mat>& imgs, bool isColor, rppHand
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BitwiseNot", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2743,10 +2743,10 @@ void benchmark_RPP_HIP_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHand
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_bitwise_xor(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -2766,7 +2766,7 @@ void benchmark_RPP_HIP_BitwiseXor(const vector<Mat>& imgs, bool isColor, rppHand
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BitwiseXor", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_Threshold(const vector<Mat>& imgs, bool isColor, double thresh,
@@ -2828,10 +2828,10 @@ void benchmark_RPP_HIP_Threshold(const vector<Mat>& imgs, bool isColor, double t
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_threshold(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -2855,7 +2855,7 @@ void benchmark_RPP_HIP_Threshold(const vector<Mat>& imgs, bool isColor, double t
     ostringstream params;
     params << "threshold=" << thresh;
     printResult("RPP HIP Threshold", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_HistogramEqualize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2903,10 +2903,10 @@ void benchmark_RPP_HIP_HistogramEqualize(const vector<Mat>& imgs, bool isColor, 
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_histogram_equalize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -2925,7 +2925,7 @@ void benchmark_RPP_HIP_HistogramEqualize(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP HistogramEqualize", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -2987,10 +2987,10 @@ void benchmark_RPP_HIP_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t ha
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_lut(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -3012,7 +3012,7 @@ void benchmark_RPP_HIP_LUT(const vector<Mat>& imgs, bool isColor, rppHandle_t ha
     ostringstream params;
     params << "lut=inverse";
     printResult("RPP HIP LUT", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Magnitude(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3071,10 +3071,10 @@ void benchmark_RPP_HIP_Magnitude(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Magnitude: sqrt(src1^2 + src2^2)
@@ -3098,7 +3098,7 @@ void benchmark_RPP_HIP_Magnitude(const vector<Mat>& imgs, bool isColor, rppHandl
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HIP Magnitude", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3157,10 +3157,10 @@ void benchmark_RPP_HIP_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Phase: atan2(src2, src1) in degrees
@@ -3184,7 +3184,7 @@ void benchmark_RPP_HIP_Phase(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HIP Phase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3272,10 +3272,10 @@ void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         delete[] h_colTable;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -3301,7 +3301,7 @@ void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     ostringstream params;
     params << "transform=sine_wave, interpolation=bilinear";
     printResult("RPP HIP Remap", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_TensorMin(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3348,10 +3348,10 @@ void benchmark_RPP_HIP_TensorMin(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -3371,7 +3371,7 @@ void benchmark_RPP_HIP_TensorMin(const vector<Mat>& imgs, bool isColor, rppHandl
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP TensorMin", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorMax(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3417,10 +3417,10 @@ void benchmark_RPP_HIP_TensorMax(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -3440,7 +3440,7 @@ void benchmark_RPP_HIP_TensorMax(const vector<Mat>& imgs, bool isColor, rppHandl
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP TensorMax", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorSum(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3486,10 +3486,10 @@ void benchmark_RPP_HIP_TensorSum(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -3509,7 +3509,7 @@ void benchmark_RPP_HIP_TensorSum(const vector<Mat>& imgs, bool isColor, rppHandl
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP TensorSum", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorMean(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3555,10 +3555,10 @@ void benchmark_RPP_HIP_TensorMean(const vector<Mat>& imgs, bool isColor, rppHand
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -3578,7 +3578,7 @@ void benchmark_RPP_HIP_TensorMean(const vector<Mat>& imgs, bool isColor, rppHand
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP TensorMean", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorStddev(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -3641,10 +3641,10 @@ void benchmark_RPP_HIP_TensorStddev(const vector<Mat>& imgs, bool isColor, rppHa
     // Copy mean to host (stddev requires host mean tensor)
     CHECK_HIP_STATUS(hipMemcpy(h_meanOutputs, d_meanOutputs, outputLength * sizeof(Rpp32f), hipMemcpyDeviceToHost));
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             Rpp32u imgOutputLength = isColor ? 4 : 1;
@@ -3667,7 +3667,7 @@ void benchmark_RPP_HIP_TensorStddev(const vector<Mat>& imgs, bool isColor, rppHa
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP TensorStddev", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_GaussianNoise(const vector<Mat>& imgs, bool isColor, float mean, float stdDev,
@@ -3727,10 +3727,10 @@ void benchmark_RPP_HIP_GaussianNoise(const vector<Mat>& imgs, bool isColor, floa
     // Use fixed seed for reproducibility
     Rpp32u seed = 12345;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gaussian_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -3753,7 +3753,7 @@ void benchmark_RPP_HIP_GaussianNoise(const vector<Mat>& imgs, bool isColor, floa
     ostringstream params;
     params << "mean=" << mean << ", stdDev=" << stdDev;
     printResult("RPP HIP GaussianNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor, float prob,
@@ -3817,10 +3817,10 @@ void benchmark_RPP_HIP_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor,
     // Use fixed seed for reproducibility
     Rpp32u seed = 12345;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_salt_and_pepper_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -3846,7 +3846,7 @@ void benchmark_RPP_HIP_SaltAndPepperNoise(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "probability=" << prob;
     printResult("RPP HIP SaltAndPepperNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_NoiseShot(const vector<Mat>& imgs, bool isColor, float shotNoiseParam,
@@ -3908,10 +3908,10 @@ void benchmark_RPP_HIP_NoiseShot(const vector<Mat>& imgs, bool isColor, float sh
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_shot_noise(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -3934,7 +3934,7 @@ void benchmark_RPP_HIP_NoiseShot(const vector<Mat>& imgs, bool isColor, float sh
     ostringstream params;
     params << "factor=" << shotNoiseParam;
     printResult("RPP HIP NoiseShot", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Posterize(const vector<Mat>& imgs, bool isColor, int bits,
@@ -3989,10 +3989,10 @@ void benchmark_RPP_HIP_Posterize(const vector<Mat>& imgs, bool isColor, int bits
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_posterize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4014,7 +4014,7 @@ void benchmark_RPP_HIP_Posterize(const vector<Mat>& imgs, bool isColor, int bits
     ostringstream params;
     params << "bits=" << bits;
     printResult("RPP HIP Posterize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Solarize(const vector<Mat>& imgs, bool isColor, int threshold,
@@ -4070,10 +4070,10 @@ void benchmark_RPP_HIP_Solarize(const vector<Mat>& imgs, bool isColor, int thres
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_solarize(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4095,7 +4095,7 @@ void benchmark_RPP_HIP_Solarize(const vector<Mat>& imgs, bool isColor, int thres
     ostringstream params;
     params << "threshold=" << threshold;
     printResult("RPP HIP Solarize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorCast(const vector<Mat>& imgs, bool isColor, float r, float g, float b,
@@ -4163,10 +4163,10 @@ void benchmark_RPP_HIP_ColorCast(const vector<Mat>& imgs, bool isColor, float r,
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_cast(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4189,7 +4189,7 @@ void benchmark_RPP_HIP_ColorCast(const vector<Mat>& imgs, bool isColor, float r,
     ostringstream params;
     params << "R=" << r << ", G=" << g << ", B=" << b;
     printResult("RPP HIP ColorCast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorTemperature(const vector<Mat>& imgs, bool isColor, int adjustment,
@@ -4251,10 +4251,10 @@ void benchmark_RPP_HIP_ColorTemperature(const vector<Mat>& imgs, bool isColor, i
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_temperature(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4276,7 +4276,7 @@ void benchmark_RPP_HIP_ColorTemperature(const vector<Mat>& imgs, bool isColor, i
     ostringstream params;
     params << "adjustment=" << adjustment;
     printResult("RPP HIP ColorTemperature", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -4344,10 +4344,10 @@ void benchmark_RPP_HIP_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHand
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_twist(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4373,7 +4373,7 @@ void benchmark_RPP_HIP_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHand
     ostringstream params;
     params << "hue=60, saturation=1.3";
     printResult("RPP HIP ColorTwist", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Vignette(const vector<Mat>& imgs, bool isColor, float strength,
@@ -4429,10 +4429,10 @@ void benchmark_RPP_HIP_Vignette(const vector<Mat>& imgs, bool isColor, float str
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_vignette(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4454,7 +4454,7 @@ void benchmark_RPP_HIP_Vignette(const vector<Mat>& imgs, bool isColor, float str
     ostringstream params;
     params << "intensity=" << strength;
     printResult("RPP HIP Vignette", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_NonLinearBlend(const vector<Mat>& imgs, bool isColor, float strength,
@@ -4532,10 +4532,10 @@ void benchmark_RPP_HIP_NonLinearBlend(const vector<Mat>& imgs, bool isColor, flo
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_non_linear_blend(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -4560,7 +4560,7 @@ void benchmark_RPP_HIP_NonLinearBlend(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "stdDev=" << strength;
     printResult("RPP HIP NonLinearBlend", num_images, isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Erase(const vector<Mat>& imgs, bool isColor, int numBoxes,
@@ -4639,10 +4639,10 @@ void benchmark_RPP_HIP_Erase(const vector<Mat>& imgs, bool isColor, int numBoxes
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_erase(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4668,7 +4668,7 @@ void benchmark_RPP_HIP_Erase(const vector<Mat>& imgs, bool isColor, int numBoxes
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP Erase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle, hipStream_t stream) {
@@ -4752,10 +4752,10 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_random_erase(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4779,7 +4779,7 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP RandomErase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp32u maxBoxesPerImage,
@@ -4866,10 +4866,10 @@ void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp3
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_coarse_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4893,7 +4893,7 @@ void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp3
     ostringstream params;
     params << "maxBoxes=" << maxBoxesPerImage;
     printResult("RPP HIP CoarseDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight,
@@ -4972,10 +4972,10 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_grid_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -4998,7 +4998,7 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", tileHeight=" << tileHeight;
     printResult("RPP HIP GridDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileWidth, float ratio,
@@ -5062,10 +5062,10 @@ void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileW
     CHECK_HIP_STATUS(hipStreamSynchronize(stream));
     (void)hipGetLastError();
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_gridmask(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5086,7 +5086,7 @@ void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileW
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", ratio=" << ratio;
     printResult("RPP HIP Gridmask", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, float dropoutProb,
@@ -5160,10 +5160,10 @@ void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, flo
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_channel_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5185,7 +5185,7 @@ void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "dropoutProb=" << dropoutProb;
     printResult("RPP HIP ChannelDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp32u numBoxes,
@@ -5266,10 +5266,10 @@ void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp3
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_cutout_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5295,7 +5295,7 @@ void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp3
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP CutoutDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_JpegCompressionDistortion(const vector<Mat>& imgs, bool isColor, Rpp32s quality,
@@ -5356,10 +5356,10 @@ void benchmark_RPP_HIP_JpegCompressionDistortion(const vector<Mat>& imgs, bool i
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_jpeg_compression_distortion(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5381,7 +5381,7 @@ void benchmark_RPP_HIP_JpegCompressionDistortion(const vector<Mat>& imgs, bool i
     ostringstream params;
     params << "quality=" << quality;
     printResult("RPP HIP JpegCompressionDistortion", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -5423,10 +5423,10 @@ void benchmark_RPP_HIP_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t h
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_copy(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5445,7 +5445,7 @@ void benchmark_RPP_HIP_Copy(const vector<Mat>& imgs, bool isColor, rppHandle_t h
     ostringstream params;
     params << "layout=" << (isColor ? "NHWC" : "NCHW");
     printResult("RPP HIP Copy", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ChannelPermute(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -5501,10 +5501,10 @@ void benchmark_RPP_HIP_ChannelPermute(const vector<Mat>& imgs, bool isColor, rpp
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_channel_permute(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5525,7 +5525,7 @@ void benchmark_RPP_HIP_ChannelPermute(const vector<Mat>& imgs, bool isColor, rpp
     ostringstream params;
     params << "permutation=BGR->RGB";
     printResult("RPP HIP ChannelPermute", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -5641,10 +5641,10 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_slice(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5668,7 +5668,7 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     ostringstream params;
     params << "slice=center_50%";
     printResult("RPP HIP Slice", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -5783,10 +5783,10 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
         delete[] h_tempBuffer;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_transpose(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
@@ -5808,7 +5808,7 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
     ostringstream params;
     params << "permutation=identity";
     printResult("RPP HIP Transpose", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Normalize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -5906,10 +5906,10 @@ void benchmark_RPP_HIP_Normalize(const vector<Mat>& imgs, bool isColor, rppHandl
     Rpp32f scale = 1.0f;
     Rpp32f shift = 0.0f;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // axisMask = 0x7 (normalize across HWC dimensions)
@@ -5937,7 +5937,7 @@ void benchmark_RPP_HIP_Normalize(const vector<Mat>& imgs, bool isColor, rppHandl
     ostringstream params;
     params << "mode=auto_compute, scale=" << scale << ", shift=" << shift;
     printResult("RPP HIP Normalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isColor, float mulVal, float addVal,
@@ -6022,10 +6022,10 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isCo
         roiGenericPtr[i].xyzwhdROI.roiDepth = 1;
     }
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Output = (Input * mulTensor) + addTensor
@@ -6051,7 +6051,7 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "mul=" << mulVal << ", add=" << addVal;
     printResult("RPP HIP FusedMultiplyAddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -6145,10 +6145,10 @@ void benchmark_RPP_HIP_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppHa
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images - 1; ++i) {  // Process num_images-1 pairs (same as others)
             CHECK_RPP_STATUS(rppt_crop_and_patch(d_inputs1[i], d_inputs2[i], &srcDescs[i],
@@ -6175,7 +6175,7 @@ void benchmark_RPP_HIP_CropAndPatch(const vector<Mat>& imgs, bool isColor, rppHa
     ostringstream params;
     params << "crop=center_quarter, patch=center_quarter";
     printResult("RPP HIP CropAndPatch", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_CropMirrorNormalize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -6264,10 +6264,10 @@ void benchmark_RPP_HIP_CropMirrorNormalize(const vector<Mat>& imgs, bool isColor
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop_mirror_normalize(d_inputs[i], &srcDescs[i],
@@ -6295,7 +6295,7 @@ void benchmark_RPP_HIP_CropMirrorNormalize(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "crop=half, mirror=horizontal, mean=60/80/100, stddev=0.9";
     printResult("RPP HIP CropMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -6388,10 +6388,10 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isCol
 
     rppSetBatchSize(handle, 1);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
             // Pass pointer to the i-th 256-element ROI block
@@ -6423,7 +6423,7 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "resize=half, mirror=horizontal, mean=60/80/100, stddev=1";
     printResult("RPP HIP ResizeMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, rppHandle_t handle, hipStream_t stream) {
@@ -6505,7 +6505,7 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
 
     // NOTE: rppt_resize_crop_mirror has handle corruption bug similar to rppt_flip
     // Run only once to avoid memory corruption, then multiply time by PERF_RUNS
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
     for (int i = 0; i < num_images; ++i) {
         // Pass pointer to the i-th 256-element ROI block
         CHECK_RPP_STATUS(rppt_resize_crop_mirror(d_inputs[i], &srcDescs[i],
@@ -6520,9 +6520,9 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
     CHECK_HIP_STATUS(hipStreamSynchronize(stream));
     perfMonitor.stop();
 
-    // Multiply by PERF_RUNS to normalize with other benchmarks
+    // Multiply by HIP_PERF_RUNS to normalize with other benchmarks
     double singleRunTime = perfMonitor.getTotalTime();
-    double adjustedTime = singleRunTime * PERF_RUNS;
+    double adjustedTime = singleRunTime * HIP_PERF_RUNS;
 
     for (int i = 0; i < num_images; ++i) {
         CHECK_HIP_STATUS(hipFree(d_inputs[i]));
@@ -6534,7 +6534,7 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
 
     ostringstream params;
     params << "crop=80%,resize=224x224,mirror";
-    printResult("RPP HIP ResizeCropMirror", imgs.size(), isColor, adjustedTime, params.str());
+    printResult("RPP HIP ResizeCropMirror", imgs.size(), isColor, adjustedTime, perfMonitor.getTotalEnergy(), params.str());
 }
 
 // ============================================================================
@@ -6619,10 +6619,10 @@ void benchmark_RPP_HIP_Flip_Batched(const vector<Mat>& imgs, bool isColor, int f
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         // CRITICAL: Sync before resetting ROI to prevent CPU-GPU race
         // The GPU may still be reading roiTensor from the previous iteration
@@ -6653,7 +6653,7 @@ void benchmark_RPP_HIP_Flip_Batched(const vector<Mat>& imgs, bool isColor, int f
 
     string name = (flipCode == 1) ? "Horizontal" : (flipCode == 0) ? "Vertical" : "Both";
     printResult("RPP HIP BATCH Flip", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "type=" + name);
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "type=" + name);
 }
 
 void benchmark_RPP_HIP_Resize_Batched(const vector<Mat>& imgs, bool isColor, int dstW, int dstH,
@@ -6719,10 +6719,10 @@ void benchmark_RPP_HIP_Resize_Batched(const vector<Mat>& imgs, bool isColor, int
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalSrcBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_resize(d_input, &srcDesc, d_output, &dstDesc,
                                      dstImgSizes, interpType, roiTensor, RpptRoiType::XYWH,
@@ -6740,7 +6740,7 @@ void benchmark_RPP_HIP_Resize_Batched(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "type=" << interpName << ", size=" << dstW << "x" << dstH;
     printResult("RPP HIP BATCH Resize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 
@@ -6805,10 +6805,10 @@ void benchmark_RPP_HIP_Crop_Batched(const vector<Mat>& imgs, bool isColor, int c
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalSrcBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_crop(d_input, &srcDesc, d_output, &dstDesc,
                                    roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -6824,7 +6824,7 @@ void benchmark_RPP_HIP_Crop_Batched(const vector<Mat>& imgs, bool isColor, int c
     ostringstream params;
     params << "size=" << cropW << "x" << cropH;
     printResult("RPP HIP BATCH Crop", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Rotate_Batched(const vector<Mat>& imgs, bool isColor, float angleDeg,
@@ -6882,10 +6882,10 @@ void benchmark_RPP_HIP_Rotate_Batched(const vector<Mat>& imgs, bool isColor, flo
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_rotate(d_input, &srcDesc, d_output, &dstDesc,
                                      angleTensor, RpptInterpolationType::BILINEAR,
@@ -6903,7 +6903,7 @@ void benchmark_RPP_HIP_Rotate_Batched(const vector<Mat>& imgs, bool isColor, flo
     ostringstream params;
     params << "angle=" << angleDeg << "deg";
     printResult("RPP HIP BATCH Rotate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 // ===== FILTER OPERATIONS =====
@@ -6963,10 +6963,10 @@ void benchmark_RPP_HIP_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor, 
     delete[] h_tempBuffer;
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_box_filter(d_input, &srcDesc, d_output, &dstDesc,
                                          kSize, borderType, roiTensor, RpptRoiType::XYWH,
@@ -6984,7 +6984,7 @@ void benchmark_RPP_HIP_BoxFilter_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP BATCH BoxFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_GaussianFilter_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize, float sigma,
@@ -7045,10 +7045,10 @@ void benchmark_RPP_HIP_GaussianFilter_Batched(const vector<Mat>& imgs, bool isCo
     delete[] h_tempBuffer;
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gaussian_filter(d_input, &srcDesc, d_output, &dstDesc,
                                               stdDevTensor, kSize, borderType,
@@ -7066,7 +7066,7 @@ void benchmark_RPP_HIP_GaussianFilter_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "kernel=" << kernelSize << ", sigma=" << sigma;
     printResult("RPP HIP BATCH GaussianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_MedianFilter_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -7124,10 +7124,10 @@ void benchmark_RPP_HIP_MedianFilter_Batched(const vector<Mat>& imgs, bool isColo
     delete[] h_tempBuffer;
 
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_median_filter(d_input, &srcDesc, d_output, &dstDesc,
                                             kSize, borderType, roiTensor, RpptRoiType::XYWH,
@@ -7145,7 +7145,7 @@ void benchmark_RPP_HIP_MedianFilter_Batched(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP BATCH MedianFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SobelFilter_Batched(const vector<Mat>& imgs, bool isColor, int sobelType,
@@ -7217,10 +7217,10 @@ void benchmark_RPP_HIP_SobelFilter_Batched(const vector<Mat>& imgs, bool isColor
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, srcTotalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_sobel_filter(d_input, &srcDesc, d_output, &dstDesc,
                                            sobelType, kernelSize, roiTensor, RpptRoiType::XYWH,
@@ -7238,7 +7238,7 @@ void benchmark_RPP_HIP_SobelFilter_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "type=" << sobelType;
     printResult("RPP HIP BATCH SobelFilter", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_HistogramEqualize_Batched(const vector<Mat>& imgs, bool isColor,
@@ -7306,10 +7306,10 @@ void benchmark_RPP_HIP_HistogramEqualize_Batched(const vector<Mat>& imgs, bool i
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_histogram_equalize(d_input, &srcDesc, d_output, &dstDesc,
                                                  roiTensor, RpptRoiType::XYWH,
@@ -7324,7 +7324,7 @@ void benchmark_RPP_HIP_HistogramEqualize_Batched(const vector<Mat>& imgs, bool i
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH HistogramEqualize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 
@@ -7385,10 +7385,10 @@ void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_hue(d_input, &srcDesc, d_output, &dstDesc,
                                   hueTensor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -7405,7 +7405,7 @@ void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float 
     ostringstream params;
     params << "hue=" << hueFactor;
     printResult("RPP HIP BATCH Hue", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Saturation_Batched(const vector<Mat>& imgs, bool isColor, float satFactor,
@@ -7463,10 +7463,10 @@ void benchmark_RPP_HIP_Saturation_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_saturation(d_input, &srcDesc, d_output, &dstDesc,
                                          satTensor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -7483,7 +7483,7 @@ void benchmark_RPP_HIP_Saturation_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "factor=" << satFactor;
     printResult("RPP HIP BATCH Saturation", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool isColor,
@@ -7536,10 +7536,10 @@ void benchmark_RPP_HIP_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool is
     delete[] h_tempBuffer;
 
     RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_to_greyscale(d_input, &srcDesc, d_output, &dstDesc,
                                                  srcSubpixelLayout,
@@ -7553,7 +7553,7 @@ void benchmark_RPP_HIP_ColorToGreyscale_Batched(const vector<Mat>& imgs, bool is
     CHECK_HIP_STATUS(hipFree(d_output));
 
     printResult("RPP HIP BATCH ColorToGreyscale", imgs.size(), true,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 void benchmark_RPP_HIP_Brightness_Batched(const vector<Mat>& imgs, bool isColor, float alpha, float beta,
@@ -7613,10 +7613,10 @@ void benchmark_RPP_HIP_Brightness_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_brightness(d_input, &srcDesc, d_output, &dstDesc,
                                          alphaTensor, betaTensor,
@@ -7635,7 +7635,7 @@ void benchmark_RPP_HIP_Brightness_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "alpha=" << alpha << ", beta=" << beta;
     printResult("RPP HIP BATCH Brightness", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Contrast_Batched(const vector<Mat>& imgs, bool isColor, float contrastFactor, float contrastCenter,
@@ -7695,10 +7695,10 @@ void benchmark_RPP_HIP_Contrast_Batched(const vector<Mat>& imgs, bool isColor, f
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_contrast(d_input, &srcDesc, d_output, &dstDesc,
                                        contrastFactorTensor, contrastCenterTensor,
@@ -7717,7 +7717,7 @@ void benchmark_RPP_HIP_Contrast_Batched(const vector<Mat>& imgs, bool isColor, f
     ostringstream params;
     params << "factor=" << contrastFactor << ", center=" << contrastCenter;
     printResult("RPP HIP BATCH Contrast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Emboss_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize, float strength,
@@ -7790,10 +7790,10 @@ void benchmark_RPP_HIP_Emboss_Batched(const vector<Mat>& imgs, bool isColor, int
 
     // REQUIRED: rppt_emboss only supports REPLICATE border type (validated in implementation)
     RpptImageBorderType borderType = RpptImageBorderType::REPLICATE;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_emboss(d_input, &srcDesc, d_output, &dstDesc,
                                      strengthTensor, kernelSize,
@@ -7811,7 +7811,7 @@ void benchmark_RPP_HIP_Emboss_Batched(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "kernel=" << kernelSize << ", strength=" << strength;
     printResult("RPP HIP BATCH Emboss", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 
@@ -7898,10 +7898,10 @@ void benchmark_RPP_HIP_AddScalar_Batched(const vector<Mat>& imgs, bool isColor, 
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_add_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                          addTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
@@ -7921,7 +7921,7 @@ void benchmark_RPP_HIP_AddScalar_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "value=" << (int)addVal;
     printResult("RPP HIP BATCH AddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SubtractScalar_Batched(const vector<Mat>& imgs, bool isColor, float subVal,
@@ -8005,10 +8005,10 @@ void benchmark_RPP_HIP_SubtractScalar_Batched(const vector<Mat>& imgs, bool isCo
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_subtract_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                               subTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
@@ -8028,7 +8028,7 @@ void benchmark_RPP_HIP_SubtractScalar_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "value=" << (int)subVal;
     printResult("RPP HIP BATCH SubtractScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isColor, float mulVal,
@@ -8112,10 +8112,10 @@ void benchmark_RPP_HIP_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isCo
     // Convert ROI to ROI3D
     convert_roi_to_roi3d(roiTensor, roi3dTensor, batchSize);
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_multiply_scalar(d_input, &srcGenDesc, d_output, &dstGenDesc,
                                               mulTensor, roi3dTensor, RpptRoi3DType::XYZWHD,
@@ -8134,7 +8134,7 @@ void benchmark_RPP_HIP_MultiplyScalar_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "value=" << mulVal;
     printResult("RPP HIP BATCH MultiplyScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_GaussianNoise_Batched(const vector<Mat>& imgs, bool isColor, float mean,
@@ -8201,10 +8201,10 @@ void benchmark_RPP_HIP_GaussianNoise_Batched(const vector<Mat>& imgs, bool isCol
     delete[] h_tempBuffer;
 
     unsigned long long seed = 12345;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gaussian_noise(d_input, &srcDesc, d_output, &dstDesc, meanTensor, stddevTensor,
                                              seed, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8222,7 +8222,7 @@ void benchmark_RPP_HIP_GaussianNoise_Batched(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "mean=" << mean << ", stddev=" << stddev;
     printResult("RPP HIP BATCH GaussianNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool isColor, float noiseProb,
@@ -8293,10 +8293,10 @@ void benchmark_RPP_HIP_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool 
     delete[] h_tempBuffer;
 
     Rpp32u seed = 12345;
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_salt_and_pepper_noise(d_input, &srcDesc, d_output, &dstDesc, noiseProbTensor,
                                                      saltProbTensor, saltValueTensor, pepperValueTensor,
@@ -8318,7 +8318,7 @@ void benchmark_RPP_HIP_SaltAndPepperNoise_Batched(const vector<Mat>& imgs, bool 
     ostringstream params;
     params << "probability=" << noiseProb;
     printResult("RPP HIP BATCH SaltAndPepperNoise", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor, float shotNoiseFactor,
@@ -8382,10 +8382,10 @@ void benchmark_RPP_HIP_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_shot_noise(d_input, &srcDesc, d_output, &dstDesc, shotNoiseTensor, 12345,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8403,7 +8403,7 @@ void benchmark_RPP_HIP_NoiseShot_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "factor=" << shotNoiseFactor;
     printResult("RPP HIP BATCH NoiseShot", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorCast_Batched(const vector<Mat>& imgs, bool isColor, float rShift, float gShift,
@@ -8472,10 +8472,10 @@ void benchmark_RPP_HIP_ColorCast_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_cast(d_input, &srcDesc, d_output, &dstDesc, rgbTensor, alphaTensor,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8493,7 +8493,7 @@ void benchmark_RPP_HIP_ColorCast_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "R=" << rShift << ", G=" << gShift << ", B=" << bShift;
     printResult("RPP HIP BATCH ColorCast", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorTemperature_Batched(const vector<Mat>& imgs, bool isColor, int adjustmentValue,
@@ -8557,10 +8557,10 @@ void benchmark_RPP_HIP_ColorTemperature_Batched(const vector<Mat>& imgs, bool is
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_temperature(d_input, &srcDesc, d_output, &dstDesc, adjustmentTensor,
                                                  roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8578,7 +8578,7 @@ void benchmark_RPP_HIP_ColorTemperature_Batched(const vector<Mat>& imgs, bool is
     ostringstream params;
     params << "adjustment=" << adjustmentValue;
     printResult("RPP HIP BATCH ColorTemperature", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -8643,10 +8643,10 @@ void benchmark_RPP_HIP_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_color_twist(d_input, &srcDesc, d_output, &dstDesc, alpha, beta, hueShift,
                                           satFactor, roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8658,7 +8658,7 @@ void benchmark_RPP_HIP_ColorTwist_Batched(const vector<Mat>& imgs, bool isColor,
     ostringstream params;
     params << "hue=" << hueShift[0] << ", saturation=" << satFactor[0];
     printResult("RPP HIP BATCH ColorTwist", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -8730,10 +8730,10 @@ void benchmark_RPP_HIP_Vignette_Batched(const vector<Mat>& imgs, bool isColor, f
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_vignette(d_input, &srcDesc, d_output, &dstDesc, intensityTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8751,7 +8751,7 @@ void benchmark_RPP_HIP_Vignette_Batched(const vector<Mat>& imgs, bool isColor, f
     ostringstream params;
     params << "intensity=" << vignetteIntensity;
     printResult("RPP HIP BATCH Vignette", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isColor, float stdDev,
@@ -8823,10 +8823,10 @@ void benchmark_RPP_HIP_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isCo
     delete[] h_tempBuffer1;
     delete[] h_tempBuffer2;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_non_linear_blend(d_input1, d_input2, &srcDesc, d_output, &dstDesc, stdDevTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8845,7 +8845,7 @@ void benchmark_RPP_HIP_NonLinearBlend_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "stdDev=" << stdDev;
     printResult("RPP HIP BATCH NonLinearBlend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Posterize_Batched(const vector<Mat>& imgs, bool isColor, int levelBits,
@@ -8909,10 +8909,10 @@ void benchmark_RPP_HIP_Posterize_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_posterize(d_input, &srcDesc, d_output, &dstDesc, posterizeLevelBits,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -8930,7 +8930,7 @@ void benchmark_RPP_HIP_Posterize_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "bits=" << levelBits;
     printResult("RPP HIP BATCH Posterize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Solarize_Batched(const vector<Mat>& imgs, bool isColor, int threshold,
@@ -8994,10 +8994,10 @@ void benchmark_RPP_HIP_Solarize_Batched(const vector<Mat>& imgs, bool isColor, i
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
 
         CHECK_RPP_STATUS(rppt_solarize(d_input, &srcDesc, d_output, &dstDesc, thresholdTensor,
@@ -9016,7 +9016,7 @@ void benchmark_RPP_HIP_Solarize_Batched(const vector<Mat>& imgs, bool isColor, i
     ostringstream params;
     params << "threshold=" << threshold;
     printResult("RPP HIP BATCH Solarize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9080,10 +9080,10 @@ void benchmark_RPP_HIP_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rpp
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_glitch(d_input, &srcDesc, d_output, &dstDesc, rgbOffsets,
                                      roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9098,7 +9098,7 @@ void benchmark_RPP_HIP_Glitch_Batched(const vector<Mat>& imgs, bool isColor, rpp
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH Glitch", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_JpegCompressionDistortion_Batched(const vector<Mat>& imgs, bool isColor, Rpp32s quality,
@@ -9162,10 +9162,10 @@ void benchmark_RPP_HIP_JpegCompressionDistortion_Batched(const vector<Mat>& imgs
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_jpeg_compression_distortion(d_input, &srcDesc, d_output, &dstDesc, qualityTensor,
                                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9177,7 +9177,7 @@ void benchmark_RPP_HIP_JpegCompressionDistortion_Batched(const vector<Mat>& imgs
     ostringstream params;
     params << "quality=" << quality;
     printResult("RPP HIP BATCH JpegCompressionDistortion", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -9244,10 +9244,10 @@ void benchmark_RPP_HIP_TensorMin_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_min(d_input, &srcDesc, minOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9261,7 +9261,7 @@ void benchmark_RPP_HIP_TensorMin_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH TensorMin", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorMax_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9323,10 +9323,10 @@ void benchmark_RPP_HIP_TensorMax_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_max(d_input, &srcDesc, maxOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9340,7 +9340,7 @@ void benchmark_RPP_HIP_TensorMax_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH TensorMax", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorSum_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9402,10 +9402,10 @@ void benchmark_RPP_HIP_TensorSum_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_sum(d_input, &srcDesc, sumOutputs, outputLength,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9419,7 +9419,7 @@ void benchmark_RPP_HIP_TensorSum_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH TensorSum", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorMean_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9481,10 +9481,10 @@ void benchmark_RPP_HIP_TensorMean_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_mean(d_input, &srcDesc, meanOutputs, outputLength,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9498,7 +9498,7 @@ void benchmark_RPP_HIP_TensorMean_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH TensorMean", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_TensorStddev_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9565,10 +9565,10 @@ void benchmark_RPP_HIP_TensorStddev_Batched(const vector<Mat>& imgs, bool isColo
                                       roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                     "TensorMean");
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_tensor_stddev(d_input, &srcDesc, stddevOutputs, outputLength, meanOutputs,
                                             roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9583,7 +9583,7 @@ void benchmark_RPP_HIP_TensorStddev_Batched(const vector<Mat>& imgs, bool isColo
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH TensorStddev", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_Threshold_Batched(const vector<Mat>& imgs, bool isColor, float thresh,
@@ -9647,10 +9647,10 @@ void benchmark_RPP_HIP_Threshold_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_threshold(d_input, &srcDesc, d_output, &dstDesc, minTensor, maxTensor,
                                         roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9669,7 +9669,7 @@ void benchmark_RPP_HIP_Threshold_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "threshold=" << thresh;
     printResult("RPP HIP BATCH Threshold", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9739,10 +9739,10 @@ void benchmark_RPP_HIP_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_warp_affine(d_input, &srcDesc, d_output, &dstDesc, affineTensor,
                                           RpptInterpolationType::BILINEAR, roiTensor,
@@ -9758,7 +9758,7 @@ void benchmark_RPP_HIP_WarpAffine_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH WarpAffine", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_WarpPerspective_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9831,10 +9831,10 @@ void benchmark_RPP_HIP_WarpPerspective_Batched(const vector<Mat>& imgs, bool isC
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_warp_perspective(d_input, &srcDesc, d_output, &dstDesc, perspectiveTensor,
                                                RpptInterpolationType::BILINEAR, roiTensor,
@@ -9850,7 +9850,7 @@ void benchmark_RPP_HIP_WarpPerspective_Batched(const vector<Mat>& imgs, bool isC
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH WarpPerspective", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -9911,10 +9911,10 @@ void benchmark_RPP_HIP_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, rp
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_fisheye(d_input, &srcDesc, d_output, &dstDesc, roiTensor,
                                       RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -9928,7 +9928,7 @@ void benchmark_RPP_HIP_Fisheye_Batched(const vector<Mat>& imgs, bool isColor, rp
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH Fisheye", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_LensCorrection_Batched(const vector<Mat>& imgs, bool isColor, rppHandle_t handle,
@@ -10023,10 +10023,10 @@ void benchmark_RPP_HIP_LensCorrection_Batched(const vector<Mat>& imgs, bool isCo
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_lens_correction(d_input, &srcDesc, d_output, &dstDesc, d_rowRemapTable,
                                               d_colRemapTable, &tableDesc, cameraMatrix,
@@ -10046,7 +10046,7 @@ void benchmark_RPP_HIP_LensCorrection_Batched(const vector<Mat>& imgs, bool isCo
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH LensCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy());
 }
 
 void benchmark_RPP_HIP_GammaCorrection_Batched(const vector<Mat>& imgs, bool isColor, float gamma,
@@ -10110,10 +10110,10 @@ void benchmark_RPP_HIP_GammaCorrection_Batched(const vector<Mat>& imgs, bool isC
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gamma_correction(d_input, &srcDesc, d_output, &dstDesc, gammaTensor,
                                                roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10130,7 +10130,7 @@ void benchmark_RPP_HIP_GammaCorrection_Batched(const vector<Mat>& imgs, bool isC
     ostringstream params;
     params << "gamma=" << gamma;
     printResult("RPP HIP BATCH GammaCorrection", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Exposure_Batched(const vector<Mat>& imgs, bool isColor, float exposureFactor,
@@ -10194,10 +10194,10 @@ void benchmark_RPP_HIP_Exposure_Batched(const vector<Mat>& imgs, bool isColor, f
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_exposure(d_input, &srcDesc, d_output, &dstDesc, exposureTensor,
                                        roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10214,7 +10214,7 @@ void benchmark_RPP_HIP_Exposure_Batched(const vector<Mat>& imgs, bool isColor, f
     ostringstream params;
     params << "factor=" << exposureFactor;
     printResult("RPP HIP BATCH Exposure", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Blend_Batched(const vector<Mat>& imgs, bool isColor, float alpha,
@@ -10281,10 +10281,10 @@ void benchmark_RPP_HIP_Blend_Batched(const vector<Mat>& imgs, bool isColor, floa
     delete[] h_tempBuffer1;
     delete[] h_tempBuffer2;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_blend(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                     alphaTensor, roiTensor, RpptRoiType::XYWH,
@@ -10303,7 +10303,7 @@ void benchmark_RPP_HIP_Blend_Batched(const vector<Mat>& imgs, bool isColor, floa
     ostringstream params;
     params << "alpha=" << alpha;
     printResult("RPP HIP BATCH Blend", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 // ===== MORPHOLOGICAL OPERATIONS =====
@@ -10374,10 +10374,10 @@ void benchmark_RPP_HIP_Erode_Batched(const vector<Mat>& imgs, bool isColor, int 
     delete[] h_tempBuffer;
 
     Rpp32u kSize = static_cast<Rpp32u>(kernelSize);
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         // Pass roiTensor directly (first element of 256-element buffer per image)
         CHECK_RPP_STATUS(rppt_erode(d_input, &srcDesc, d_output, &dstDesc,
@@ -10396,7 +10396,7 @@ void benchmark_RPP_HIP_Erode_Batched(const vector<Mat>& imgs, bool isColor, int 
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP BATCH Erode", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 void benchmark_RPP_HIP_Dilate_Batched(const vector<Mat>& imgs, bool isColor, int kernelSize,
@@ -10465,10 +10465,10 @@ void benchmark_RPP_HIP_Dilate_Batched(const vector<Mat>& imgs, bool isColor, int
     delete[] h_tempBuffer;
 
     Rpp32u kSize = static_cast<Rpp32u>(kernelSize);
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         // Pass roiTensor directly (first element of 256-element buffer per image)
         CHECK_RPP_STATUS(rppt_dilate(d_input, &srcDesc, d_output, &dstDesc,
@@ -10487,7 +10487,7 @@ void benchmark_RPP_HIP_Dilate_Batched(const vector<Mat>& imgs, bool isColor, int
     ostringstream params;
     params << "kernel=" << kernelSize;
     printResult("RPP HIP BATCH Dilate", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
 
@@ -10554,10 +10554,10 @@ void benchmark_RPP_HIP_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer1;
     delete[] h_tempBuffer2;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_and(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10572,7 +10572,7 @@ void benchmark_RPP_HIP_BitwiseAnd_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH BitwiseAnd", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 void benchmark_RPP_HIP_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
@@ -10636,10 +10636,10 @@ void benchmark_RPP_HIP_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer1;
     delete[] h_tempBuffer2;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_or(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                          roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10654,7 +10654,7 @@ void benchmark_RPP_HIP_BitwiseOr_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH BitwiseOr", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 void benchmark_RPP_HIP_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor,
@@ -10709,10 +10709,10 @@ void benchmark_RPP_HIP_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_not(d_input, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10726,7 +10726,7 @@ void benchmark_RPP_HIP_BitwiseNot_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH BitwiseNot", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 void benchmark_RPP_HIP_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor,
@@ -10790,10 +10790,10 @@ void benchmark_RPP_HIP_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor,
     delete[] h_tempBuffer1;
     delete[] h_tempBuffer2;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_bitwise_xor(d_input1, d_input2, &srcDesc, d_output, &dstDesc,
                                           roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -10808,7 +10808,7 @@ void benchmark_RPP_HIP_BitwiseXor_Batched(const vector<Mat>& imgs, bool isColor,
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     printResult("RPP HIP BATCH BitwiseXor", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), "");
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), "");
 }
 
 
@@ -10896,10 +10896,10 @@ void benchmark_RPP_HIP_Erase_Batched(const vector<Mat>& imgs, bool isColor, int 
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_erase(d_input, &srcDesc, d_output, &dstDesc,
                                     anchorBoxInfoTensor, colorsTensor, numBoxesTensor,
@@ -10912,7 +10912,7 @@ void benchmark_RPP_HIP_Erase_Batched(const vector<Mat>& imgs, bool isColor, int 
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP BATCH Erase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11009,10 +11009,10 @@ void benchmark_RPP_HIP_RandomErase_Batched(const vector<Mat>& imgs, bool isColor
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_random_erase(d_input, &srcDesc, d_output, &dstDesc,
                                            anchorBoxInfoTensor, d_noiseBuffer,
@@ -11025,7 +11025,7 @@ void benchmark_RPP_HIP_RandomErase_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP BATCH RandomErase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11128,10 +11128,10 @@ void benchmark_RPP_HIP_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCol
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_coarse_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                              anchorBoxInfoTensor, numBoxesTensor, maxBoxesPerImage,
@@ -11144,7 +11144,7 @@ void benchmark_RPP_HIP_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "maxBoxes=" << maxBoxesPerImage;
     printResult("RPP HIP BATCH CoarseDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11235,10 +11235,10 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_grid_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                            anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH,
@@ -11251,7 +11251,7 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", tileHeight=" << tileHeight;
     printResult("RPP HIP BATCH GridDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11343,10 +11343,10 @@ void benchmark_RPP_HIP_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, i
     CHECK_HIP_STATUS(hipStreamSynchronize(stream));
     (void)hipGetLastError();
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_gridmask(d_input, &srcDesc, d_output, &dstDesc,
                                        tileWidthVal, gridRatio, gridAngle, translateVector,
@@ -11359,7 +11359,7 @@ void benchmark_RPP_HIP_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, i
     ostringstream params;
     params << "tileWidth=" << tileWidth << ", ratio=" << ratio;
     printResult("RPP HIP BATCH Gridmask", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11427,10 +11427,10 @@ void benchmark_RPP_HIP_ChannelDropout_Batched(const vector<Mat>& imgs, bool isCo
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_channel_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                               dropoutTensor,
@@ -11443,7 +11443,7 @@ void benchmark_RPP_HIP_ChannelDropout_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     params << "dropoutProb=" << dropoutProb;
     printResult("RPP HIP BATCH ChannelDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11537,10 +11537,10 @@ void benchmark_RPP_HIP_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCol
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_tempBuffer, totalBufferSize, hipMemcpyHostToDevice));
     delete[] h_tempBuffer;
 
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_cutout_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                              anchorBoxInfoTensor, colorsTensor, numBoxesTensor,
@@ -11553,7 +11553,7 @@ void benchmark_RPP_HIP_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCol
     ostringstream params;
     params << "numBoxes=" << numBoxes;
     printResult("RPP HIP BATCH CutoutDropout", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11601,10 +11601,10 @@ void benchmark_RPP_HIP_Copy_Batched(const vector<Mat>& imgs, bool isColor, rppHa
     CHECK_HIP_STATUS(hipMemcpy(d_input, h_input, bufferSize, hipMemcpyHostToDevice));
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_copy((RppPtr_t)d_input, &srcDesc, (RppPtr_t)d_output, &dstDesc,
                                    handle, RPP_HIP_BACKEND),
@@ -11616,7 +11616,7 @@ void benchmark_RPP_HIP_Copy_Batched(const vector<Mat>& imgs, bool isColor, rppHa
     ostringstream params;
     params << "layout=NHWC";
     printResult("RPP HIP BATCH Copy", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11684,10 +11684,10 @@ void benchmark_RPP_HIP_Slice_Batched(const vector<Mat>& imgs, bool isColor, rppH
     Rpp8u fillValue = 0;
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_slice((RppPtr_t)d_input, &srcGenericDesc, (RppPtr_t)d_output, &dstGenericDesc,
                                     anchorTensor, shapeTensor, (RppPtr_t)&fillValue, false, roiTensor,
@@ -11700,7 +11700,7 @@ void benchmark_RPP_HIP_Slice_Batched(const vector<Mat>& imgs, bool isColor, rppH
     ostringstream params;
     params << "slice=center_50%";
     printResult("RPP HIP BATCH Slice", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11766,10 +11766,10 @@ void benchmark_RPP_HIP_ChannelPermute_Batched(const vector<Mat>& imgs, bool isCo
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_channel_permute((RppPtr_t)d_input, &srcDesc, (RppPtr_t)d_output, &dstDesc,
                                               permutationTensor, handle, RPP_HIP_BACKEND),
@@ -11781,7 +11781,7 @@ void benchmark_RPP_HIP_ChannelPermute_Batched(const vector<Mat>& imgs, bool isCo
     ostringstream params;
     if (isColor) params << "permutation=BGR->RGB";
     printResult("RPP HIP BATCH ChannelPermute", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11875,10 +11875,10 @@ void benchmark_RPP_HIP_Transpose_Batched(const vector<Mat>& imgs, bool isColor, 
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_transpose((RppPtr_t)d_input, srcGenericDesc, (RppPtr_t)d_output, dstGenericDesc,
                                         permTensor, roiTensor, handle, RPP_HIP_BACKEND),
@@ -11890,7 +11890,7 @@ void benchmark_RPP_HIP_Transpose_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "permutation=0,2,1,3";
     printResult("RPP HIP BATCH Transpose", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -11951,10 +11951,10 @@ void benchmark_RPP_HIP_LUT_Batched(const vector<Mat>& imgs, bool isColor, rppHan
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_lut((RppPtr_t)d_input, srcDesc, (RppPtr_t)d_output, dstDesc,
                                   (RppPtr_t)d_lut, roiTensorPtrSrc, RpptRoiType::XYWH,
@@ -11967,7 +11967,7 @@ void benchmark_RPP_HIP_LUT_Batched(const vector<Mat>& imgs, bool isColor, rppHan
     ostringstream params;
     params << "lut=inverse";
     printResult("RPP HIP BATCH LUT", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -12024,10 +12024,10 @@ void benchmark_RPP_HIP_Magnitude_Batched(const vector<Mat>& imgs, bool isColor, 
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_magnitude((RppPtr_t)d_input1, (RppPtr_t)d_input2, srcDesc,
                                         (RppPtr_t)d_output, dstDesc,
@@ -12040,7 +12040,7 @@ void benchmark_RPP_HIP_Magnitude_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HIP BATCH Magnitude", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input1));
     CHECK_HIP_STATUS(hipFree(d_input2));
@@ -12110,10 +12110,10 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar_Batched(const vector<Mat>& imgs, b
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_fused_multiply_add_scalar((RppPtr_t)d_inputF32, srcDesc,
                                                          (RppPtr_t)d_outputF32, dstDesc,
@@ -12128,7 +12128,7 @@ void benchmark_RPP_HIP_FusedMultiplyAddScalar_Batched(const vector<Mat>& imgs, b
     ostringstream params;
     params << "mul=" << mulVal << ", add=" << addVal;
     printResult("RPP HIP BATCH FusedMultiplyAddScalar", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_inputF32));
     CHECK_HIP_STATUS(hipFree(d_outputF32));
@@ -12216,10 +12216,10 @@ void benchmark_RPP_HIP_Remap_Batched(const vector<Mat>& imgs, bool isColor, rppH
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_remap((RppPtr_t)d_input, d_srcDesc, (RppPtr_t)d_output, d_dstDesc,
                                     d_rowRemapTable, d_colRemapTable, d_tableDesc, interpolationType,
@@ -12232,7 +12232,7 @@ void benchmark_RPP_HIP_Remap_Batched(const vector<Mat>& imgs, bool isColor, rppH
     ostringstream params;
     params << "transform=sine_wave, interpolation=bilinear";
     printResult("RPP HIP BATCH Remap", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -12317,10 +12317,10 @@ void benchmark_RPP_HIP_Phase_Batched(const vector<Mat>& imgs, bool isColor, rppH
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_phase((RppPtr_t)d_input1, (RppPtr_t)d_input2, d_srcDesc,
                                     (RppPtr_t)d_output, d_dstDesc,
@@ -12334,7 +12334,7 @@ void benchmark_RPP_HIP_Phase_Batched(const vector<Mat>& imgs, bool isColor, rppH
     ostringstream params;
     params << "inputs=2";
     printResult("RPP HIP BATCH Phase", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input1));
     CHECK_HIP_STATUS(hipFree(d_input2));
@@ -12412,10 +12412,10 @@ void benchmark_RPP_HIP_Normalize_Batched(const vector<Mat>& imgs, bool isColor, 
     CHECK_HIP_STATUS(hipMemcpy(d_inputBuffer, h_inputBuffer, batchSize * imageSize * sizeof(Rpp8u), hipMemcpyHostToDevice));
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_normalize((RppPtr_t)d_inputBuffer, genericDesc,
                                         (RppPtr_t)d_outputBuffer, genericDesc,
@@ -12430,7 +12430,7 @@ void benchmark_RPP_HIP_Normalize_Batched(const vector<Mat>& imgs, bool isColor, 
     ostringstream params;
     params << "mode=auto_compute, scale=" << scale << ", shift=" << shift;
     printResult("RPP HIP BATCH Normalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_inputBuffer));
     CHECK_HIP_STATUS(hipFree(d_outputBuffer));
@@ -12522,10 +12522,10 @@ void benchmark_RPP_HIP_CropAndPatch_Batched(const vector<Mat>& imgs, bool isColo
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_crop_and_patch((RppPtr_t)d_input1, (RppPtr_t)d_input2, d_srcDesc,
                                              (RppPtr_t)d_output, d_dstDesc,
@@ -12539,7 +12539,7 @@ void benchmark_RPP_HIP_CropAndPatch_Batched(const vector<Mat>& imgs, bool isColo
     ostringstream params;
     params << "crop=center_quarter, patch=center_quarter";
     printResult("RPP HIP BATCH CropAndPatch", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input1));
     CHECK_HIP_STATUS(hipFree(d_input2));
@@ -12638,10 +12638,10 @@ void benchmark_RPP_HIP_CropMirrorNormalize_Batched(const vector<Mat>& imgs, bool
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_crop_mirror_normalize((RppPtr_t)d_input, d_srcDesc,
                                                     (RppPtr_t)d_output, d_dstDesc,
@@ -12656,7 +12656,7 @@ void benchmark_RPP_HIP_CropMirrorNormalize_Batched(const vector<Mat>& imgs, bool
     ostringstream params;
     params << "crop=half, mirror=horizontal, mean=60/80/100, stddev=0.9";
     printResult("RPP HIP BATCH CropMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -12751,10 +12751,10 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize_Batched(const vector<Mat>& imgs, bo
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_resize_mirror_normalize((RppPtr_t)d_input, d_srcDesc,
                                                       (RppPtr_t)d_output, d_dstDesc,
@@ -12770,7 +12770,7 @@ void benchmark_RPP_HIP_ResizeMirrorNormalize_Batched(const vector<Mat>& imgs, bo
     ostringstream params;
     params << "resize=half, mirror=horizontal, mean=60/80/100, stddev=1";
     printResult("RPP HIP BATCH ResizeMirrorNormalize", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));
@@ -12863,10 +12863,10 @@ void benchmark_RPP_HIP_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool is
     }
 
     // Benchmark loop
-    for (int k = 0; k < TOTAL_RUNS; ++k) {
+    for (int k = 0; k < HIP_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
-            perfMonitor.start();
+            perfMonitor.start(DeviceType::GPU, 0);
         }
         CHECK_RPP_STATUS(rppt_resize_crop_mirror((RppPtr_t)d_input, d_srcDesc,
                                                  (RppPtr_t)d_output, d_dstDesc,
@@ -12881,7 +12881,7 @@ void benchmark_RPP_HIP_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool is
     ostringstream params;
     params << "crop=80%,resize=224x224,mirror";
     printResult("RPP HIP BATCH ResizeCropMirror", imgs.size(), isColor,
-                perfMonitor.getTotalTime(), params.str());
+                perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 
     CHECK_HIP_STATUS(hipFree(d_input));
     CHECK_HIP_STATUS(hipFree(d_output));

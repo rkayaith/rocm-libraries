@@ -95,6 +95,12 @@ else()
     )
 endif()
 
+# Find AMD SMI library (for GPU energy measurement)
+find_library(AMDSMI_LIBRARY
+    NAMES amd_smi libamd_smi
+    PATHS /usr/lib /usr/local/lib ${ROCM_PATH}/lib
+    PATH_SUFFIXES lib lib64
+)
 
 # Find RPP library
 find_package(rpp 3.1.2 QUIET)
@@ -134,6 +140,13 @@ else()
         "   3. Manual local build: Set -DXLSXWRITER_ROOT=/path/to/libxlsxwriter${ColourReset}")
 endif()
 
+if(AMDSMI_LIBRARY)
+    message("-- ${Green}AMD SMI found at ${AMDSMI_LIBRARY}${ColourReset}")
+else()
+    message(FATAL_ERROR
+        "-- ${Red}${PROJECT_NAME} requires AMD SMI library for GPU energy measurement${ColourReset}")
+endif()
+
 # Create executable from separated source files
 add_executable(opencv_vs_rpp_host_hip_benchmarking
     benchmarks_utils.cpp
@@ -169,6 +182,7 @@ target_link_libraries(opencv_vs_rpp_host_hip_benchmarking
         OpenMP::OpenMP_CXX
         rpp::rpp
         ${XLSXWRITER_LIBRARY}
+        ${AMDSMI_LIBRARY}
 )
 
 # Compiler options
@@ -182,3 +196,4 @@ message("-- \tOpenCV: ${OpenCV_VERSION}")
 message("-- \tOpenMP: Found")
 message("-- \tRPP: ${rpp_VERSION}")
 message("-- \txlsxwriter: Found")
+message("-- \tAMD SMI: Found")
