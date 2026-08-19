@@ -5202,6 +5202,18 @@ void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp3
     CHECK_HIP_STATUS(hipHostMalloc(&numBoxesTensor, num_images * sizeof(Rpp32u)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(RpptROI)));
 
+    // Use reference implementation logic for cutout dropout
+    for (int i = 0; i < num_images; ++i) {
+        roiTensor[i].xywhROI.xy.x = 0;
+        roiTensor[i].xywhROI.xy.y = 0;
+        roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
+        roiTensor[i].xywhROI.roiHeight = imgs[i].rows;
+    }
+
+    init_cutout_dropout(num_images, maxBoxesPerImage, numBoxesTensor,
+                       anchorBoxInfoTensor, roiTensor, numChannels,
+                       0, DROPOUT_FIXED_SEED, 1, colorsTensor);
+
     for (int i = 0; i < num_images; ++i) {
         RpptLayout layout = (isColor && imgs[i].channels() == 3) ? RpptLayout::NHWC : RpptLayout::NCHW;
         set_descriptor_dims_and_strides_local(&srcDescs[i], 1, imgs[i].rows, imgs[i].cols, numChannels, 0);
@@ -5209,34 +5221,6 @@ void benchmark_RPP_HIP_CutoutDropout(const vector<Mat>& imgs, bool isColor, Rpp3
         srcDescs[i].dataType = RpptDataType::U8;
         update_strides_from_layout(&srcDescs[i]);
         dstDescs[i] = srcDescs[i];
-
-        numBoxesTensor[i] = numBoxes;
-
-        // Define cutout boxes (random regions to drop out)
-        int width = imgs[i].cols;
-        int height = imgs[i].rows;
-        for (Rpp32u box = 0; box < numBoxes; ++box) {
-            int idx = i * maxBoxesPerImage + box;
-            // Create random-sized boxes in different positions
-            int cutoutSize = std::min(width, height) / (numBoxes + 2);
-            int xPos = (box * width) / (numBoxes + 1);
-            int yPos = (box * height) / (numBoxes + 1);
-
-            anchorBoxInfoTensor[idx].lt.x = xPos;
-            anchorBoxInfoTensor[idx].lt.y = yPos;
-            anchorBoxInfoTensor[idx].rb.x = std::min(xPos + cutoutSize, width - 1);
-            anchorBoxInfoTensor[idx].rb.y = std::min(yPos + cutoutSize, height - 1);
-
-            // Fill with gray color (128)
-            for (int c = 0; c < numChannels; ++c) {
-                colorsTensor[(idx * numChannels) + c] = 128;
-            }
-        }
-
-        roiTensor[i].xywhROI.xy.x = 0;
-        roiTensor[i].xywhROI.xy.y = 0;
-        roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
-        roiTensor[i].xywhROI.roiHeight = imgs[i].rows;
 
         size_t alignedBufferSize = srcDescs[i].n * srcDescs[i].h * srcDescs[i].w * srcDescs[i].c * sizeof(Rpp8u);
 
@@ -11528,35 +11512,17 @@ void benchmark_RPP_HIP_CutoutDropout_Batched(const vector<Mat>& imgs, bool isCol
     CHECK_HIP_STATUS(hipHostMalloc(&numBoxesTensor, batchSize * sizeof(Rpp32u)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * sizeof(RpptROI)));
 
+    // Use reference implementation logic for cutout dropout
     for (int i = 0; i < batchSize; ++i) {
-        numBoxesTensor[i] = numBoxes;
-        int width = imgs[i].cols;
-        int height = imgs[i].rows;
-        
-        // Create cutout boxes (random locations)
-        for (Rpp32u box = 0; box < numBoxes; ++box) {
-            int idx = i * numBoxes + box;
-            int boxW = width / (numBoxes + 2);
-            int boxH = height / (numBoxes + 2);
-            int x = (rand() % (width - boxW));
-            int y = (rand() % (height - boxH));
-            
-            anchorBoxInfoTensor[idx].lt.x = x;
-            anchorBoxInfoTensor[idx].lt.y = y;
-            anchorBoxInfoTensor[idx].rb.x = x + boxW;
-            anchorBoxInfoTensor[idx].rb.y = y + boxH;
-
-            // Fill with gray (128)
-            for (int c = 0; c < numChannels; ++c) {
-                colorsTensor[(idx * numChannels) + c] = 128;
-            }
-        }
-
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
         roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
         roiTensor[i].xywhROI.roiHeight = imgs[i].rows;
     }
+
+    init_cutout_dropout(batchSize, numBoxes, numBoxesTensor,
+                       anchorBoxInfoTensor, roiTensor, numChannels,
+                       0, DROPOUT_FIXED_SEED, 1, colorsTensor);
 
     Rpp8u* h_tempBuffer = new Rpp8u[srcDesc.strides.nStride * batchSize]();
 
