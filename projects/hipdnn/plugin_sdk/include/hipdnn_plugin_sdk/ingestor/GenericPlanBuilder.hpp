@@ -262,7 +262,9 @@ public:
                 candidates.push_back(
                     {kernel.kernelId,
                      std::make_unique<GenericPlan<THandle>>(
-                         _stateManager.getDispatchDetails(kernel), context, catalog.bound)});
+                         _stateManager.getDispatchDetails(kernel), context, catalog.bound),
+                     kernel.packId,
+                     kernel.dispatchId});
             }
             catch(const std::exception& error)
             {
@@ -274,8 +276,17 @@ public:
 
         // An empty vector here (every candidate's GenericPlan threw) throws
         // INTERNAL_ERROR out of BenchmarkPlan's own constructor, propagating unhandled.
-        executionContext.setPlan(
-            std::make_unique<BenchmarkPlan<THandle>>(std::move(candidates), handle));
+        // The ranking is discovered inside execute(), one layer below this builder, and
+        // the cache lives in the state manager the plan holds no reference to. The
+        // callback is the write-back channel, already bound to the key computed above.
+        // It captures the state manager by reference, which is safe: the manager is owned
+        // by the engine and strictly outlives every plan it hands out.
+        executionContext.setPlan(std::make_unique<BenchmarkPlan<THandle>>(
+            std::move(candidates),
+            handle,
+            [&stateManager = _stateManager, winnerKey](std::vector<RankedEntry> ranking) {
+                stateManager.recordWinner(winnerKey, std::move(ranking));
+            }));
     }
 
     /// One knob per KMD field the engine exposes; default is the top-ranked value.

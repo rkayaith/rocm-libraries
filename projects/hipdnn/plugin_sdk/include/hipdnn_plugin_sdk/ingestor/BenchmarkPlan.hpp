@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -23,6 +24,7 @@
 #include <hipdnn_plugin_sdk/PluginException.hpp>
 #include <hipdnn_plugin_sdk/PluginLogging.hpp>
 #include <hipdnn_plugin_sdk/ingestor/Descriptors.hpp>
+#include <hipdnn_plugin_sdk/ingestor/WinnerCache.hpp>
 #include <hipdnn_plugin_sdk/interfaces/IPlan.hpp>
 
 namespace hipdnn_plugin_sdk::ingestor
@@ -93,20 +95,38 @@ template <typename THandle>
 class BenchmarkPlan : public IPlan<THandle>
 {
 public:
-    /// One sub-plan plus the kernel it was built for. kernelId rides alongside because
-    /// IPlan has no kernel accessor and must not grow one -- it is what the selection
-    /// log names and what a future disk-backed cache would persist against.
+    /// One sub-plan plus the kernel it was built for. The ids ride alongside because
+    /// IPlan has no kernel accessor and must not grow one: kernelId is what the selection
+    /// log names, and packId/dispatchId are the staleness cross-check a cached ranking is
+    /// validated against on a later run.
+    ///
+    /// The two staleness ids default and sit after `plan` so a caller that does not cache
+    /// -- every existing SDK fixture -- constructs a Candidate exactly as before. A
+    /// default-constructed packId never matches a real one, so an uncached candidate
+    /// simply never resolves against a record, which is the correct outcome.
     struct Candidate
     {
         DescriptorId kernelId;
         std::unique_ptr<IPlan<THandle>> plan;
+        DescriptorId packId{};
+        DescriptorId dispatchId{};
     };
+
+    /// Invoked once, with every usable candidate in benchmarked order, after sampling
+    /// resolves the winner. An **absent callback means no caching** -- the flag-off path,
+    /// the SDK fixtures, and any provider that does not want a cache simply pass nothing,
+    /// so this stays a plain std::function rather than a cache reference. BenchmarkPlan
+    /// deliberately knows nothing about the cache's type or lifetime.
+    using RecordRankingFn = std::function<void(std::vector<RankedEntry>)>;
 
     /// @param handle Used once, here, to size every sub-plan's workspace requirement;
     ///        execute() always uses the handle its own caller passes.
     /// @throws HipdnnPluginException(INTERNAL_ERROR) if @p candidates is empty.
-    BenchmarkPlan(std::vector<Candidate> candidates, const THandle& handle)
+    BenchmarkPlan(std::vector<Candidate> candidates,
+                  const THandle& handle,
+                  RecordRankingFn recordRanking = {})
         : _candidates(std::move(candidates))
+        , _recordRanking(std::move(recordRanking))
     {
         static_assert(HasGetStream<THandle>::value,
                       "BenchmarkPlan requires THandle to have a 'hipStream_t getStream() const' "
@@ -166,9 +186,11 @@ private:
             return *_chosen;
         }
 
-        size_t best = 0;
-        double bestTimeMs = std::numeric_limits<double>::max();
-        bool anyUsable = false;
+        // Every usable candidate's time is retained, not just the running minimum: the
+        // winner cache stores the whole ranking so a later run whose knob filter excludes
+        // the winner can still serve the best surviving candidate.
+        std::vector<std::pair<double, size_t>> ranked;
+        ranked.reserve(_candidates.size());
 
         for(size_t index = 0; index < _candidates.size(); ++index)
         {
@@ -176,42 +198,75 @@ private:
                 = sampleCandidate(index, handle, deviceBuffers, numDeviceBuffers, workspace);
             if(!timeMs.has_value())
             {
+                // Omitted from the ranking, never appended with a sentinel time: a
+                // candidate that threw or failed to time is known-broken, and recording
+                // it as a low-ranked fallback would let it be served ahead of the normal
+                // ranked path on a later run.
                 continue;
             }
-            anyUsable = true;
-            if(*timeMs < bestTimeMs)
-            {
-                bestTimeMs = *timeMs;
-                best = index;
-            }
+            ranked.emplace_back(*timeMs, index);
         }
 
-        if(!anyUsable)
+        // stable_sort, not sort: today's strict `<` comparison leaves ties resolving to
+        // the lowest candidate index, and micro-kernels do tie. An unstable sort would
+        // reorder equal times arbitrarily and silently change which kernel wins.
+        std::stable_sort(ranked.begin(), ranked.end(), [](const auto& lhs, const auto& rhs) {
+            return lhs.first < rhs.first;
+        });
+
+        size_t best = 0;
+        if(ranked.empty())
         {
             HIPDNN_PLUGIN_LOG_ERROR("ingestor: benchmarking found no usable candidate among "
                                     << _candidates.size() << " kernel(s); defaulting to "
                                     << toString(_candidates.front().kernelId));
-            best = 0;
+            // Nothing is recorded here: an all-unusable sweep has no ranking, and caching
+            // index 0 would cache a guess.
         }
         else
         {
+            best = ranked.front().second;
             HIPDNN_PLUGIN_LOG_INFO("ingestor: benchmarking selected kernel "
-                                   << toString(_candidates[best].kernelId) << " in " << bestTimeMs
-                                   << " ms among " << _candidates.size() << " candidate(s)");
+                                   << toString(_candidates[best].kernelId) << " in "
+                                   << ranked.front().first << " ms among " << _candidates.size()
+                                   << " candidate(s)");
+
+            if(_recordRanking)
+            {
+                std::vector<RankedEntry> entries;
+                entries.reserve(ranked.size());
+                for(const auto& [timeMs, index] : ranked)
+                {
+                    const auto& candidate = _candidates[index];
+                    entries.push_back(RankedEntry{
+                        candidate.kernelId, candidate.packId, candidate.dispatchId, timeMs});
+                }
+                _recordRanking(std::move(entries));
+            }
         }
 
         _chosen = best;
         return best;
     }
 
+protected:
     /// The minimum timed execute() over BENCHMARK_ITERATIONS, after BENCHMARK_WARMUP_RUNS
     /// untimed ones, or nullopt if the candidate threw or a HIP event call failed -- both
     /// are a loss for this candidate, never a throw out of resolveChosen().
-    std::optional<double> sampleCandidate(size_t index,
-                                          const THandle& handle,
-                                          const hipdnnPluginDeviceBuffer_t* deviceBuffers,
-                                          uint32_t numDeviceBuffers,
-                                          void* workspace) const
+    ///
+    /// Virtual purely as a **test seam**, and it changes no production behaviour: the
+    /// timed path below needs real hipEvents, so on a machine with no device every
+    /// candidate scores unusable and the ranking is always empty. That would leave the
+    /// write-back path -- and the story's central claim, that a sampled ranking survives
+    /// its plan -- green while proving nothing. A test subclass returns deterministic
+    /// times instead, so the ranking, the omission of failed candidates, and the
+    /// all-unusable case are all assertable without hardware. The device path itself is
+    /// proven on gfx942.
+    virtual std::optional<double> sampleCandidate(size_t index,
+                                                  const THandle& handle,
+                                                  const hipdnnPluginDeviceBuffer_t* deviceBuffers,
+                                                  uint32_t numDeviceBuffers,
+                                                  void* workspace) const
     {
         const auto& candidate = _candidates[index];
         try
@@ -246,6 +301,7 @@ private:
         }
     }
 
+private:
     /// One warmup-free, timed execute() bracketed by hipEvents on handle.getStream() --
     /// never the null stream, or a plan on a non-default stream measures nothing.
     std::optional<double> timeOneExecute(const Candidate& candidate,
@@ -284,6 +340,7 @@ private:
     }
 
     std::vector<Candidate> _candidates;
+    RecordRankingFn _recordRanking;
     size_t _workspaceBytes = 0;
     mutable std::optional<size_t> _chosen;
     mutable std::mutex _mutex;
