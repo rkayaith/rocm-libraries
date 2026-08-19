@@ -4679,14 +4679,26 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
     vector<RpptDesc> dstDescs(num_images);
     vector<Rpp8u*> d_inputs(num_images);
     vector<Rpp8u*> d_outputs(num_images);
-    vector<Rpp8u*> d_noiseBuffers(num_images);
+
+    // Allocate noise buffer shared across all images (matching BATCH implementation)
+    // Noise buffer size: 255x255 tiled noise pattern per image per channel
+    size_t noiseBufferSizePerImage = 255 * 255 * numChannels * sizeof(Rpp8u);
+    size_t totalNoiseBufferSize = noiseBufferSizePerImage * num_images;
+    Rpp8u *d_noiseBuffer;
+    CHECK_HIP_STATUS(hipMalloc(&d_noiseBuffer, totalNoiseBufferSize));
+
+    // Fill noise buffer with random pattern (matching BATCH)
+    Rpp8u* h_noiseBuffer = new Rpp8u[totalNoiseBufferSize];
+    for (size_t idx = 0; idx < totalNoiseBufferSize; ++idx) {
+        h_noiseBuffer[idx] = rand() % 256;
+    }
+    CHECK_HIP_STATUS(hipMemcpy(d_noiseBuffer, h_noiseBuffer, totalNoiseBufferSize, hipMemcpyHostToDevice));
+    delete[] h_noiseBuffer;
 
     // Allocate parameter tensors and ROIs in pinned host memory
     RpptRoiLtrb *anchorBoxInfoTensor;
     RpptROI *roiTensor;
-
-    Rpp32u maxEraseBoxes = numBoxes;  // Number of random erase regions
-    CHECK_HIP_STATUS(hipHostMalloc(&anchorBoxInfoTensor, num_images * maxEraseBoxes * sizeof(RpptRoiLtrb)));
+    CHECK_HIP_STATUS(hipHostMalloc(&anchorBoxInfoTensor, num_images * numBoxes * sizeof(RpptRoiLtrb)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(RpptROI)));
 
     for (int i = 0; i < num_images; ++i) {
@@ -4697,22 +4709,22 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
         update_strides_from_layout(&srcDescs[i]);
         dstDescs[i] = srcDescs[i];
 
-        // Define random erase boxes
+        // Define erase boxes at different positions (matching BATCH implementation)
         int width = imgs[i].cols;
         int height = imgs[i].rows;
 
-        for (Rpp32u box = 0; box < maxEraseBoxes; ++box) {
-            int idx = i * maxEraseBoxes + box;
-            // Create random-sized erase regions
-            int boxWidth = width / (maxEraseBoxes + 2);
-            int boxHeight = height / (maxEraseBoxes + 2);
-            int xPos = (box * width) / (maxEraseBoxes + 1);
-            int yPos = (box * height) / (maxEraseBoxes + 1);
-
-            anchorBoxInfoTensor[idx].lt.x = std::max(0, xPos);
-            anchorBoxInfoTensor[idx].lt.y = std::max(0, yPos);
-            anchorBoxInfoTensor[idx].rb.x = std::min(width - 1, xPos + boxWidth);
-            anchorBoxInfoTensor[idx].rb.y = std::min(height - 1, yPos + boxHeight);
+        for (int b = 0; b < numBoxes; ++b) {
+            int idx = i * numBoxes + b;
+            // Fixed box size: width/4 x height/4 (matching BATCH)
+            int boxWidth = width / 4;
+            int boxHeight = height / 4;
+            // Grid-based positioning (matching BATCH)
+            int xOffset = (b % 2) * (width / 2);
+            int yOffset = (b / 2) * (height / 2);
+            anchorBoxInfoTensor[idx].lt.x = xOffset + (width / 4 - boxWidth) / 2;
+            anchorBoxInfoTensor[idx].lt.y = yOffset + (height / 4 - boxHeight) / 2;
+            anchorBoxInfoTensor[idx].rb.x = anchorBoxInfoTensor[idx].lt.x + boxWidth;
+            anchorBoxInfoTensor[idx].rb.y = anchorBoxInfoTensor[idx].lt.y + boxHeight;
         }
 
         roiTensor[i].xywhROI.xy.x = 0;
@@ -4724,17 +4736,6 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
 
         CHECK_HIP_STATUS(hipMalloc(&d_inputs[i], alignedBufferSize));
         CHECK_HIP_STATUS(hipMalloc(&d_outputs[i], alignedBufferSize));
-
-        // Allocate noise buffer (filled with random values for erased regions)
-        CHECK_HIP_STATUS(hipMalloc(&d_noiseBuffers[i], alignedBufferSize));
-
-        // Fill noise buffer with random pattern (simple: use gradient for demo)
-        Rpp8u* h_noiseBuffer = new Rpp8u[alignedBufferSize];
-        for (size_t idx = 0; idx < alignedBufferSize; ++idx) {
-            h_noiseBuffer[idx] = (idx % 256);  // Simple pattern
-        }
-        CHECK_HIP_STATUS(hipMemcpy(d_noiseBuffers[i], h_noiseBuffer, alignedBufferSize, hipMemcpyHostToDevice));
-        delete[] h_noiseBuffer;
 
         // Copy image data
         Rpp8u* h_tempBuffer = new Rpp8u[alignedBufferSize]();
@@ -4758,9 +4759,11 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
             perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
+            // Calculate noise buffer offset for this image (matching BATCH)
+            Rpp8u* noiseBufferPtr = d_noiseBuffer + (i * noiseBufferSizePerImage / sizeof(Rpp8u));
             CHECK_RPP_STATUS(rppt_random_erase(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
-                                               &anchorBoxInfoTensor[i * maxEraseBoxes],
-                                               d_noiseBuffers[i],
+                                               &anchorBoxInfoTensor[i * numBoxes],
+                                               noiseBufferPtr,
                                                &roiTensor[i], RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
                             "RandomErase");
         }
@@ -4771,8 +4774,8 @@ void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int nu
     for (int i = 0; i < num_images; ++i) {
         CHECK_HIP_STATUS(hipFree(d_inputs[i]));
         CHECK_HIP_STATUS(hipFree(d_outputs[i]));
-        CHECK_HIP_STATUS(hipFree(d_noiseBuffers[i]));
     }
+    CHECK_HIP_STATUS(hipFree(d_noiseBuffer));
     CHECK_HIP_STATUS(hipHostFree(anchorBoxInfoTensor));
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
