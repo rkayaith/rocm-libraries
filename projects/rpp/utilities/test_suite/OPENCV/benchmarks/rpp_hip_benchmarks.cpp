@@ -5112,6 +5112,13 @@ void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, flo
     CHECK_HIP_STATUS(hipHostMalloc(&dropoutTensor, num_images * 3 * sizeof(Rpp8u)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(RpptROI)));
 
+    // Generate dropout mask using reference implementation logic
+    Rpp32f dropoutProbability[num_images];
+    for (int i = 0; i < num_images; ++i) {
+        dropoutProbability[i] = dropoutProb;
+    }
+    generate_channel_dropout_mask(dropoutTensor, dropoutProbability, num_images, numChannels, DROPOUT_FIXED_SEED);
+
     for (int i = 0; i < num_images; ++i) {
         RpptLayout layout = RpptLayout::NHWC;
         set_descriptor_dims_and_strides_local(&srcDescs[i], 1, imgs[i].rows, imgs[i].cols, numChannels, 0);
@@ -5119,22 +5126,6 @@ void benchmark_RPP_HIP_ChannelDropout(const vector<Mat>& imgs, bool isColor, flo
         srcDescs[i].dataType = RpptDataType::U8;
         update_strides_from_layout(&srcDescs[i]);
         dstDescs[i] = srcDescs[i];
-
-        // Simple dropout pattern: randomly drop one channel based on probability
-        // For demo: drop R channel if prob > 0.66, G if 0.33-0.66, B if < 0.33
-        if (dropoutProb > 0.66f) {
-            dropoutTensor[i * 3 + 0] = 0;  // Drop R
-            dropoutTensor[i * 3 + 1] = 1;  // Keep G
-            dropoutTensor[i * 3 + 2] = 1;  // Keep B
-        } else if (dropoutProb > 0.33f) {
-            dropoutTensor[i * 3 + 0] = 1;  // Keep R
-            dropoutTensor[i * 3 + 1] = 0;  // Drop G
-            dropoutTensor[i * 3 + 2] = 1;  // Keep B
-        } else {
-            dropoutTensor[i * 3 + 0] = 1;  // Keep R
-            dropoutTensor[i * 3 + 1] = 1;  // Keep G
-            dropoutTensor[i * 3 + 2] = 0;  // Drop B
-        }
 
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
@@ -11448,13 +11439,14 @@ void benchmark_RPP_HIP_ChannelDropout_Batched(const vector<Mat>& imgs, bool isCo
     CHECK_HIP_STATUS(hipHostMalloc(&dropoutTensor, batchSize * numChannels * sizeof(Rpp8u)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * sizeof(RpptROI)));
 
+    // Generate dropout mask using reference implementation logic
+    Rpp32f dropoutProbability[batchSize];
     for (int i = 0; i < batchSize; ++i) {
-        // Randomly dropout channels based on probability
-        for (int c = 0; c < numChannels; ++c) {
-            float randVal = (float)rand() / RAND_MAX;
-            dropoutTensor[i * numChannels + c] = (randVal < dropoutProb) ? 1 : 0;
-        }
+        dropoutProbability[i] = dropoutProb;
+    }
+    generate_channel_dropout_mask(dropoutTensor, dropoutProbability, batchSize, numChannels, DROPOUT_FIXED_SEED);
 
+    for (int i = 0; i < batchSize; ++i) {
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
         roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
