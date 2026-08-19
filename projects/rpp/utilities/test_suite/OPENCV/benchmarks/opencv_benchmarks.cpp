@@ -1607,11 +1607,11 @@ void benchmark_OpenCV_ColorTwist(const vector<Mat>& imgs, bool isColor) {
     int num_images = (int)imgs.size();
     vector<Mat> out(num_images);
 
-    // Match RPP color_twist parameters
-    float alpha = 1.0f;
-    float beta = 0.0f;
-    float hueShift = 60.0f;  // degrees
-    float saturationFactor = 1.3f;
+    // Match RPP color_twist parameters (matching HIP/HOST implementations)
+    float alpha = 1.0f;      // brightness (0 < brightness <= 20)
+    float beta = 1.0f;       // contrast (0 < contrast <= 255)
+    float hueShift = 60.0f;  // hue (0 <= hue <= 359)
+    float saturationFactor = 1.3f; // saturation (saturation >= 0)
 
     for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
@@ -1621,18 +1621,16 @@ void benchmark_OpenCV_ColorTwist(const vector<Mat>& imgs, bool isColor) {
             Mat temp, hsv;
             imgs[i].convertTo(temp, CV_32F, 1.0 / 255.0);
 
-            // Apply alpha/beta: temp = alpha * temp + beta
-            temp = alpha * temp + beta;
+            // Apply brightness (alpha) and contrast (beta)
+            temp = alpha * (temp + beta / 255.0f);
 
             // Convert to HSV for hue and saturation adjustments
             cvtColor(temp, hsv, COLOR_RGB2HSV);
             vector<Mat> channels;
             split(hsv, channels);
 
-            // Adjust hue (shift in degrees, OpenCV uses 0-180 range for 8-bit)
-            channels[0] += hueShift / 2.0f;  // OpenCV H is 0-180, so divide by 2
-
-            // Adjust saturation
+            // Adjust hue (OpenCV uses 0-180 range) and saturation
+            channels[0] += hueShift / 2.0f;
             channels[1] *= saturationFactor;
 
             merge(channels, hsv);

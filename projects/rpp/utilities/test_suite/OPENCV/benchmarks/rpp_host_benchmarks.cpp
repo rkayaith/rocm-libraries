@@ -2566,16 +2566,16 @@ void benchmark_RPP_HOST_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHan
     vector<RpptDesc> dstDescs(num_images);
     vector<RpptROI> rois(num_images);
 
-    // Color twist parameters: hue shift
-    vector<Rpp32f> alpha(num_images, 1.0f);
-    vector<Rpp32f> beta(num_images, 0.0f);
-    vector<Rpp32f> hueShift(num_images, 60.0f);  // 60 degrees
-    vector<Rpp32f> saturationFactor(num_images, 1.3f);
+    // Color twist parameters (matching HIP implementation)
+    vector<Rpp32f> alpha(num_images, 1.0f);      // brightness (0 < brightness <= 20)
+    vector<Rpp32f> beta(num_images, 1.0f);       // contrast (0 < contrast <= 255)
+    vector<Rpp32f> hueShift(num_images, 60.0f); // hue (0 <= hue <= 359)
+    vector<Rpp32f> saturationFactor(num_images, 1.3f); // saturation (saturation >= 0)
 
     for (int i = 0; i < num_images; ++i) {
         out[i] = Mat::zeros(imgs[i].size(), imgs[i].type());
-        srcDescs[i] = createRppDescriptor(imgs[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
-        dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
+        srcDescs[i] = createRppDescriptor(imgs[i], RpptLayout::NHWC);
+        dstDescs[i] = createRppDescriptor(out[i], RpptLayout::NHWC);
         rois[i] = createFullImageROI(imgs[i]);
     }
 
@@ -2585,8 +2585,8 @@ void benchmark_RPP_HOST_ColorTwist(const vector<Mat>& imgs, bool isColor, rppHan
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_color_twist(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
-                                              alpha.data(), beta.data(), hueShift.data(),
-                                              saturationFactor.data(), &rois[i], RpptRoiType::XYWH,
+                                              &alpha[i], &beta[i], &hueShift[i],
+                                              &saturationFactor[i], &rois[i], RpptRoiType::XYWH,
                                               handle, RPP_HOST_BACKEND),
                              "color_twist");
         }
