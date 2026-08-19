@@ -4899,7 +4899,7 @@ void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp3
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
-void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight,
+void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow, Rpp32u numGridsPerColumn,
                                   rppHandle_t handle, hipStream_t stream) {
     int num_images = (int)imgs.size();
     int numChannels = isColor ? 3 : 1;
@@ -4909,14 +4909,19 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
     vector<Rpp8u*> d_inputs(num_images);
     vector<Rpp8u*> d_outputs(num_images);
 
-    // Calculate boxes per image based on grid (matching BATCH implementation)
+    // Calculate boxes with minimum of 16 and maximum of 1024
+    int boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+    boxesInEachImage = std::max(16, std::min(boxesInEachImage, 1024));
+
+    // Calculate tile dimensions from grid counts
     int maxWidth = imgs[0].cols;
     int maxHeight = imgs[0].rows;
-    int boxesInEachImage = (maxWidth / tileWidth) * (maxHeight / tileHeight);
-    boxesInEachImage = std::max(boxesInEachImage, 16);
+    int tileWidth = maxWidth / numGridsPerRow;
+    int tileHeight = maxHeight / numGridsPerColumn;
 
     Rpp32u maxHoleW = tileWidth / 2;
     Rpp32u maxHoleH = tileHeight / 2;
+    Rpp32f holeRatio = 0.4f;
 
     // Allocate parameter tensors and ROIs in pinned host memory
     RpptRoiLtrb *anchorBoxInfoTensor;
@@ -4931,22 +4936,6 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
         srcDescs[i].dataType = RpptDataType::U8;
         update_strides_from_layout(&srcDescs[i]);
         dstDescs[i] = srcDescs[i];
-
-        // Create grid of boxes (matching BATCH implementation)
-        int width = imgs[i].cols;
-        int height = imgs[i].rows;
-
-        int boxIdx = 0;
-        for (int y = 0; y < height && boxIdx < boxesInEachImage; y += tileHeight) {
-            for (int x = 0; x < width && boxIdx < boxesInEachImage; x += tileWidth) {
-                int idx = i * boxesInEachImage + boxIdx;
-                anchorBoxInfoTensor[idx].lt.x = x;
-                anchorBoxInfoTensor[idx].lt.y = y;
-                anchorBoxInfoTensor[idx].rb.x = std::min(x + tileWidth, width);
-                anchorBoxInfoTensor[idx].rb.y = std::min(y + tileHeight, height);
-                boxIdx++;
-            }
-        }
 
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
@@ -4978,6 +4967,14 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
             perfMonitor.start(DeviceType::GPU, 0);
         }
+
+        // Initialize anchor boxes with randomization using helper function
+        // Use different seed per iteration to match OpenCV behavior
+        int seed = 12345 + k * num_images;
+        init_grid_dropout_boxes(num_images, anchorBoxInfoTensor, roiTensor,
+                                numGridsPerColumn, numGridsPerRow, maxHoleW, maxHoleH, holeRatio,
+                                seed);
+
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_grid_dropout(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
                                                &anchorBoxInfoTensor[i * boxesInEachImage],
@@ -4997,7 +4994,7 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     ostringstream params;
-    params << "tileWidth=" << tileWidth << ", tileHeight=" << tileHeight;
+    params << "numGridsPerRow=" << numGridsPerRow << ", numGridsPerColumn=" << numGridsPerColumn;
     printResult("RPP HIP GridDropout", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
@@ -11178,7 +11175,7 @@ void benchmark_RPP_HIP_CoarseDropout_Batched(const vector<Mat>& imgs, bool isCol
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 }
 
-void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight,
+void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow, Rpp32u numGridsPerColumn,
                                            rppHandle_t handle, hipStream_t stream) {
     int batchSize = (int)imgs.size();
     if (batchSize == 0) return;
@@ -11202,9 +11199,13 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
     CHECK_HIP_STATUS(hipMalloc(&d_input, totalBufferSize));
     CHECK_HIP_STATUS(hipMalloc(&d_output, totalBufferSize));
 
-    // Calculate boxes per image based on grid
-    int boxesInEachImage = (maxWidth / tileWidth) * (maxHeight / tileHeight);
-    boxesInEachImage = max(boxesInEachImage, 16);
+    // Calculate boxes with minimum of 16 and maximum of 1024
+    int boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+    boxesInEachImage = max(16, min(boxesInEachImage, 1024));
+
+    // Calculate tile dimensions from grid counts
+    int tileWidth = maxWidth / numGridsPerRow;
+    int tileHeight = maxHeight / numGridsPerColumn;
 
     RpptRoiLtrb *anchorBoxInfoTensor;
     RpptROI *roiTensor;
@@ -11213,24 +11214,9 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
 
     Rpp32u maxHoleW = tileWidth / 2;
     Rpp32u maxHoleH = tileHeight / 2;
+    Rpp32f holeRatio = 0.4f;
 
     for (int i = 0; i < batchSize; ++i) {
-        int width = imgs[i].cols;
-        int height = imgs[i].rows;
-        
-        // Create grid of boxes
-        int boxIdx = 0;
-        for (int y = 0; y < height && boxIdx < boxesInEachImage; y += tileHeight) {
-            for (int x = 0; x < width && boxIdx < boxesInEachImage; x += tileWidth) {
-                int idx = i * boxesInEachImage + boxIdx;
-                anchorBoxInfoTensor[idx].lt.x = x;
-                anchorBoxInfoTensor[idx].lt.y = y;
-                anchorBoxInfoTensor[idx].rb.x = min(x + tileWidth, width);
-                anchorBoxInfoTensor[idx].rb.y = min(y + tileHeight, height);
-                boxIdx++;
-            }
-        }
-
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
         roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
@@ -11265,6 +11251,14 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
             CHECK_HIP_STATUS(hipStreamSynchronize(stream));
             perfMonitor.start(DeviceType::GPU, 0);
         }
+
+        // Initialize anchor boxes with randomization using helper function
+        // Use different seed per iteration to match OpenCV behavior
+        int seed = 12345 + k * batchSize;
+        init_grid_dropout_boxes(batchSize, anchorBoxInfoTensor, roiTensor,
+                                numGridsPerColumn, numGridsPerRow, maxHoleW, maxHoleH, holeRatio,
+                                seed);
+
         CHECK_RPP_STATUS(rppt_grid_dropout(d_input, &srcDesc, d_output, &dstDesc,
                                            anchorBoxInfoTensor, boxesInEachImage, maxHoleW, maxHoleH,
                                            roiTensor, RpptRoiType::XYWH, handle, RPP_HIP_BACKEND),
@@ -11274,7 +11268,7 @@ void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor
     perfMonitor.stop();
 
     ostringstream params;
-    params << "tileWidth=" << tileWidth << ", tileHeight=" << tileHeight;
+    params << "numGridsPerRow=" << numGridsPerRow << ", numGridsPerColumn=" << numGridsPerColumn;
     printResult("RPP HIP BATCH GridDropout", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 

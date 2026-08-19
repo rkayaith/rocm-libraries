@@ -1497,33 +1497,72 @@ void benchmark_OpenCV_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32u 
     int num_images = (int)imgs.size();
     vector<Mat> out(num_images);
 
+    // Calculate boxes with minimum of 16 and maximum of 1024
+    Rpp32u boxesInEachImage = numGridsPerRow * numGridsPerColumn;
+    boxesInEachImage = std::max((Rpp32u)16, std::min(boxesInEachImage, (Rpp32u)1024));
+
+    // Calculate tile dimensions from grid counts
+    int maxWidth = imgs[0].cols;
+    int maxHeight = imgs[0].rows;
+    int tileWidth = maxWidth / numGridsPerRow;
+    int tileHeight = maxHeight / numGridsPerColumn;
+
+    Rpp32u totalBoxes = num_images * boxesInEachImage;
+    Rpp32f holeRatio = 0.4f;
+    vector<RpptRoiLtrb> anchorBoxInfoTensor(totalBoxes);
+    vector<RpptROI> roiTensor(num_images);
+
+    Rpp32u maxHoleW = tileWidth / 2;
+    Rpp32u maxHoleH = tileHeight / 2;
+
+    for (int i = 0; i < num_images; ++i) {
+        roiTensor[i].xywhROI.xy.x = 0;
+        roiTensor[i].xywhROI.xy.y = 0;
+        roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
+        roiTensor[i].xywhROI.roiHeight = imgs[i].rows;
+    }
+
     for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
             perfMonitor.start(DeviceType::CPU, 0);
         }
+
+        // Initialize anchor boxes with randomization using helper function
+        // Use different seed per iteration to match RPP behavior
+        int seed = 12345 + k * num_images;
+        init_grid_dropout_boxes(num_images, anchorBoxInfoTensor.data(), roiTensor.data(),
+                                numGridsPerColumn, numGridsPerRow, maxHoleW, maxHoleH, holeRatio,
+                                seed);
+
         for (int i = 0; i < num_images; ++i) {
             out[i] = imgs[i].clone();
-            std::mt19937 rng(12345 + i + k * num_images);
-            std::uniform_int_distribution<int> dist(0, 1);
-            int cellW = imgs[i].cols / numGridsPerRow;
-            int cellH = imgs[i].rows / numGridsPerColumn;
 
-            for (Rpp32u r = 0; r < numGridsPerRow; ++r) {
-                for (Rpp32u c = 0; c < numGridsPerColumn; ++c) {
-                    if (dist(rng) == 0) {
-                        int x = r * cellW;
-                        int y = c * cellH;
-                        int w = min(cellW, imgs[i].cols - x);
-                        int h = min(cellH, imgs[i].rows - y);
-                        out[i](Rect(x, y, w, h)).setTo(0);
-                    }
+            // Apply dropout based on anchor boxes
+            for (Rpp32u boxIdx = 0; boxIdx < boxesInEachImage; ++boxIdx) {
+                int idx = i * boxesInEachImage + boxIdx;
+                int x1 = anchorBoxInfoTensor[idx].lt.x;
+                int y1 = anchorBoxInfoTensor[idx].lt.y;
+                int x2 = anchorBoxInfoTensor[idx].rb.x;
+                int y2 = anchorBoxInfoTensor[idx].rb.y;
+
+                // Ensure coordinates are within image bounds
+                x1 = std::max(0, std::min(x1, imgs[i].cols - 1));
+                y1 = std::max(0, std::min(y1, imgs[i].rows - 1));
+                x2 = std::max(0, std::min(x2, imgs[i].cols));
+                y2 = std::max(0, std::min(y2, imgs[i].rows));
+
+                int w = x2 - x1;
+                int h = y2 - y1;
+
+                if (w > 0 && h > 0) {
+                    out[i](Rect(x1, y1, w, h)).setTo(0);
                 }
             }
         }
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "tileWidth=" << numGridsPerRow << ", tileHeight=" << numGridsPerColumn;
+    params << "numGridsPerRow=" << numGridsPerRow << ", numGridsPerColumn=" << numGridsPerColumn;
     printResult("OpenCV GridDropout", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }

@@ -451,7 +451,7 @@ void benchmark_RPP_HIP_Erase(const vector<Mat>& imgs, bool isColor, int numBoxes
 void benchmark_RPP_HIP_RandomErase(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_CoarseDropout(const vector<Mat>& imgs, bool isColor, Rpp32u maxBoxesPerImage,
                                 rppHandle_t handle, hipStream_t stream);
-void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight,
+void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow, Rpp32u numGridsPerColumn,
                               rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileWidth, float ratio,
                            rppHandle_t handle, hipStream_t stream);
@@ -595,7 +595,7 @@ void benchmark_RPP_HIP_JpegCompressionDistortion_Batched(const vector<Mat>& imgs
 void benchmark_RPP_HIP_Erase_Batched(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_RandomErase_Batched(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_CoarseDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u maxBoxesPerImage, rppHandle_t handle, hipStream_t stream);
-void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight, rppHandle_t handle, hipStream_t stream);
+void benchmark_RPP_HIP_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow, Rpp32u numGridsPerColumn, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, int tileWidth, float ratio, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_ChannelDropout_Batched(const vector<Mat>& imgs, bool isColor, float dropoutProb, rppHandle_t handle, hipStream_t stream);
 void benchmark_RPP_HIP_CutoutDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u numBoxes, rppHandle_t handle, hipStream_t stream);
@@ -657,7 +657,7 @@ void benchmark_RPP_HOST_JpegCompressionDistortion_Batched(const vector<Mat>& img
 void benchmark_RPP_HOST_Erase_Batched(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle);
 void benchmark_RPP_HOST_RandomErase_Batched(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle);
 void benchmark_RPP_HOST_CoarseDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u maxBoxesPerImage, rppHandle_t handle);
-void benchmark_RPP_HOST_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, int tileWidth, int tileHeight, rppHandle_t handle);
+void benchmark_RPP_HOST_GridDropout_Batched(const vector<Mat>& imgs, bool isColor, Rpp32u numGridsPerRow, Rpp32u numGridsPerColumn, rppHandle_t handle);
 void benchmark_RPP_HOST_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, int tileWidth, float ratio, rppHandle_t handle);
 void benchmark_RPP_HOST_ChannelDropout_Batched(const vector<Mat>& imgs, bool isColor, float dropoutProb, rppHandle_t handle);
 void benchmark_RPP_HOST_CutoutDropout_Batched(const vector<Mat>& imgs, bool isColor, int numBoxes, rppHandle_t handle);
