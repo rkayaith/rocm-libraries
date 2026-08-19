@@ -5303,12 +5303,6 @@ void benchmark_RPP_HIP_JpegCompressionDistortion(const vector<Mat>& imgs, bool i
     int num_images = (int)imgs.size();
     int numChannels = isColor ? 3 : 1;
 
-    // JPEG compression distortion only supports RGB images (3 channels)
-    if (numChannels != 3) {
-        cerr << "Warning: JPEG compression distortion requires RGB images (3 channels). Skipping." << endl;
-        return;
-    }
-
     vector<RpptDesc> srcDescs(num_images);
     vector<RpptDesc> dstDescs(num_images);
     vector<Rpp8u*> d_inputs(num_images);
@@ -12373,7 +12367,7 @@ void benchmark_RPP_HIP_Normalize_Batched(const vector<Mat>& imgs, bool isColor, 
     genericDesc->strides[0] = height * width * channels;  // N stride
 
     // axisMask: normalize over H and W
-    Rpp32u axisMask = 3;
+    Rpp32u axisMask = 0x7;
 
     // Allocate mean, stddev, and ROI tensors in pinned memory
     Rpp32u meanStddevSize = batchSize * channels;
@@ -12381,17 +12375,11 @@ void benchmark_RPP_HIP_Normalize_Batched(const vector<Mat>& imgs, bool isColor, 
     Rpp32u *roiTensor;
     CHECK_HIP_STATUS(hipHostMalloc(&meanTensor, meanStddevSize * sizeof(Rpp32f)));
     CHECK_HIP_STATUS(hipHostMalloc(&stdDevTensor, meanStddevSize * sizeof(Rpp32f)));
-    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * nDim * 2 * sizeof(Rpp32u)));
+    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * sizeof(Rpp32u)));
 
-    // Initialize ROI tensor
+    // Initialize ROI tensor - simplified format matching non-batched
     for (int i = 0; i < batchSize; i++) {
-        int idx = i * (nDim * 2);
-        roiTensor[idx + 0] = 0;         // h_start
-        roiTensor[idx + 1] = 0;         // w_start
-        roiTensor[idx + 2] = 0;         // c_start
-        roiTensor[idx + 3] = height;    // h_size
-        roiTensor[idx + 4] = width;     // w_size
-        roiTensor[idx + 5] = channels;  // c_size
+        roiTensor[i] = 1;
     }
 
     // computeMeanStddev: 3 = compute both
