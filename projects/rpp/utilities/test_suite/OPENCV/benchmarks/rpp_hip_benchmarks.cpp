@@ -4906,14 +4906,18 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
     vector<Rpp8u*> d_inputs(num_images);
     vector<Rpp8u*> d_outputs(num_images);
 
+    // Calculate boxes per image based on grid (matching BATCH implementation)
+    int maxWidth = imgs[0].cols;
+    int maxHeight = imgs[0].rows;
+    int boxesInEachImage = (maxWidth / tileWidth) * (maxHeight / tileHeight);
+    boxesInEachImage = std::max(boxesInEachImage, 16);
+
+    Rpp32u maxHoleW = tileWidth / 2;
+    Rpp32u maxHoleH = tileHeight / 2;
+
     // Allocate parameter tensors and ROIs in pinned host memory
     RpptRoiLtrb *anchorBoxInfoTensor;
     RpptROI *roiTensor;
-
-    Rpp32u boxesInEachImage = 16;  // Grid will have multiple dropout boxes
-    Rpp32u maxHoleW = tileWidth;
-    Rpp32u maxHoleH = tileHeight;
-
     CHECK_HIP_STATUS(hipHostMalloc(&anchorBoxInfoTensor, num_images * boxesInEachImage * sizeof(RpptRoiLtrb)));
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(RpptROI)));
 
@@ -4925,26 +4929,20 @@ void benchmark_RPP_HIP_GridDropout(const vector<Mat>& imgs, bool isColor, int ti
         update_strides_from_layout(&srcDescs[i]);
         dstDescs[i] = srcDescs[i];
 
-        // Define grid dropout boxes (arranged in a grid pattern)
+        // Create grid of boxes (matching BATCH implementation)
         int width = imgs[i].cols;
         int height = imgs[i].rows;
-        int gridCols = 4;
-        int gridRows = 4;
 
-        for (Rpp32u box = 0; box < boxesInEachImage; ++box) {
-            int idx = i * boxesInEachImage + box;
-            int row = box / gridCols;
-            int col = box % gridCols;
-
-            int cellWidth = width / gridCols;
-            int cellHeight = height / gridRows;
-            int xPos = col * cellWidth + cellWidth / 4;
-            int yPos = row * cellHeight + cellHeight / 4;
-
-            anchorBoxInfoTensor[idx].lt.x = std::max(0, xPos);
-            anchorBoxInfoTensor[idx].lt.y = std::max(0, yPos);
-            anchorBoxInfoTensor[idx].rb.x = std::min(width - 1, xPos + (int)maxHoleW);
-            anchorBoxInfoTensor[idx].rb.y = std::min(height - 1, yPos + (int)maxHoleH);
+        int boxIdx = 0;
+        for (int y = 0; y < height && boxIdx < boxesInEachImage; y += tileHeight) {
+            for (int x = 0; x < width && boxIdx < boxesInEachImage; x += tileWidth) {
+                int idx = i * boxesInEachImage + boxIdx;
+                anchorBoxInfoTensor[idx].lt.x = x;
+                anchorBoxInfoTensor[idx].lt.y = y;
+                anchorBoxInfoTensor[idx].rb.x = std::min(x + tileWidth, width);
+                anchorBoxInfoTensor[idx].rb.y = std::min(y + tileHeight, height);
+                boxIdx++;
+            }
         }
 
         roiTensor[i].xywhROI.xy.x = 0;
