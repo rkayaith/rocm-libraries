@@ -5507,13 +5507,14 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     vector<Rpp8u*> d_inputs(num_images);
     vector<Rpp8u*> d_outputs(num_images);
 
-    // Allocate anchor and shape tensors in pinned host memory
+    // Use reference implementation logic for slice
+    // numDims-1 = 3 elements (excluding batch dimension)
     Rpp32s *anchorTensor;
     Rpp32s *shapeTensor;
     Rpp32u *roiTensor;
-    CHECK_HIP_STATUS(hipHostMalloc(&anchorTensor, num_images * 4 * sizeof(Rpp32s)));  // 4D tensor [N,H,W,C]
-    CHECK_HIP_STATUS(hipHostMalloc(&shapeTensor, num_images * 4 * sizeof(Rpp32s)));
-    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(Rpp32u)));
+    CHECK_HIP_STATUS(hipHostMalloc(&anchorTensor, num_images * 3 * sizeof(Rpp32s)));
+    CHECK_HIP_STATUS(hipHostMalloc(&shapeTensor, num_images * 3 * sizeof(Rpp32s)));
+    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * 6 * sizeof(Rpp32u)));
 
     for (int i = 0; i < num_images; ++i) {
         RpptLayout layout = (isColor && imgs[i].channels() == 3) ? RpptLayout::NHWC : RpptLayout::NCHW;
@@ -5547,48 +5548,44 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         srcDescs[i].strides[1] = srcDescs[i].strides[2] * srcDescs[i].dims[2];
         srcDescs[i].strides[0] = srcDescs[i].strides[1] * srcDescs[i].dims[1];
 
-        // Slice center region (50% of image)
-        int sliceHeight = height / 2;
-        int sliceWidth = width / 2;
-        int startY = height / 4;
-        int startX = width / 4;
+        // Reference implementation: slice 50% of height and width from ROI xy position
+        // anchorTensor and roiTensor use (numDims-1) = 3 element format
+        int idx1 = i * 3;
+        int idx2 = i * 6;
 
-        // Set anchor point [N=0, H=startY, W=startX, C=0]
         if (layout == RpptLayout::NHWC) {
-            anchorTensor[i * 4 + 0] = 0;  // N
-            anchorTensor[i * 4 + 1] = startY;  // H
-            anchorTensor[i * 4 + 2] = startX;  // W
-            anchorTensor[i * 4 + 3] = 0;  // C
-
-            // Set shape [N=1, H=sliceHeight, W=sliceWidth, C=numChannels]
-            shapeTensor[i * 4 + 0] = 1;  // N
-            shapeTensor[i * 4 + 1] = sliceHeight;  // H
-            shapeTensor[i * 4 + 2] = sliceWidth;  // W
-            shapeTensor[i * 4 + 3] = numChannels;  // C
+            // NHWC: [H, W, C]
+            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // H anchor (from top)
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // W anchor (from left)
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // C anchor
+            roiTensor[idx2 + 3] = height;
+            roiTensor[idx2 + 4] = width;
+            roiTensor[idx2 + 5] = numChannels;
+            shapeTensor[idx1 + 0] = height / 2;     // Slice 50% height
+            shapeTensor[idx1 + 1] = width / 2;      // Slice 50% width
+            shapeTensor[idx1 + 2] = numChannels;    // All channels
 
             // Setup destination descriptor
             dstDescs[i] = srcDescs[i];
-            dstDescs[i].dims[1] = sliceHeight;
-            dstDescs[i].dims[2] = sliceWidth;
+            dstDescs[i].dims[1] = height / 2;
+            dstDescs[i].dims[2] = width / 2;
         } else {  // NCHW
-            anchorTensor[i * 4 + 0] = 0;  // N
-            anchorTensor[i * 4 + 1] = 0;  // C
-            anchorTensor[i * 4 + 2] = startY;  // H
-            anchorTensor[i * 4 + 3] = startX;  // W
-
-            // Set shape [N=1, C=numChannels, H=sliceHeight, W=sliceWidth]
-            shapeTensor[i * 4 + 0] = 1;  // N
-            shapeTensor[i * 4 + 1] = numChannels;  // C
-            shapeTensor[i * 4 + 2] = sliceHeight;  // H
-            shapeTensor[i * 4 + 3] = sliceWidth;  // W
+            // NCHW: [C, H, W]
+            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // C anchor
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // H anchor
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // W anchor
+            roiTensor[idx2 + 3] = numChannels;
+            roiTensor[idx2 + 4] = height;
+            roiTensor[idx2 + 5] = width;
+            shapeTensor[idx1 + 0] = numChannels;    // All channels
+            shapeTensor[idx1 + 1] = height / 2;     // Slice 50% height
+            shapeTensor[idx1 + 2] = width / 2;      // Slice 50% width
 
             // Setup destination descriptor
             dstDescs[i] = srcDescs[i];
-            dstDescs[i].dims[2] = sliceHeight;
-            dstDescs[i].dims[3] = sliceWidth;
+            dstDescs[i].dims[2] = height / 2;
+            dstDescs[i].dims[3] = width / 2;
         }
-
-        roiTensor[i] = 1;  // Single image
 
         // Calculate buffer sizes
         size_t srcBufferSize = srcDescs[i].strides[0] * srcDescs[i].dims[0] * sizeof(Rpp8u);
@@ -5617,9 +5614,10 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
             perfMonitor.start(DeviceType::GPU, 0);
         }
         for (int i = 0; i < num_images; ++i) {
+            Rpp8u fillValue = 0;
             CHECK_RPP_STATUS(rppt_slice(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
-                                       anchorTensor + i * 4, shapeTensor + i * 4,
-                                       nullptr, false, &roiTensor[i],
+                                       anchorTensor + i * 3, shapeTensor + i * 3,
+                                       &fillValue, false, roiTensor + i * 6,
                                        handle, RPP_HIP_BACKEND),
                             "Slice");
         }
@@ -11669,26 +11667,28 @@ void benchmark_RPP_HIP_Slice_Batched(const vector<Mat>& imgs, bool isColor, rppH
     srcGenericDesc.strides[0] = height * width * channels;
     dstGenericDesc = srcGenericDesc;
 
-    // Anchor and shape tensors in pinned memory
+    // Use reference implementation logic for slice
+    // numDims-1 = 3 elements (excluding batch dimension)
     Rpp32s *anchorTensor, *shapeTensor;
     Rpp32u *roiTensor;
-    CHECK_HIP_STATUS(hipHostMalloc(&anchorTensor, batchSize * 4 * sizeof(Rpp32s)));
-    CHECK_HIP_STATUS(hipHostMalloc(&shapeTensor, batchSize * 4 * sizeof(Rpp32s)));
-    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * 4 * sizeof(Rpp32u)));
+    CHECK_HIP_STATUS(hipHostMalloc(&anchorTensor, batchSize * 3 * sizeof(Rpp32s)));
+    CHECK_HIP_STATUS(hipHostMalloc(&shapeTensor, batchSize * 3 * sizeof(Rpp32s)));
+    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * 6 * sizeof(Rpp32u)));
 
     for (int i = 0; i < batchSize; i++) {
-        anchorTensor[i * 4 + 0] = 0;
-        anchorTensor[i * 4 + 1] = 0;
-        anchorTensor[i * 4 + 2] = 0;
-        anchorTensor[i * 4 + 3] = 0;
-        shapeTensor[i * 4 + 0] = 1;
-        shapeTensor[i * 4 + 1] = height;
-        shapeTensor[i * 4 + 2] = width;
-        shapeTensor[i * 4 + 3] = channels;
-        roiTensor[i * 4 + 0] = 1;
-        roiTensor[i * 4 + 1] = height;
-        roiTensor[i * 4 + 2] = width;
-        roiTensor[i * 4 + 3] = channels;
+        int idx1 = i * 3;
+        int idx2 = i * 6;
+
+        // NHWC: [H, W, C] - matching reference implementation
+        roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // H anchor
+        roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // W anchor
+        roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // C anchor
+        roiTensor[idx2 + 3] = height;
+        roiTensor[idx2 + 4] = width;
+        roiTensor[idx2 + 5] = channels;
+        shapeTensor[idx1 + 0] = height / 2;     // Slice 50% height
+        shapeTensor[idx1 + 1] = width / 2;      // Slice 50% width
+        shapeTensor[idx1 + 2] = channels;       // All channels
     }
 
     Rpp8u fillValue = 0;
