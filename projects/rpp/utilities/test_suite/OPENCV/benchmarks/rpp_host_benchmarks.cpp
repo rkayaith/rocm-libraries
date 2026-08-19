@@ -2707,7 +2707,7 @@ void benchmark_RPP_HOST_CropMirrorNormalize(const vector<Mat>& imgs, bool isColo
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_crop_mirror_normalize(
                                  imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i],
-                                 offset.data(), multiplier.data(), mirror.data(), &dstRois[i],
+                                 &offset[i * channels], &multiplier[i * channels], &mirror[i], &dstRois[i],
                                  RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
                              "crop_mirror_normalize");
         }
@@ -7848,16 +7848,14 @@ void benchmark_RPP_HOST_CropMirrorNormalize_Batched(const vector<Mat>& imgs, boo
     int dstHeight = height / 2;
     int dstWidth = width / 2;
 
-    // Set up descriptors
+    // Set up descriptors (matching HIP BATCH - no padding)
     RpptDesc srcDesc, dstDesc;
     srcDesc.layout = isColor ? RpptLayout::NHWC : RpptLayout::NCHW;
     srcDesc.dataType = RpptDataType::U8;
     dstDesc.layout = isColor ? RpptLayout::NHWC : RpptLayout::NCHW;
     dstDesc.dataType = RpptDataType::U8;
-    int widthPadded = ((width / 8) * 8) + 8;
-    int dstWidthPadded = ((dstWidth / 8) * 8) + 8;
-    set_descriptor_dims_and_strides(&srcDesc, batchSize, height, widthPadded, channels, 0);
-    set_descriptor_dims_and_strides(&dstDesc, batchSize, dstHeight, dstWidthPadded, channels, 0);
+    set_descriptor_dims_and_strides(&srcDesc, batchSize, height, width, channels, 0);
+    set_descriptor_dims_and_strides(&dstDesc, batchSize, dstHeight, dstWidth, channels, 0);
 
     // Allocate buffers
     size_t srcBufferSize = (size_t)srcDesc.n * srcDesc.h * srcDesc.w * srcDesc.c;
