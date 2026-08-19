@@ -5669,16 +5669,23 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
     int num_images = (int)imgs.size();
     int numChannels = isColor ? 3 : 1;
 
-    vector<RpptGenericDesc> srcDescs(num_images);
-    vector<RpptGenericDesc> dstDescs(num_images);
+    // Allocate descriptors in pinned memory so they're GPU-accessible
+    RpptGenericDesc *srcDescs, *dstDescs;
+    CHECK_HIP_STATUS(hipHostMalloc(&srcDescs, num_images * sizeof(RpptGenericDesc)));
+    CHECK_HIP_STATUS(hipHostMalloc(&dstDescs, num_images * sizeof(RpptGenericDesc)));
+
     vector<Rpp8u*> d_inputs(num_images);
     vector<Rpp8u*> d_outputs(num_images);
 
     // Allocate permutation tensor and ROI tensor in pinned host memory
+    // The rppt_transpose HIP kernel processes 3D sub-tensors (HWC) for each image,
+    // excluding the batch dimension (N). Therefore:
+    // 1. permTensor must have (numDims-1) = 3 elements per image
+    // 2. roiTensor must have (numDims-1)*2 = 6 values per image
     Rpp32u *permTensor;
     Rpp32u *roiTensor;
-    CHECK_HIP_STATUS(hipHostMalloc(&permTensor, num_images * 4 * sizeof(Rpp32u)));  // 4D permutation
-    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * sizeof(Rpp32u)));
+    CHECK_HIP_STATUS(hipHostMalloc(&permTensor, num_images * 3 * sizeof(Rpp32u)));  // 3D permutation
+    CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, num_images * 6 * sizeof(Rpp32u)));
 
     for (int i = 0; i < num_images; ++i) {
         RpptLayout layout = (isColor && imgs[i].channels() == 3) ? RpptLayout::NHWC : RpptLayout::NCHW;
@@ -5695,36 +5702,76 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
         int alignedWidth = ((width + 7) / 8) * 8;  // Align to 8
 
         if (layout == RpptLayout::NHWC) {
+            // Source: NHWC [N, H, W, C]
             srcDescs[i].dims[0] = 1;  // N
             srcDescs[i].dims[1] = height;  // H
             srcDescs[i].dims[2] = width;  // W (use original width, not aligned)
             srcDescs[i].dims[3] = numChannels;  // C
 
-            // Identity permutation (no transpose) - matching buffer allocation
-            permTensor[i * 4 + 0] = 0;  // N
-            permTensor[i * 4 + 1] = 1;  // H
-            permTensor[i * 4 + 2] = 2;  // W
-            permTensor[i * 4 + 3] = 3;  // C
+            // Transpose H and W in the 3D sub-tensor (HWC): HWC -> WHC
+            // Permutation for the 3D HWC sub-tensor (excluding N dimension)
+            // [1, 0, 2] means: W goes to dim0, H goes to dim1, C stays at dim2
+            permTensor[i * 3 + 0] = 1;  // output dim0 <- input dim1 (W)
+            permTensor[i * 3 + 1] = 0;  // output dim1 <- input dim0 (H)
+            permTensor[i * 3 + 2] = 2;  // output dim2 <- input dim2 (C)
 
-            // Setup destination descriptor (same as source for identity)
-            dstDescs[i] = srcDescs[i];
+            // Destination: NWHC [N, W, H, C] - swapped H and W
+            dstDescs[i].numDims = 4;
+            dstDescs[i].offsetInBytes = 0;
+            dstDescs[i].dataType = RpptDataType::U8;
+            dstDescs[i].layout = layout;
+            dstDescs[i].dims[0] = 1;  // N
+            dstDescs[i].dims[1] = width;  // W (now in dim1)
+            dstDescs[i].dims[2] = height;  // H (now in dim2)
+            dstDescs[i].dims[3] = numChannels;  // C
         } else {  // NCHW
+            // Source: NCHW [N, C, H, W]
             srcDescs[i].dims[0] = 1;  // N
             srcDescs[i].dims[1] = numChannels;  // C
             srcDescs[i].dims[2] = height;  // H
             srcDescs[i].dims[3] = width;  // W (use original width, not aligned)
 
-            // Identity permutation (no transpose) - matching buffer allocation
-            permTensor[i * 4 + 0] = 0;  // N
-            permTensor[i * 4 + 1] = 1;  // C
-            permTensor[i * 4 + 2] = 2;  // H
-            permTensor[i * 4 + 3] = 3;  // W
+            // Transpose H and W in the 3D sub-tensor (CHW): CHW -> CWH
+            // Permutation for the 3D CHW sub-tensor (excluding N dimension)
+            // [0, 2, 1] means: C stays at dim0, W goes to dim1, H goes to dim2
+            permTensor[i * 3 + 0] = 0;  // output dim0 <- input dim0 (C)
+            permTensor[i * 3 + 1] = 2;  // output dim1 <- input dim2 (W)
+            permTensor[i * 3 + 2] = 1;  // output dim2 <- input dim1 (H)
 
-            // Setup destination descriptor (same as source for identity)
-            dstDescs[i] = srcDescs[i];
+            // Destination: NCWH [N, C, W, H] - swapped H and W
+            dstDescs[i].numDims = 4;
+            dstDescs[i].offsetInBytes = 0;
+            dstDescs[i].dataType = RpptDataType::U8;
+            dstDescs[i].layout = layout;
+            dstDescs[i].dims[0] = 1;  // N
+            dstDescs[i].dims[1] = numChannels;  // C
+            dstDescs[i].dims[2] = width;  // W (now in dim2)
+            dstDescs[i].dims[3] = height;  // H (now in dim3)
+        }
+
+        // ROI tensor: (numDims-1)*2 = 6 values per image
+        // Format: [dim0_start, dim1_start, dim2_start, dim0_size, dim1_size, dim2_size]
+        int roiIdx = i * 6;
+        if (layout == RpptLayout::NHWC) {
+            // For HWC sub-tensor
+            roiTensor[roiIdx + 0] = 0;         // h_start
+            roiTensor[roiIdx + 1] = 0;         // w_start
+            roiTensor[roiIdx + 2] = 0;         // c_start
+            roiTensor[roiIdx + 3] = height;    // h_size
+            roiTensor[roiIdx + 4] = width;     // w_size
+            roiTensor[roiIdx + 5] = numChannels;  // c_size
+        } else {  // NCHW
+            // For CHW sub-tensor
+            roiTensor[roiIdx + 0] = 0;         // c_start
+            roiTensor[roiIdx + 1] = 0;         // h_start
+            roiTensor[roiIdx + 2] = 0;         // w_start
+            roiTensor[roiIdx + 3] = numChannels;  // c_size
+            roiTensor[roiIdx + 4] = height;    // h_size
+            roiTensor[roiIdx + 5] = width;     // w_size
         }
 
         // Calculate strides for source (with alignment)
+        int alignedHeight = ((height + 7) / 8) * 8;  // Align height to 8 as well
         if (layout == RpptLayout::NHWC) {
             srcDescs[i].strides[3] = 1;
             srcDescs[i].strides[2] = numChannels;
@@ -5737,22 +5784,30 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
             srcDescs[i].strides[0] = srcDescs[i].strides[1] * numChannels;
         }
 
-        // Destination strides same as source for identity
-        dstDescs[i].strides[0] = srcDescs[i].strides[0];
-        dstDescs[i].strides[1] = srcDescs[i].strides[1];
-        dstDescs[i].strides[2] = srcDescs[i].strides[2];
-        dstDescs[i].strides[3] = srcDescs[i].strides[3];
-
-        roiTensor[i] = 1;  // Single image
+        // Calculate destination strides (H and W are swapped)
+        if (layout == RpptLayout::NHWC) {
+            // Destination NWHC: strides for [N, W, H, C]
+            dstDescs[i].strides[3] = 1;  // C stride
+            dstDescs[i].strides[2] = numChannels;  // H stride
+            dstDescs[i].strides[1] = alignedHeight * numChannels;  // W stride (use aligned height since H and W swapped)
+            dstDescs[i].strides[0] = dstDescs[i].strides[1] * width;  // N stride
+        } else {  // NCHW
+            // Destination NCWH: strides for [N, C, W, H]
+            dstDescs[i].strides[3] = 1;  // H stride
+            dstDescs[i].strides[2] = alignedHeight;  // W stride (use aligned height since H and W swapped)
+            dstDescs[i].strides[1] = dstDescs[i].strides[2] * width;  // C stride
+            dstDescs[i].strides[0] = dstDescs[i].strides[1] * numChannels;  // N stride
+        }
 
         // Calculate buffer sizes
-        size_t bufferSize = srcDescs[i].strides[0] * sizeof(Rpp8u);
+        size_t srcBufferSize = srcDescs[i].strides[0] * sizeof(Rpp8u);
+        size_t dstBufferSize = dstDescs[i].strides[0] * sizeof(Rpp8u);
 
-        CHECK_HIP_STATUS(hipMalloc(&d_inputs[i], bufferSize));
-        CHECK_HIP_STATUS(hipMalloc(&d_outputs[i], bufferSize));
+        CHECK_HIP_STATUS(hipMalloc(&d_inputs[i], srcBufferSize));
+        CHECK_HIP_STATUS(hipMalloc(&d_outputs[i], dstBufferSize));
 
         // Copy image data line by line to account for width alignment
-        Rpp8u* h_tempBuffer = new Rpp8u[bufferSize]();
+        Rpp8u* h_tempBuffer = new Rpp8u[srcBufferSize]();
         int elementsPerRow = width * numChannels;
 
         if (layout == RpptLayout::NHWC) {
@@ -5773,7 +5828,7 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
             }
         }
 
-        CHECK_HIP_STATUS(hipMemcpy(d_inputs[i], h_tempBuffer, bufferSize, hipMemcpyHostToDevice));
+        CHECK_HIP_STATUS(hipMemcpy(d_inputs[i], h_tempBuffer, srcBufferSize, hipMemcpyHostToDevice));
         delete[] h_tempBuffer;
     }
 
@@ -5784,7 +5839,7 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
         }
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(rppt_transpose(d_inputs[i], &srcDescs[i], d_outputs[i], &dstDescs[i],
-                                           permTensor + i * 4, &roiTensor[i],
+                                           permTensor + i * 3, roiTensor + i * 6,
                                            handle, RPP_HIP_BACKEND),
                             "Transpose");
         }
@@ -5796,11 +5851,13 @@ void benchmark_RPP_HIP_Transpose(const vector<Mat>& imgs, bool isColor, rppHandl
         CHECK_HIP_STATUS(hipFree(d_inputs[i]));
         CHECK_HIP_STATUS(hipFree(d_outputs[i]));
     }
+    CHECK_HIP_STATUS(hipHostFree(srcDescs));
+    CHECK_HIP_STATUS(hipHostFree(dstDescs));
     CHECK_HIP_STATUS(hipHostFree(permTensor));
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     ostringstream params;
-    params << "permutation=identity";
+    params << "permutation=0,2,1,3";
     printResult("RPP HIP Transpose", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
