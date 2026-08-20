@@ -7113,14 +7113,14 @@ void benchmark_RPP_HOST_Slice_Batched(const vector<Mat>& imgs, bool isColor, rpp
     Rpp32s* anchorTensor = (Rpp32s*)calloc(batchSize * 3, sizeof(Rpp32s));
     Rpp32s* shapeTensor = (Rpp32s*)calloc(batchSize * 3, sizeof(Rpp32s));
     for (int i = 0; i < batchSize; i++) {
-        // Slice from (0, 0, 0) in HWC space
-        anchorTensor[i * 3 + 0] = 0;  // height anchor
-        anchorTensor[i * 3 + 1] = 0;  // width anchor
-        anchorTensor[i * 3 + 2] = 0;  // channel anchor
+        // Slice from center (matching OpenCV, HOST non-batch, HIP implementations)
+        anchorTensor[i * 3 + 0] = height / 4;  // height anchor (center)
+        anchorTensor[i * 3 + 1] = width / 4;   // width anchor (center)
+        anchorTensor[i * 3 + 2] = 0;           // channel anchor
 
-        // Slice the full HWC dimensions (no change to original image)
-        shapeTensor[i * 3 + 0] = height;
-        shapeTensor[i * 3 + 1] = width;
+        // Slice 50% of height and width
+        shapeTensor[i * 3 + 0] = height / 2;
+        shapeTensor[i * 3 + 1] = width / 2;
         shapeTensor[i * 3 + 2] = channels;
     }
 
@@ -7128,12 +7128,12 @@ void benchmark_RPP_HOST_Slice_Batched(const vector<Mat>& imgs, bool isColor, rpp
     Rpp32u* roiTensor = (Rpp32u*)calloc(batchSize * 6, sizeof(Rpp32u));
     for (int i = 0; i < batchSize; i++) {
         // ROI format: [begin_H, begin_W, begin_C, length_H, length_W, length_C]
-        roiTensor[i * 6 + 0] = 0;        // height begin
-        roiTensor[i * 6 + 1] = 0;        // width begin
-        roiTensor[i * 6 + 2] = 0;        // channel begin
-        roiTensor[i * 6 + 3] = height;   // height length
-        roiTensor[i * 6 + 4] = width;    // width length
-        roiTensor[i * 6 + 5] = channels; // channel length
+        roiTensor[i * 6 + 0] = height / 4;  // height begin (center)
+        roiTensor[i * 6 + 1] = width / 4;   // width begin (center)
+        roiTensor[i * 6 + 2] = 0;           // channel begin
+        roiTensor[i * 6 + 3] = height;      // height length (full)
+        roiTensor[i * 6 + 4] = width;       // width length (full)
+        roiTensor[i * 6 + 5] = channels;    // channel length
     }
 
     // Benchmark loop

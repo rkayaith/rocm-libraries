@@ -5552,9 +5552,10 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
 
         if (layout == RpptLayout::NHWC) {
             // NHWC: [H, W, C]
-            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // H anchor (from top)
-            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // W anchor (from left)
-            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // C anchor
+            // Slice from center (matching OpenCV and HOST implementations)
+            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = height / 4;  // H anchor (center)
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = width / 4;   // W anchor (center)
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;           // C anchor
             roiTensor[idx2 + 3] = height;
             roiTensor[idx2 + 4] = width;
             roiTensor[idx2 + 5] = numChannels;
@@ -5568,9 +5569,10 @@ void benchmark_RPP_HIP_Slice(const vector<Mat>& imgs, bool isColor, rppHandle_t 
             dstDescs[i].dims[2] = width / 2;
         } else {  // NCHW
             // NCHW: [C, H, W]
-            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // C anchor
-            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // H anchor
-            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // W anchor
+            // Slice from center (matching OpenCV and HOST implementations)
+            roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;           // C anchor
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = height / 4;  // H anchor (center)
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = width / 4;   // W anchor (center)
             roiTensor[idx2 + 3] = numChannels;
             roiTensor[idx2 + 4] = height;
             roiTensor[idx2 + 5] = width;
@@ -11673,10 +11675,10 @@ void benchmark_RPP_HIP_Slice_Batched(const vector<Mat>& imgs, bool isColor, rppH
         int idx1 = i * 3;
         int idx2 = i * 6;
 
-        // NHWC: [H, W, C] - matching reference implementation
-        roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = 0;  // H anchor
-        roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;  // W anchor
-        roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;  // C anchor
+        // NHWC: [H, W, C] - slice from center (matching OpenCV and HOST implementations)
+        roiTensor[idx2 + 0] = anchorTensor[idx1 + 0] = height / 4;  // H anchor (center)
+        roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = width / 4;   // W anchor (center)
+        roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;           // C anchor
         roiTensor[idx2 + 3] = height;
         roiTensor[idx2 + 4] = width;
         roiTensor[idx2 + 5] = channels;
