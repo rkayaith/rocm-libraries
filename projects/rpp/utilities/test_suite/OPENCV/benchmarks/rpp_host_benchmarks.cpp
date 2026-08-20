@@ -7759,15 +7759,14 @@ void benchmark_RPP_HOST_CropAndPatch_Batched(const vector<Mat>& imgs, bool isCol
     int height = imgs[0].rows;
     int width = imgs[0].cols;
 
-    // Set up descriptors with width padding for HOST
+    // Set up descriptors (matching HIP BATCH - no padding)
     RpptDesc srcDesc, dstDesc;
     srcDesc.layout = isColor ? RpptLayout::NHWC : RpptLayout::NCHW;
     srcDesc.dataType = RpptDataType::U8;
     dstDesc.layout = isColor ? RpptLayout::NHWC : RpptLayout::NCHW;
     dstDesc.dataType = RpptDataType::U8;
-    int widthPadded = ((width / 8) * 8) + 8;
-    set_descriptor_dims_and_strides(&srcDesc, batchSize, height, widthPadded, channels, 0);
-    set_descriptor_dims_and_strides(&dstDesc, batchSize, height, widthPadded, channels, 0);
+    set_descriptor_dims_and_strides(&srcDesc, batchSize, height, width, channels, 0);
+    set_descriptor_dims_and_strides(&dstDesc, batchSize, height, width, channels, 0);
 
     // Allocate HOST buffers
     size_t bufferSize = (size_t)srcDesc.n * srcDesc.h * srcDesc.w * srcDesc.c;
