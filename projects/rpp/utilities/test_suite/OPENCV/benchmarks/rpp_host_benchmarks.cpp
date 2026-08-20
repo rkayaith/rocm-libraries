@@ -2154,7 +2154,7 @@ void benchmark_RPP_HOST_Gridmask(const vector<Mat>& imgs, bool isColor, Rpp32u t
         for (int i = 0; i < num_images; ++i) {
             CHECK_RPP_STATUS(
                 rppt_gridmask(imgs[i].data, &srcDescs[i], out[i].data, &dstDescs[i], tileWidth,
-                              gridRatio, 0.0f, translateVector,  // Uses scalars!
+                              gridRatio, 0.0f, translateVector,  // gridAngle=0.0f (matching OpenCV - no rotation)
                               &rois[i], RpptRoiType::XYWH, handle, RPP_HOST_BACKEND),
                 "gridmask");
         }
@@ -6548,7 +6548,7 @@ void benchmark_RPP_HOST_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, 
 
     Rpp32u tileWidthVal = min((Rpp32u)tileWidth, (Rpp32u)min(maxWidth, maxHeight));
     Rpp32f gridRatio = ratio;
-    Rpp32f gridAngle = 0.5f;
+    Rpp32f gridAngle = 0.0f;  // No rotation (matching OpenCV)
     RpptUintVector2D translateVector;
     translateVector.x = 0;
     translateVector.y = 0;

@@ -5016,7 +5016,7 @@ void benchmark_RPP_HIP_Gridmask(const vector<Mat>& imgs, bool isColor, int tileW
     // Gridmask parameters (same for all images in batch)
     Rpp32u gridTileWidth = (Rpp32u)tileWidth;
     Rpp32f gridRatio = ratio;  // Ratio of grid hole to tile (0.0-1.0)
-    Rpp32f gridAngle = 0.5f;   // Rotation angle in radians (matching reference implementation)
+    Rpp32f gridAngle = 0.0f;   // No rotation (matching OpenCV)
     RpptUintVector2D translateVector;
     translateVector.x = 0;
     translateVector.y = 0;
@@ -11314,7 +11314,7 @@ void benchmark_RPP_HIP_Gridmask_Batched(const vector<Mat>& imgs, bool isColor, i
     Rpp32u minDim = min(maxWidth, maxHeight);
     Rpp32u tileWidthVal = min((Rpp32u)tileWidth, minDim);
     Rpp32f gridRatio = ratio;
-    Rpp32f gridAngle = 0.5f;  // Grid rotation angle in radians
+    Rpp32f gridAngle = 0.0f;  // No rotation (matching OpenCV)
     RpptUintVector2D translateVector;
     translateVector.x = 0;
     translateVector.y = 0;
