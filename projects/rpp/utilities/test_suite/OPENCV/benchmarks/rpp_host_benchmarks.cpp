@@ -2830,7 +2830,7 @@ void benchmark_RPP_HOST_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, 
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "crop=80%,resize=224x224,mirror";
+    params << "crop=80%,resize=224x224,mirror=horizontal";
     printResult("RPP HOST ResizeCropMirror", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
@@ -8107,7 +8107,7 @@ void benchmark_RPP_HOST_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool i
     perfMonitor.stop();
 
     ostringstream params;
-    params << "crop=80%,resize=224x224,mirror";
+    params << "crop=80%,resize=224x224,mirror=horizontal";
     printResult("RPP HOST BATCH ResizeCropMirror", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 

@@ -6494,8 +6494,8 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
         dstImgSizes[i].width = targetWidth;
         dstImgSizes[i].height = targetHeight;
 
-        // Mirror: alternate images for demo
-        mirrorTensor[i] = (i % 2);
+        // Mirror: horizontal flip (consistent with all other backends)
+        mirrorTensor[i] = 1;
 
         // Allocate device memory
         size_t srcBufferSize = srcDescs[i].n * srcDescs[i].h * srcDescs[i].w * srcDescs[i].c * sizeof(Rpp8u);
@@ -6550,7 +6550,7 @@ void benchmark_RPP_HIP_ResizeCropMirror(const vector<Mat>& imgs, bool isColor, r
     CHECK_HIP_STATUS(hipHostFree(dstImgSizes));
 
     ostringstream params;
-    params << "crop=80%,resize=224x224,mirror";
+    params << "crop=80%,resize=224x224,mirror=horizontal";
     printResult("RPP HIP ResizeCropMirror", imgs.size(), isColor, adjustedTime, perfMonitor.getTotalEnergy(), params.str());
 }
 
@@ -12872,7 +12872,7 @@ void benchmark_RPP_HIP_ResizeCropMirror_Batched(const vector<Mat>& imgs, bool is
     perfMonitor.stop();
 
     ostringstream params;
-    params << "crop=80%,resize=224x224,mirror";
+    params << "crop=80%,resize=224x224,mirror=horizontal";
     printResult("RPP HIP BATCH ResizeCropMirror", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 

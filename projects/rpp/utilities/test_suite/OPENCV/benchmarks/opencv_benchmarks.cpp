@@ -1807,7 +1807,7 @@ void benchmark_OpenCV_ResizeCropMirror(const vector<Mat>& imgs, bool isColor) {
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "crop=80%,resize=224x224,mirror";
+    params << "crop=80%,resize=224x224,mirror=horizontal";
     printResult("OpenCV ResizeCropMirror", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
