@@ -3249,22 +3249,15 @@ void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t 
         CHECK_HIP_STATUS(hipMemcpy(d_inputs[i], h_tempBuffer, alignedBufferSize, hipMemcpyHostToDevice));
         delete[] h_tempBuffer;
 
-        // Create remap tables (sine wave distortion to match other implementations)
+        // Create remap tables using init_remap helper
         Rpp32f* h_rowTable = new Rpp32f[tableSize / sizeof(Rpp32f)]();
         Rpp32f* h_colTable = new Rpp32f[tableSize / sizeof(Rpp32f)]();
 
-        for (int row = 0; row < height; ++row) {
-            for (int col = 0; col < tableDescs[i].w; ++col) {
-                int idx = row * tableDescs[i].w + col;
-                if (col < width) {
-                    h_rowTable[idx] = (Rpp32f)row + sin(col * 0.01f) * 5.0f;  // Sine wave on rows
-                    h_colTable[idx] = (Rpp32f)col + cos(row * 0.01f) * 5.0f;  // Cosine wave on cols
-                } else {
-                    h_rowTable[idx] = (Rpp32f)row;  // Padding
-                    h_colTable[idx] = 0.0f;  // Padding
-                }
-            }
-        }
+        // Call init_remap for this single image
+        RpptDesc singleSrcDesc = srcDescs[i];
+        RpptDesc singleTableDesc = tableDescs[i];
+        RpptROI singleROI = roiTensor[i * 256];
+        init_remap(&singleTableDesc, &singleSrcDesc, &singleROI, h_rowTable, h_colTable);
 
         CHECK_HIP_STATUS(hipMemcpy(d_rowRemapTable[i], h_rowTable, tableSize, hipMemcpyHostToDevice));
         CHECK_HIP_STATUS(hipMemcpy(d_colRemapTable[i], h_colTable, tableSize, hipMemcpyHostToDevice));
@@ -3299,7 +3292,7 @@ void benchmark_RPP_HIP_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     ostringstream params;
-    params << "transform=sine_wave, interpolation=bilinear";
+    params << "transform=horizontal_flip_left_half, interpolation=bilinear";
     printResult("RPP HIP Remap", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
@@ -12236,7 +12229,7 @@ void benchmark_RPP_HIP_Remap_Batched(const vector<Mat>& imgs, bool isColor, rppH
     perfMonitor.stop();
 
     ostringstream params;
-    params << "transform=sine_wave, interpolation=bilinear";
+    params << "transform=horizontal_flip_left_half, interpolation=bilinear";
     printResult("RPP HIP BATCH Remap", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 

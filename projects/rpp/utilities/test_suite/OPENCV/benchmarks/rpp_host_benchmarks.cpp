@@ -1888,7 +1888,7 @@ void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t
     vector<RpptDesc> dstDescs(num_images);
     vector<RpptROI> rois(num_images);
 
-    // Create simple identity remap (with slight distortion)
+    // Create remap tables using init_remap helper
     int h = imgs[0].rows;
     int w = imgs[0].cols;
     vector<Rpp32f> mapX(num_images * h * w);
@@ -1899,29 +1899,22 @@ void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t
     tableDesc.n = num_images;
     tableDesc.h = h;
     tableDesc.w = w;
-    tableDesc.c = 1;
-    tableDesc.strides.nStride = h * w;
-    tableDesc.strides.hStride = w;
-    tableDesc.strides.wStride = 1;
-    tableDesc.strides.cStride = 1;
 
     for (int i = 0; i < num_images; ++i) {
-        Rpp32f* mapXImg = mapX.data() + i * h * w;
-        Rpp32f* mapYImg = mapY.data() + i * h * w;
-
-        for (int y = 0; y < h; ++y) {
-            for (int x = 0; x < w; ++x) {
-                int idx = y * w + x;
-                mapYImg[idx] = y + sin(x * 0.01f) * 5.0f;
-                mapXImg[idx] = x + cos(y * 0.01f) * 5.0f;
-            }
-        }
-
         out[i] = Mat::zeros(imgs[i].size(), imgs[i].type());
         srcDescs[i] = createRppDescriptor(imgs[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
         dstDescs[i] = createRppDescriptor(out[i], isColor ? RpptLayout::NHWC : RpptLayout::NCHW);
         rois[i] = createFullImageROI(imgs[i]);
     }
+
+    // Create unified srcDesc for init_remap
+    RpptDesc srcDescUnified;
+    srcDescUnified.n = num_images;
+    srcDescUnified.h = h;
+    srcDescUnified.w = w;
+    srcDescUnified.c = isColor ? 3 : 1;
+
+    init_remap(&tableDesc, &srcDescUnified, rois.data(), mapY.data(), mapX.data());
 
     for (int k = 0; k < HOST_TOTAL_RUNS; ++k) {
         if (k == WARMUP_RUNS) {
@@ -1937,7 +1930,7 @@ void benchmark_RPP_HOST_Remap(const vector<Mat>& imgs, bool isColor, rppHandle_t
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "transform=sine_wave, interpolation=bilinear";
+    params << "transform=horizontal_flip_left_half, interpolation=bilinear";
     printResult("RPP HOST Remap", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
@@ -7581,7 +7574,7 @@ void benchmark_RPP_HOST_Remap_Batched(const vector<Mat>& imgs, bool isColor, rpp
     perfMonitor.stop();
 
     ostringstream params;
-    params << "transform=sine_wave, interpolation=bilinear";
+    params << "transform=horizontal_flip_left_half, interpolation=bilinear";
     printResult("RPP HOST BATCH Remap", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 

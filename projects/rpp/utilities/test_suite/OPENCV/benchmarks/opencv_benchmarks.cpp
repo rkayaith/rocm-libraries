@@ -873,13 +873,20 @@ void benchmark_OpenCV_Remap(const vector<Mat>& imgs, bool isColor) {
 
     if (imgs.empty()) return;
 
-    // Match RPP sine wave distortion mapping
+    // Match init_remap behavior (horizontal flip on left half)
     Mat map_x(imgs[0].size(), CV_32FC1);
     Mat map_y(imgs[0].size(), CV_32FC1);
+    int halfWidth = imgs[0].cols / 2;
     for (int y = 0; y < map_x.rows; ++y) {
         for (int x = 0; x < map_x.cols; ++x) {
-            map_y.at<float>(y, x) = y + sin(x * 0.01f) * 5.0f;
-            map_x.at<float>(y, x) = x + cos(y * 0.01f) * 5.0f;
+            map_y.at<float>(y, x) = (float)y;
+            if (x < halfWidth) {
+                // Left half: horizontal flip
+                map_x.at<float>(y, x) = (float)(halfWidth - x);
+            } else {
+                // Right half: identity
+                map_x.at<float>(y, x) = (float)x;
+            }
         }
     }
 
@@ -892,7 +899,7 @@ void benchmark_OpenCV_Remap(const vector<Mat>& imgs, bool isColor) {
     }
     perfMonitor.stop();
     ostringstream params;
-    params << "transform=sine_wave, interpolation=bilinear";
+    params << "transform=horizontal_flip_left_half, interpolation=bilinear";
     printResult("OpenCV Remap", imgs.size(), isColor, perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
 
