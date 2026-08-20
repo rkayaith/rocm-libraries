@@ -7354,7 +7354,7 @@ void benchmark_RPP_HIP_HistogramEqualize_Batched(const vector<Mat>& imgs, bool i
 
 // ===== COLOR OPERATIONS =====
 
-void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float hueFactor,
+void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float hueDelta,
                                    rppHandle_t handle, hipStream_t stream) {
     int batchSize = (int)imgs.size();
     if (batchSize == 0) return;
@@ -7384,7 +7384,7 @@ void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float 
     CHECK_HIP_STATUS(hipHostMalloc(&roiTensor, batchSize * sizeof(RpptROI)));
 
     for (int i = 0; i < batchSize; ++i) {
-        hueTensor[i] = hueFactor;
+        hueTensor[i] = hueDelta;
         roiTensor[i].xywhROI.xy.x = 0;
         roiTensor[i].xywhROI.xy.y = 0;
         roiTensor[i].xywhROI.roiWidth = imgs[i].cols;
@@ -7427,7 +7427,7 @@ void benchmark_RPP_HIP_Hue_Batched(const vector<Mat>& imgs, bool isColor, float 
     CHECK_HIP_STATUS(hipHostFree(roiTensor));
 
     ostringstream params;
-    params << "hue=" << hueFactor;
+    params << "hue=" << hueDelta;
     printResult("RPP HIP BATCH Hue", imgs.size(), isColor,
                 perfMonitor.getTotalTime(), perfMonitor.getTotalEnergy(), params.str());
 }
