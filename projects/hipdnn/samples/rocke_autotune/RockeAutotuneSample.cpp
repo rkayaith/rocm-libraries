@@ -92,10 +92,12 @@ constexpr int64_t UID_K = 2;
 constexpr int64_t UID_V = 3;
 constexpr int64_t UID_O = 4;
 
-/// Log fragments the backend's config heuristic emits when it consults the exact-match
-/// cache. The read side reports its decision nowhere else.
-constexpr const char* CACHE_HIT_FRAGMENT = "exact-match cache hit";
-constexpr const char* CACHE_MISS_FRAGMENT = "exact-match cache miss";
+/// Log fragments the INGESTOR emits while racing its candidates and while reusing a
+/// benchmarked record. The count of raced kernels is reported on the SELECTED line
+/// ("among N candidate(s)") rather than one line per candidate, so that is what the
+/// sample parses.
+constexpr const char* BENCHMARK_SELECTED_FRAGMENT = "ingestor: benchmarking selected kernel";
+constexpr const char* RECORD_REUSED_FRAGMENT = "from a benchmarked record of";
 
 /// Captures backend log lines so the sample can observe the read-side cache decision.
 class LogCapture
@@ -137,14 +139,42 @@ public:
         return {};
     }
 
+    /// The candidate count the ingestor reports on its selection line, which reads
+    /// "... in 0.0245 ms among 3 candidate(s)". Zero when the line is absent or does not
+    /// carry a count, which is what a run that never raced anything looks like.
+    static size_t candidatesFrom(const std::string& selectedLine)
+    {
+        const auto at = selectedLine.rfind("among ");
+        if(at == std::string::npos)
+        {
+            return 0;
+        }
+        return static_cast<size_t>(std::strtoul(selectedLine.c_str() + at + 6, nullptr, 10));
+    }
+
+    /// How many captured lines contain @p fragment. The candidate count is how the
+    /// sample shows a real race happened rather than a single kernel being rubber-stamped.
+    size_t countContaining(const std::string& fragment)
+    {
+        const std::lock_guard<std::mutex> lock(_mutex);
+        size_t hits = 0;
+        for(const auto& line : _lines)
+        {
+            if(line.find(fragment) != std::string::npos)
+            {
+                ++hits;
+            }
+        }
+        return hits;
+    }
+
 private:
     std::mutex _mutex;
     std::vector<std::string> _lines;
 };
 
-void logCallback(hipdnnSeverity_t /*severity*/,
-                 void* /*userData*/,
-                 const hipdnnDebug_t* /*debug*/,
+void logCallback(hipdnnUserLogCallbackHandle_t /*userHandle*/,
+                 hipdnnSeverity_t /*severity*/,
                  const char* message)
 {
     LogCapture::instance().record(message);
@@ -214,8 +244,8 @@ Operands allocateOperands()
         auto tensor = std::make_unique<utilities::Tensor<bf16>>(
             std::vector<int64_t>{BATCH, heads, sequence, HEAD_SIZE},
             std::vector<int64_t>{sequence * heads * HEAD_SIZE, HEAD_SIZE, heads * HEAD_SIZE, 1});
-        tensor->fillWithRandomValues(-1.0F, 1.0F, seed);
-        operands.variantPack[uid] = tensor->deviceData();
+        tensor->fillTensorWithRandomValues(-1.0F, 1.0F, seed);
+        operands.variantPack[uid] = tensor->memory().deviceData();
         operands.tensors.push_back(std::move(tensor));
     };
 
@@ -233,11 +263,11 @@ const char* describe(AutotuneCacheWriteOutcome outcome)
     case AutotuneCacheWriteOutcome::WRITTEN:
         return "WRITTEN";
     case AutotuneCacheWriteOutcome::UNCHANGED:
-        return "UNCHANGED";
+        return "UNCHANGED  (the stored ranking already matched)";
     case AutotuneCacheWriteOutcome::DECLINED_DISABLED:
-        return "DECLINED_DISABLED";
+        return "DECLINED_DISABLED  (HIPDNN_DISABLE_EXACT_ENGINE_CACHE)";
     case AutotuneCacheWriteOutcome::DECLINED_UNKEYABLE:
-        return "DECLINED_UNKEYABLE";
+        return "DECLINED_UNKEYABLE  (graph/device did not reduce to a cache key)";
     case AutotuneCacheWriteOutcome::NOT_ATTEMPTED_NO_SUCCESSFUL_ENGINE:
         return "NOT_ATTEMPTED_NO_SUCCESSFUL_ENGINE";
     }
@@ -246,24 +276,27 @@ const char* describe(AutotuneCacheWriteOutcome outcome)
 
 void printRanking(const std::vector<AutotuneResult>& results)
 {
-    std::cout << "    rank  engine                                  min ms    avg ms\n";
+    std::cout << "      rank  engine                                min ms    avg ms\n";
     int rank = 0;
     for(const auto& result : results)
     {
-        std::cout << "    " << std::setw(4) << rank++ << "  " << std::left << std::setw(38)
-                  << result.engineName.substr(0, 38) << std::right << std::fixed
+        std::cout << "      " << std::setw(4) << rank++ << "  " << std::left << std::setw(36)
+                  << result.engineName.substr(0, 36) << std::right << std::fixed
                   << std::setprecision(4) << std::setw(9) << result.minTimeMs << std::setw(10)
                   << result.avgTimeMs << '\n';
     }
 }
 
-/// Scenario 1: how many candidates does this graph actually have?
+/// Scenario 1: which engine serves this graph?
 ///
-/// The premise of everything below. With fewer than two the sweep still runs but proves
-/// nothing about choosing, so this reports the count rather than assuming it.
+/// Expect exactly ONE. The competing block_n kernels live inside a single engine, so
+/// the frontend sees one engine id no matter how many variants are packed -- the count
+/// here says nothing about how many kernels will race. Scenario 2 is where the variants
+/// become visible. This exists to confirm the rocKE engine is reachable at all before
+/// anything is measured.
 bool showCandidates(hipdnnHandle_t handle)
 {
-    std::cout << "\n[1] Candidates for the SDPA graph\n";
+    std::cout << "\n[1] Engine serving the SDPA graph\n";
     auto graph = buildSdpaGraph();
 
     auto result = graph->build_operation_graph(handle);
@@ -275,34 +308,55 @@ bool showCandidates(hipdnnHandle_t handle)
     }
 
     std::vector<int64_t> engineIds;
-    HIPDNN_FE_CHECK(graph->get_ranked_engine_ids(engineIds));
+    result = graph->get_ranked_engine_ids(engineIds);
+    if(result.is_bad())
+    {
+        std::cout << "    no engine offered itself: " << result.err_msg << '\n';
+        return false;
+    }
     std::cout << "    engines offering themselves: " << engineIds.size() << '\n';
     for(const auto id : engineIds)
     {
         std::cout << "      engine id " << id << '\n';
     }
-    if(engineIds.size() < 2)
+    if(engineIds.empty())
     {
-        std::cout << "    NOTE: fewer than two candidates, so the sweep below has no real\n"
-                     "    choice to make. Check that the competing block_n descriptors were\n"
-                     "    packed for this arch.\n";
+        std::cout << "    NOTE: nothing serves this graph, so there is nothing to race.\n";
+        return false;
     }
     return true;
 }
 
-/// Scenario 2: benchmark every candidate, rank them, and write the winner.
+/// Scenario 2: an exhaustive sweep races the kernels and populates both caches.
 ///
-/// autotuneExhaustiveSweep() is the one entry point that writes the exact-match cache;
-/// the plain autotune() overloads benchmark but never write.
+/// One call drives both layers, which is why it is the right entry point even though
+/// this graph has a single engine:
+///
+///   * EXHAUSTIVE mode first builds temporary PRIMING plans carrying the
+///     `global.benchmarking` knob. That knob is what makes the ingestor race its
+///     candidates -- BenchmarkPlan times every applicable block_n kernel and hands the
+///     fastest to recordWinner(), which writes the ingestor winner cache.
+///   * The sweep then benchmarks the engine with real plans and writes the measured
+///     ranking to the frontend exact-match cache, reporting the outcome.
+///
+/// So the kernel-level choice and the engine-level ranking both happen here, and both
+/// caches are populated by the one call.
 bool sweepAndCache(hipdnnHandle_t handle)
 {
-    std::cout << "\n[2] Exhaustive sweep across the competing variants\n";
+    std::cout << "\n[2] Exhaustive sweep: race the kernels, cache the winner\n";
+
+    hipdnnSeverity_t savedLevel = HIPDNN_SEV_OFF;
+    HIPDNN_FE_CHECK(getGlobalLogLevel(savedLevel));
+    HIPDNN_FE_CHECK(setGlobalLogLevel(HIPDNN_SEV_INFO));
+    HIPDNN_FE_CHECK(setUserLogCallback(
+        logCallback, HIPDNN_SEV_INFO, LogCallbackMode::SYNC, &LogCapture::instance()));
+    LogCapture::instance().clear();
+
     auto graph = buildSdpaGraph();
     HIPDNN_FE_CHECK(graph->build_operation_graph(handle));
     HIPDNN_FE_CHECK(graph->add_all_engines());
 
     auto operands = allocateOperands();
-
     int64_t maxWorkspace = 0;
     HIPDNN_FE_CHECK(graph->get_estimated_max_workspace_size(maxWorkspace));
     const utilities::Workspace workspace(static_cast<size_t>(maxWorkspace));
@@ -321,40 +375,41 @@ bool sweepAndCache(hipdnnHandle_t handle)
                                                    &results,
                                                    &outcome));
 
-    std::cout << "    benchmarked " << results.size() << " candidate(s)\n";
-    printRanking(results);
-    std::cout << "    cache write: " << describe(outcome) << '\n';
-    if(outcome != AutotuneCacheWriteOutcome::WRITTEN
-       && outcome != AutotuneCacheWriteOutcome::UNCHANGED)
+    const auto selected = LogCapture::instance().lastContaining(BENCHMARK_SELECTED_FRAGMENT);
+    const auto raced = LogCapture::candidatesFrom(selected);
+
+    setUserLogCallback(logCallback, HIPDNN_SEV_OFF, LogCallbackMode::SYNC, &LogCapture::instance());
+    setGlobalLogLevel(savedLevel);
+
+    // Kernel level: did the ingestor actually race the competing block_n variants?
+    std::cout << "    kernel candidates raced by the ingestor: " << raced << '\n';
+    if(!selected.empty())
     {
-        std::cout << "    NOTE: the ranking did not reach the cache, so the reuse step below\n"
-                     "    has nothing to hit.\n";
-        return false;
+        std::cout << "    " << selected << '\n';
+    }
+    if(raced < 2)
+    {
+        std::cout << "    NOTE: fewer than two kernels were raced, so nothing was really\n"
+                     "    chosen at the kernel level. Check that the competing block_n\n"
+                     "    descriptors were packed for this arch.\n";
     }
 
-    // A second sweep measuring the same order has nothing to add. UNCHANGED here is the
-    // write-side evidence that the first sweep's ranking is already stored.
-    auto second = AutotuneCacheWriteOutcome::NOT_ATTEMPTED_NO_SUCCESSFUL_ENGINE;
-    auto reGraph = buildSdpaGraph();
-    HIPDNN_FE_CHECK(reGraph->build_operation_graph(handle));
-    HIPDNN_FE_CHECK(reGraph->add_all_engines());
-    HIPDNN_FE_CHECK(reGraph->autotuneExhaustiveSweep(
-        handle, operands.variantPack, workspace.get(), maxWorkspace, config, {}, nullptr, &second));
-    std::cout << "    re-sweep cache write: " << describe(second)
-              << (second == AutotuneCacheWriteOutcome::UNCHANGED
-                      ? "  (the stored ranking already matched)"
-                      : "")
-              << '\n';
-    return true;
+    // Engine level: the measured ranking and where it went.
+    std::cout << "    engines benchmarked: " << results.size() << '\n';
+    printRanking(results);
+    std::cout << "    exact-match cache write: " << describe(outcome) << '\n';
+
+    return raced >= 2 || outcome == AutotuneCacheWriteOutcome::WRITTEN;
 }
 
-/// Scenario 3: a fresh graph consults the cache instead of re-deciding.
+/// Scenario 3: a second graph reuses the benchmarked record instead of re-racing.
 ///
-/// The read side reports its decision only in the log, so this captures backend logging
-/// around a heuristic-driven selection and reports which fragment appeared.
-bool showCacheReuse(hipdnnHandle_t handle)
+/// Same process, fresh graph. A hit logs that the engine served a kernel "from a
+/// benchmarked record"; a miss re-races and logs candidates again. Neither outcome is
+/// reported through a return value anywhere in the API, so the log is the evidence.
+bool showWinnerReuse(hipdnnHandle_t handle)
 {
-    std::cout << "\n[3] A fresh graph reuses the cached ranking\n";
+    std::cout << "\n[3] A fresh graph reuses the benchmarked winner\n";
 
     hipdnnSeverity_t savedLevel = HIPDNN_SEV_OFF;
     HIPDNN_FE_CHECK(getGlobalLogLevel(savedLevel));
@@ -365,30 +420,32 @@ bool showCacheReuse(hipdnnHandle_t handle)
 
     auto graph = buildSdpaGraph();
     HIPDNN_FE_CHECK(graph->build_operation_graph(handle));
-    std::vector<int64_t> engineIds;
-    HIPDNN_FE_CHECK(graph->get_ranked_engine_ids(engineIds));
+    HIPDNN_FE_CHECK(graph->build(handle));
 
-    const auto hit = LogCapture::instance().lastContaining(CACHE_HIT_FRAGMENT);
-    const auto miss = LogCapture::instance().lastContaining(CACHE_MISS_FRAGMENT);
+    auto operands = allocateOperands();
+    int64_t workspaceSize = 0;
+    HIPDNN_FE_CHECK(graph->get_workspace_size(workspaceSize));
+    const utilities::Workspace workspace(static_cast<size_t>(workspaceSize));
+    HIPDNN_FE_CHECK(graph->execute(handle, operands.variantPack, workspace.get()));
+
+    const auto reused = LogCapture::instance().lastContaining(RECORD_REUSED_FRAGMENT);
+    const auto reRaced = LogCapture::candidatesFrom(
+        LogCapture::instance().lastContaining(BENCHMARK_SELECTED_FRAGMENT));
 
     setUserLogCallback(logCallback, HIPDNN_SEV_OFF, LogCallbackMode::SYNC, &LogCapture::instance());
     setGlobalLogLevel(savedLevel);
 
-    if(!hit.empty())
+    if(!reused.empty())
     {
-        std::cout << "    cache HIT: " << hit << '\n'
-                  << "    The ranking came from the previous sweep rather than being\n"
-                     "    re-derived, which is the reuse this sample exists to show.\n";
+        std::cout << "    REUSED: " << reused << '\n'
+                  << "    The winner came from the recorded ranking rather than being\n"
+                     "    re-measured, which is the reuse this sample exists to show.\n";
         return true;
     }
-    if(!miss.empty())
-    {
-        std::cout << "    cache MISS: " << miss << '\n'
-                  << "    The sweep's ranking did not key to this graph+device.\n";
-        return false;
-    }
-    std::cout << "    no exact-match cache decision was logged. The cache may be disabled\n"
-                 "    (HIPDNN_DISABLE_EXACT_ENGINE_CACHE / HIPDNN_DISABLE_CACHE).\n";
+    std::cout << "    the record was not reused; " << reRaced
+              << " candidate(s) were benchmarked again.\n"
+                 "    A record is keyed on (graph content, device), so this means the second\n"
+                 "    graph did not key to the first, or caching is off (HIPDNN_DISABLE_CACHE).\n";
     return false;
 }
 
@@ -414,6 +471,16 @@ int main(int argc, char** argv)
     RETURN_SUCCESS_IF_NO_DEVICE();
     initializeFrontendLogging();
 
+    // The ingestor only races its candidates when benchmarking is on, and it is off by
+    // default. Set the process-wide override before the first handle so the engine sees
+    // it, unless the caller already chose a value.
+    if(hipdnn_data_sdk::utilities::getEnv("HIPDNN_FORCE_BENCHMARKING").empty())
+    {
+        static char forceBenchmarking[] = "HIPDNN_FORCE_BENCHMARKING=1";
+        putenv(forceBenchmarking);
+        std::cout << "(enabled HIPDNN_FORCE_BENCHMARKING=1 for this process)\n";
+    }
+
     hipdnnHandle_t handle = nullptr;
     HIPDNN_CHECK(hipdnnCreate(&handle));
 
@@ -428,7 +495,7 @@ int main(int argc, char** argv)
     }
     if(ok)
     {
-        ok = showCacheReuse(handle);
+        ok = showWinnerReuse(handle);
     }
 
     HIPDNN_CHECK(hipdnnDestroy(handle));
