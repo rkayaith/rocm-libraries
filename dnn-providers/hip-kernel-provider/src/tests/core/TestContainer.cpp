@@ -47,8 +47,20 @@ static uint32_t expectedEngines()
 }
 
 /// Upper bound for the fixed-size buffers below; only needs to be at least
-/// expectedEngines().
-constexpr uint32_t MAX_EXPECTED_ENGINES = 8;
+/// expectedEngines(). That count is dynamic -- it grows with every discovered
+/// descriptor set -- so a bound too small does not fail cleanly: copyEngineIds truncates
+/// and whichever engine sorted last silently vanishes from the buffer, which reads as
+/// that engine being missing rather than as a test-local limit. Checked at run time by
+/// the guard in each test that uses it.
+constexpr uint32_t MAX_EXPECTED_ENGINES = 16;
+
+/// Fails with the real numbers instead of letting a truncated copy masquerade as a
+/// missing engine.
+#define REQUIRE_ENGINE_BUFFER_FITS()                                                         \
+    ASSERT_LE(expectedEngines(), MAX_EXPECTED_ENGINES)                                       \
+        << "MAX_EXPECTED_ENGINES (" << MAX_EXPECTED_ENGINES << ") is below the "             \
+        << expectedEngines() << " engines this build exposes, so the copy below truncates. " \
+        << "Raise the bound."
 
 TEST(TestContainer, ConstructsSuccessfully)
 {
@@ -69,6 +81,7 @@ TEST(TestContainer, CopyEngineIdsWithBufferContainsHipMlopsEngineId)
 #ifndef HIPDNN_ENGINE_HIP_MLOPS
     GTEST_SKIP();
 #else
+    REQUIRE_ENGINE_BUFFER_FITS();
     std::array<int64_t, MAX_EXPECTED_ENGINES> engineIds = {};
     uint32_t numEngines = 0;
     auto totalEngines
