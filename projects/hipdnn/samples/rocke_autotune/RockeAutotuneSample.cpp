@@ -276,14 +276,18 @@ const char* describe(AutotuneCacheWriteOutcome outcome)
 
 void printRanking(const std::vector<AutotuneResult>& results)
 {
-    std::cout << "      rank  engine                                min ms    avg ms\n";
+    // robust ms first, because that is what autotuneExhaustiveSweep() ranks on: the
+    // mean after discarding the slow tail, i.e. what the engine usually costs. min ms
+    // is shown beside it since a large gap between the two is the volatility the robust
+    // statistic exists to ignore.
+    std::cout << "      rank  engine                             robust ms    min ms\n";
     int rank = 0;
     for(const auto& result : results)
     {
         std::cout << "      " << std::setw(4) << rank++ << "  " << std::left << std::setw(36)
                   << result.engineName.substr(0, 36) << std::right << std::fixed
-                  << std::setprecision(4) << std::setw(9) << result.minTimeMs << std::setw(10)
-                  << result.avgTimeMs << '\n';
+                  << std::setprecision(4) << std::setw(9) << result.robustTimeMs << std::setw(10)
+                  << result.minTimeMs << '\n';
     }
 }
 
