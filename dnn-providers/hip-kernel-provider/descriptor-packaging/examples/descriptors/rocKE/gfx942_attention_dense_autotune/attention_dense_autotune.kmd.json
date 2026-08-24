@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "id": "19563451-58b3-5767-8847-43d8e8d941fb",
+  "name": "attention_dense_autotune variant fields",
+  "fields": [
+    {
+      "name": "dtype",
+      "type": "string"
+    },
+    {
+      "name": "head_size",
+      "type": "int",
+      "default_value": 64
+    },
+    {
+      "name": "num_query_heads",
+      "type": "int",
+      "default_value": 8
+    },
+    {
+      "name": "num_kv_heads",
+      "type": "int",
+      "default_value": 8
+    },
+    {
+      "name": "seqlen_q",
+      "type": "int",
+      "default_value": 256
+    },
+    {
+      "name": "seqlen_kv",
+      "type": "int",
+      "default_value": 256
+    },
+    {
+      "name": "causal",
+      "type": "int",
+      "default_value": 1
+    },
+    {
+      "name": "block_n",
+      "type": "int",
+      "default_value": 64
+    }
+  ]
+}

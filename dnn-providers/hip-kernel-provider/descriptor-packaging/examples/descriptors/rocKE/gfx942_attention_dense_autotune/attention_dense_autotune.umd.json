@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "id": "c76a290d-2b97-5193-b0ac-d5de462fb016",
+  "name": "attention_dense_autotune: kernel geometry matches the graph",
+  "scope": "kernel",
+  "match_symbol": "hipkernel.attention_dense.kernel_match"
+}

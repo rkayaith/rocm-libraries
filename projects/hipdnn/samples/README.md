@@ -417,3 +417,26 @@ Demonstrates how to use hipDNN's engine configuration knobs system for runtime p
 
 > [!NOTE]
 > This sample is educational and demonstrates the knobs API. It is not a performance benchmark or validation test.
+
+### [**`RockeAutotuneSample`**](./rocke_autotune/RockeAutotuneSample.cpp)
+
+Autotunes a real SDPA graph across competing rocKE-authored kernel variants, then shows the measured winner reaching the exact-match ranking cache and being reused.
+
+**What This Sample Shows:**
+1. **Real competition**: several rocKE kernels built for one geometry at different KV tile lengths (`block_n`) all match the same graph, so the sweep has a genuine choice to make
+2. **Measured ranking**: `autotuneExhaustiveSweep()` benchmarks every candidate and reports them ranked by time
+3. **Cache write**: the same call reports an `AutotuneCacheWriteOutcome` — `WRITTEN` on a first sweep, `UNCHANGED` when a re-sweep measures the same order
+4. **Cache reuse**: a fresh graph consults the cached ranking instead of re-deciding
+
+**Why `block_n` is the competition axis:** the `attention_dense` pack's kernel matcher compares the seven geometry fields a rocKE kernel bakes in and deliberately not `block_n`, so variants differing only in tile length are all applicable and the pack's `score()` ranks them. `block_n` is the knob the engine's descriptor exposes.
+
+**Observing the cache:** there is no `bool wasCacheHit` in the public API. The write side reports `AutotuneCacheWriteOutcome`; the read side logs `exact-match cache hit` / `miss` at info level, so the sample installs a log callback and reports which appeared.
+
+**Requirements:** built with `-DHIPDNN_ENABLE_SDPA=ON -DHIPDNN_ENABLE_KERNEL_INGESTOR=ON`, and the rocKE `attention_dense` descriptors packed for the running device's arch. Without them the sample reports what was missing and exits 0.
+
+> [!NOTE]
+> The sample never asserts which variant wins. That is a hardware measurement, and pinning it would make the sample fail on a part where a different tile is genuinely faster.
+
+### [**`AutotuneSample`**](./autotune/AutotuneSample.cpp)
+
+Demonstrates the autotuning API over a convolution graph: standard and exhaustive tuning modes, filtering candidates, inspecting ranked results, saving results to a heuristic config file, and autotuning over pre-compiled plans.

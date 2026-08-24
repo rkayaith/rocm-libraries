@@ -168,6 +168,14 @@ add_hipdnn_sample(hipdnn_sample_knobs_usage knobs/KnobsUsage.cpp)
 
 add_hipdnn_sample(hipdnn_sample_autotune autotune/AutotuneSample.cpp)
 
+# Autotuning across competing rocKE SDPA kernel variants. Needs SDPA for the graph and
+# the kernel ingestor for the rocKE engine that supplies the candidates. Without the
+# packed descriptors the sample reports that and exits 0, so the gate is on the build
+# options rather than on whether production packaging happened to run.
+if(HIPDNN_ENABLE_SDPA AND HIPDNN_ENABLE_KERNEL_INGESTOR)
+    add_hipdnn_sample(hipdnn_sample_rocke_autotune rocke_autotune/RockeAutotuneSample.cpp)
+endif()
+
 # Enable testing and add sample tests
 enable_testing()
 

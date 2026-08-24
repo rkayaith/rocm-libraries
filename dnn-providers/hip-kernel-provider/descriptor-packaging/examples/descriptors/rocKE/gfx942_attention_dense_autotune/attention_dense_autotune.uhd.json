@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "id": "5b346b47-0c99-551d-9eaf-118049f60b4c",
+  "name": "attention_dense_autotune selector",
+  "kind": "native",
+  "payload": "hipkernel.attention_dense.score"
+}

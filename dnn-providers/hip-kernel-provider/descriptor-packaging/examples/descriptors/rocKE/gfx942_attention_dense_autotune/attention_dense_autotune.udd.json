@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "id": "08f40b7e-beb2-5801-b3ee-51de82c85bdc",
+  "name": "attention_dense_autotune dispatch",
+  "dispatch_symbol": "hipkernel.attention_dense.dispatch"
+}

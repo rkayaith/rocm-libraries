@@ -1,0 +1,117 @@
+{
+  "version": "1.0",
+  "id": "610a8c3e-184d-575c-9b09-df7c4ef1a5cd",
+  "name": "hipkernel:attention_dense_autotune",
+  "arch": [
+    "gfx942"
+  ],
+  "matchers": [
+    "c76a290d-2b97-5193-b0ac-d5de462fb016"
+  ],
+  "engine": "5b5aa732-e099-5a8c-9d80-527aad8161a9",
+  "dispatch": "08f40b7e-beb2-5801-b3ee-51de82c85bdc",
+  "kernelDescriptors": [
+    {
+      "version": "1.0",
+      "id": "a9f4ca04-7bf3-581f-adfa-d457902854aa",
+      "name": "attention_dense.bf16_d64_hq8_kv8_sq256_bn32.gfx942",
+      "kernel_source": {
+        "kind": "rocke",
+        "source": "kernels/gfx942/attention_dense.py",
+        "builder": "build_gfx942_attention_dense",
+        "spec": {
+          "problem": {
+            "batch": 1,
+            "seqlen_q": 256,
+            "seqlen_kv": 256,
+            "num_query_heads": 8,
+            "num_kv_heads": 8,
+            "head_size": 64,
+            "causal": true,
+            "dtype": "bf16",
+            "block_n": 32
+          }
+        }
+      },
+      "metadata": {
+        "dtype": "BFLOAT16",
+        "head_size": 64,
+        "num_query_heads": 8,
+        "num_kv_heads": 8,
+        "seqlen_q": 256,
+        "seqlen_kv": 256,
+        "causal": 1,
+        "block_n": 32
+      },
+      "priority": 0
+    },
+    {
+      "version": "1.0",
+      "id": "dce61fda-2458-547f-9d50-f1fbec1b2368",
+      "name": "attention_dense.bf16_d64_hq8_kv8_sq256_bn64.gfx942",
+      "kernel_source": {
+        "kind": "rocke",
+        "source": "kernels/gfx942/attention_dense.py",
+        "builder": "build_gfx942_attention_dense",
+        "spec": {
+          "problem": {
+            "batch": 1,
+            "seqlen_q": 256,
+            "seqlen_kv": 256,
+            "num_query_heads": 8,
+            "num_kv_heads": 8,
+            "head_size": 64,
+            "causal": true,
+            "dtype": "bf16",
+            "block_n": 64
+          }
+        }
+      },
+      "metadata": {
+        "dtype": "BFLOAT16",
+        "head_size": 64,
+        "num_query_heads": 8,
+        "num_kv_heads": 8,
+        "seqlen_q": 256,
+        "seqlen_kv": 256,
+        "causal": 1,
+        "block_n": 64
+      },
+      "priority": 0
+    },
+    {
+      "version": "1.0",
+      "id": "b2e4cf69-28fd-54eb-b299-c7bf2403ddb1",
+      "name": "attention_dense.bf16_d64_hq8_kv8_sq256_bn128.gfx942",
+      "kernel_source": {
+        "kind": "rocke",
+        "source": "kernels/gfx942/attention_dense.py",
+        "builder": "build_gfx942_attention_dense",
+        "spec": {
+          "problem": {
+            "batch": 1,
+            "seqlen_q": 256,
+            "seqlen_kv": 256,
+            "num_query_heads": 8,
+            "num_kv_heads": 8,
+            "head_size": 64,
+            "causal": true,
+            "dtype": "bf16",
+            "block_n": 128
+          }
+        }
+      },
+      "metadata": {
+        "dtype": "BFLOAT16",
+        "head_size": 64,
+        "num_query_heads": 8,
+        "num_kv_heads": 8,
+        "seqlen_q": 256,
+        "seqlen_kv": 256,
+        "causal": 1,
+        "block_n": 128
+      },
+      "priority": 0
+    }
+  ]
+}
