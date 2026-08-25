@@ -270,6 +270,8 @@ const char* describe(AutotuneCacheWriteOutcome outcome)
         return "DECLINED_UNKEYABLE  (graph/device did not reduce to a cache key)";
     case AutotuneCacheWriteOutcome::NOT_ATTEMPTED_NO_SUCCESSFUL_ENGINE:
         return "NOT_ATTEMPTED_NO_SUCCESSFUL_ENGINE";
+    case AutotuneCacheWriteOutcome::NOT_ATTEMPTED_PARTIAL_SWEEP:
+        return "NOT_ATTEMPTED_PARTIAL_SWEEP  (a candidate was kept out of the timing loop)";
     }
     return "UNKNOWN";
 }
