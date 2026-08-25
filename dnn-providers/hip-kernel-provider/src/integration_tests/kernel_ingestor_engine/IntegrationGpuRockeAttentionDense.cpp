@@ -26,6 +26,9 @@
 #include <hipdnn_frontend/Utilities.hpp>
 #include <hipdnn_frontend/attributes/SdpaAttributes.hpp>
 #include <hipdnn_frontend/attributes/TensorAttributes.hpp>
+#include <hipdnn_frontend/knob/Knob.hpp>
+#include <hipdnn_frontend/knob/KnobConstraint.hpp>
+#include <hipdnn_frontend/knob/KnobSetting.hpp>
 #include <hipdnn_test_sdk/utilities/LogRecorder.hpp>
 #include <hipdnn_test_sdk/utilities/TestUtilities.hpp>
 
@@ -68,6 +71,14 @@ namespace
 /// must agree or the loader drops the set during its symbol pre-flight.
 constexpr const char* ROCKE_ENGINE_NAME = "hipkernel:AttentionDense";
 
+/// The autotune pack's engine: the same rocKE builder as above, packed three times with
+/// different block_n, competing for one graph. Named by attention_dense_autotune.ued.json.
+constexpr const char* ROCKE_AUTOTUNE_ENGINE_NAME = "hipkernel:AttentionDenseAutotune";
+
+/// The knob that pack publishes, one valid value per packed variant
+/// (attention_dense_autotune.ued.json: `knobs: ["block_n"]`).
+constexpr const char* BLOCK_N_KNOB = "block_n";
+
 /// The one arch the shipped descriptor is built for, matching its `arch` field.
 constexpr const char* ROCKE_DESCRIPTOR_ARCH = "gfx942";
 
@@ -94,19 +105,24 @@ const float ATTENTION_SCALE = 1.0F / std::sqrt(static_cast<float>(HEAD_SIZE));
 /// fp32-vs-fp32 comparison would justify.
 constexpr float BF16_TOLERANCE = 2.0e-2F;
 
+/// The autotune pack is compiled for a different head size than the single-variant pack
+/// (attention_dense_autotune.kdp.json: `head_size: 64`). Its three variants differ from
+/// each other only in block_n; they share this geometry.
+constexpr int64_t AUTOTUNE_HEAD_SIZE = 64;
+
 /// Dims [B, H, S, D]; strides describe the BSHD (token-major) buffer the kernel reads.
 ///
 /// The rocKE dense kernel's ABI is BSHD: its docstring declares "q/out are [B, S, Hq, D]
 /// and k/v are [B, Skv, Hkv, D], dense contiguous", and its emitted addressing agrees
 /// (stride_q_tok = Hq * D).
-std::shared_ptr<TensorAttributes>
-    makeAttentionTensor(int64_t uid, const std::string& name, int64_t heads, int64_t sequence)
+std::shared_ptr<TensorAttributes> makeAttentionTensor(
+    int64_t uid, const std::string& name, int64_t heads, int64_t sequence, int64_t headSize)
 {
     auto tensor = std::make_shared<TensorAttributes>();
     tensor->set_uid(uid)
         .set_name(name)
-        .set_dim({BATCH, heads, sequence, HEAD_SIZE})
-        .set_stride({sequence * heads * HEAD_SIZE, HEAD_SIZE, heads * HEAD_SIZE, 1})
+        .set_dim({BATCH, heads, sequence, headSize})
+        .set_stride({sequence * heads * headSize, headSize, heads * headSize, 1})
         .set_data_type(DataType::BFLOAT16);
     return tensor;
 }
@@ -124,22 +140,21 @@ struct DenseSdpaGraph
     std::shared_ptr<TensorAttributes> output;
 };
 
-DenseSdpaGraph buildDenseSdpaGraph()
+DenseSdpaGraph buildSdpaGraphForHeadSize(int64_t headSize, const char* name)
 {
     auto graph = std::make_shared<Graph>();
-    graph->set_name("rocke_attention_dense")
+    graph->set_name(name)
         .set_io_data_type(DataType::BFLOAT16)
         .set_intermediate_data_type(DataType::FLOAT)
         .set_compute_data_type(DataType::FLOAT);
 
-    auto q = makeAttentionTensor(1, "Q", NUM_QUERY_HEADS, SEQLEN_Q);
-    auto k = makeAttentionTensor(2, "K", NUM_KV_HEADS, SEQLEN_KV);
-    auto v = makeAttentionTensor(3, "V", NUM_KV_HEADS, SEQLEN_KV);
+    auto q = makeAttentionTensor(1, "Q", NUM_QUERY_HEADS, SEQLEN_Q, headSize);
+    auto k = makeAttentionTensor(2, "K", NUM_KV_HEADS, SEQLEN_KV, headSize);
+    auto v = makeAttentionTensor(3, "V", NUM_KV_HEADS, SEQLEN_KV, headSize);
 
     SdpaAttributes attributes;
-    attributes.set_name("rocke_attention_dense")
-        .set_causal_mask(true)
-        .set_attn_scale(ATTENTION_SCALE);
+    attributes.set_name(name).set_causal_mask(true).set_attn_scale(
+        1.0F / std::sqrt(static_cast<float>(headSize)));
 
     auto [o, stats] = graph->sdpa(q, k, v, attributes);
     EXPECT_EQ(stats, nullptr) << "generate_stats was not requested, so no stats tensor "
@@ -150,12 +165,25 @@ DenseSdpaGraph buildDenseSdpaGraph()
     o->set_uid(4)
         .set_name("O")
         .set_output(true)
-        .set_dim({BATCH, NUM_QUERY_HEADS, SEQLEN_Q, HEAD_SIZE})
+        .set_dim({BATCH, NUM_QUERY_HEADS, SEQLEN_Q, headSize})
         .set_stride(
-            {SEQLEN_Q * NUM_QUERY_HEADS * HEAD_SIZE, HEAD_SIZE, NUM_QUERY_HEADS * HEAD_SIZE, 1})
+            {SEQLEN_Q * NUM_QUERY_HEADS * headSize, headSize, NUM_QUERY_HEADS * headSize, 1})
         .set_data_type(DataType::BFLOAT16);
 
     return {graph, o};
+}
+
+DenseSdpaGraph buildDenseSdpaGraph()
+{
+    return buildSdpaGraphForHeadSize(HEAD_SIZE, "rocke_attention_dense");
+}
+
+/// The autotune pack's geometry, which differs from the single-variant pack's in head
+/// size alone (d64 vs d128). A rocKE kernel bakes its shape in, so the wrong head size
+/// is declined by the kernel matcher rather than served incorrectly.
+DenseSdpaGraph buildAutotuneSdpaGraph()
+{
+    return buildSdpaGraphForHeadSize(AUTOTUNE_HEAD_SIZE, "rocke_attention_dense_autotune");
 }
 
 /// The directory the loader walks, derived the way the loader derives it: from the plugin
@@ -497,6 +525,100 @@ TEST_F(IntegrationGpuRockeAttentionDense, ReadsOperandsInTheLayoutItDeclares)
             << "head " << h << " returned " << got << ", i.e. it read head "
             << (static_cast<int>(got) - 1)
             << "'s V. The kernel does not read operands in the layout this test declares.";
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Every autotune variant, not merely the one that won
+// ---------------------------------------------------------------------------
+
+/// Each packed block_n variant computes the same attention, correctly.
+///
+/// The sweep ranks the autotune pack's three variants and caches the winner, but a
+/// ranking is a statement about SPEED. Nothing else compares any variant against a
+/// reference, so a variant that is fast and WRONG ranks first and is then cached as the
+/// winner and reused -- the failure autotuning is uniquely good at hiding.
+///
+/// Driven through the block_n knob rather than by racing, so the variant under test is
+/// chosen rather than observed: a benchmark executes one and leaves the others untried.
+TEST_F(IntegrationGpuRockeAttentionDense, EveryAutotuneVariantComputesCorrectAttention)
+{
+    const int64_t autotuneEngineId
+        = hipdnn_data_sdk::utilities::engineNameToId(ROCKE_AUTOTUNE_ENGINE_NAME);
+
+    // The knob's own valid values decide which variants are exercised. Hardcoding
+    // {32, 64, 128} would keep passing if the pack silently stopped publishing one,
+    // which is the regression most worth catching here.
+    std::vector<int64_t> blockNValues;
+    {
+        auto [graph, output] = buildAutotuneSdpaGraph();
+        static_cast<void>(output);
+
+        auto result = graph->build_operation_graph(_handle);
+        ASSERT_EQ(result.code, ErrorCode::OK) << result.err_msg;
+
+        std::vector<Knob> knobs;
+        result = graph->get_knobs_for_engine(autotuneEngineId, knobs);
+        ASSERT_EQ(result.code, ErrorCode::OK) << result.err_msg;
+
+        const auto blockN = std::find_if(knobs.begin(), knobs.end(), [](const Knob& knob) {
+            return knob.knobId() == BLOCK_N_KNOB;
+        });
+        ASSERT_NE(blockN, knobs.end()) << "the autotune pack published no '" << BLOCK_N_KNOB
+                                       << "' knob, so its variants cannot be selected individually";
+
+        const auto* constraint = blockN->constraint();
+        ASSERT_NE(constraint, nullptr) << "the block_n knob carries no constraint";
+        ASSERT_EQ(constraint->kind(), ConstraintKind::INT) << "block_n is not an integer knob";
+        const auto& validValues = static_cast<const IntConstraint*>(constraint)->getValidValues();
+        blockNValues.assign(validValues.begin(), validValues.end());
+        std::sort(blockNValues.begin(), blockNValues.end());
+    }
+
+    ASSERT_GE(blockNValues.size(), 2U)
+        << "an autotune pack with fewer than two variants has nothing to tune, so the "
+           "sweep the sample demonstrates would be racing a single candidate";
+
+    for(const int64_t blockN : blockNValues)
+    {
+        SCOPED_TRACE("block_n=" + std::to_string(blockN));
+
+        auto [graph, output] = buildAutotuneSdpaGraph();
+
+        auto result = graph->build_operation_graph(_handle);
+        ASSERT_EQ(result.code, ErrorCode::OK) << result.err_msg;
+
+        // The ranked id, not engineNameToId(): create_execution_plan_ext() validates its
+        // argument against the ranked set and rejects a name-derived id outright
+        // ("Engine id is not in a valid range"). Located in that set rather than assumed,
+        // so a graph this engine declines fails here instead of silently verifying
+        // whichever engine did answer.
+        std::vector<int64_t> rankedEngineIds;
+        result = graph->get_ranked_engine_ids(rankedEngineIds);
+        ASSERT_EQ(result.code, ErrorCode::OK) << result.err_msg;
+        const auto ranked
+            = std::find(rankedEngineIds.begin(), rankedEngineIds.end(), autotuneEngineId);
+        ASSERT_NE(ranked, rankedEngineIds.end())
+            << "the autotune engine did not offer itself for this graph; its descriptor's "
+               "geometry and this graph's must agree exactly";
+
+        // create_execution_plan_ext() rather than create_execution_plans(): the default
+        // heuristic path picks a variant for us, which is what this case must prevent.
+        const std::vector<KnobSetting> settings{KnobSetting(BLOCK_N_KNOB, blockN)};
+        result = graph->create_execution_plan_ext(*ranked, settings);
+        ASSERT_EQ(result.code, ErrorCode::OK) << result.err_msg;
+
+        registerValidator(output, BF16_TOLERANCE);
+        verifyGraph(*graph, /*seed=*/0);
+        ASSERT_FALSE(HasFatalFailure() || HasNonfatalFailure())
+            << "block_n=" << blockN << " disagreed with the CPU reference";
+
+        int64_t servingEngineId = 0;
+        ASSERT_EQ(graph->get_execution_plan_engine_id(servingEngineId).code, ErrorCode::OK);
+        EXPECT_EQ(servingEngineId, autotuneEngineId)
+            << "engine id " << servingEngineId << " served the graph, not the autotune "
+            << "engine " << autotuneEngineId << ", so the numeric agreement above is not "
+            << "evidence about this variant";
     }
 }
 
