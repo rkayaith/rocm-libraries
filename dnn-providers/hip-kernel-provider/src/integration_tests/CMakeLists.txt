@@ -168,3 +168,44 @@ if(ENABLE_ASM_SDPA_ENGINE AND HIPDNN_ENABLE_SDPA
             "HIPDNN_AITER_ASM_DIR=${_install_asm_dir}"
     )
 endif()
+
+# The rocKE attention_dense packs, through the cross-provider gpu-reference suite.
+#
+# Selected by ENGINE_NAME, which only became possible once hip-kernel-provider implemented
+# Container::getEngineName (engine plugin API 1.4.0, added by #10645 and adopted here).
+# Before that a descriptor-backed engine published no name at all, --test-engine rejected
+# it as "not loaded", and this block could not exist.
+#
+# One target per pack because --test-engine pins exactly one engine: a case belonging to
+# the other pack reports not-applicable and skips, which each TOML documents.
+#
+# Gated on the packs actually being built. The descriptors only exist when the ingestor is
+# on AND the rocKE producer ran over a source root; without that the engines never appear
+# and every case would fail rather than skip.
+if(HIPDNN_ENABLE_KERNEL_INGESTOR AND HIPDNN_ENABLE_SDPA
+   AND HIPKERNELPROVIDER_PRODUCTION_ENABLE_ROCKE
+   AND TARGET hipdnn_integration_tests AND COMMAND add_external_integration_test_target)
+    # gpu: these graphs carry no golden data in-tree, so the reference is computed live.
+    # GpuSdpaFwdPlanBuilder accepts them (no dropout, paging, varlen, stats or fp8 descale)
+    # and reads strides from the tensor rather than assuming a layout -- which is what
+    # makes the BSHD cases checkable at all.
+    add_external_integration_test_target(
+        TARGET_NAME hip_kernel_provider_rocke_attention_dense_gpu_ref_integration_tests
+        PLUGIN_TARGET hip_kernel_provider
+        ENGINE_NAME hipkernel:AttentionDense
+        INSTALL_SUBDIR hip_kernel_provider
+        REFERENCE_EXECUTOR gpu
+        GTEST_FILTER
+            Smoke/IntegrationGpuSdpaRockeAttentionDenseBfp16.Correctness/*
+    )
+
+    add_external_integration_test_target(
+        TARGET_NAME hip_kernel_provider_rocke_attention_dense_autotune_gpu_ref_integration_tests
+        PLUGIN_TARGET hip_kernel_provider
+        ENGINE_NAME hipkernel:AttentionDenseAutotune
+        INSTALL_SUBDIR hip_kernel_provider
+        REFERENCE_EXECUTOR gpu
+        GTEST_FILTER
+            Smoke/IntegrationGpuSdpaRockeAttentionDenseBfp16.Correctness/*
+    )
+endif()

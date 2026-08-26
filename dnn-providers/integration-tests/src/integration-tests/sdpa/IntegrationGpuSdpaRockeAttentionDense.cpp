@@ -420,6 +420,22 @@ protected:
             testCase.pack == RockePack::DENSE ? ROCKE_DENSE_ENGINE_NAME
                                               : ROCKE_AUTOTUNE_ENGINE_NAME);
 
+        // Pinned to a DIFFERENT engine than this case's pack. Each pack has its own
+        // external-integration target running the same filter, so the AttentionDense
+        // target necessarily meets the autotune pack's cases and vice versa.
+        //
+        // Checked here, before anything touches the graph. Keying this off the ranked-id
+        // list does not work: the case's own engine is still RANKED when another is
+        // pinned, so the graph looks servable, and the run then dies in
+        // set_preferred_engine_id_ext() with HIPDNN_BACKEND_ERROR fighting the harness's
+        // own pin. Not-applicable is a skip everywhere else in this project; failing here
+        // would make each target red for cases that were never its to serve.
+        if(TestConfig::get().hasEngineName() && TestConfig::get().getEngineId() != rockeEngineId)
+        {
+            GTEST_SKIP() << "pinned to " << TestConfig::get().getEngineName()
+                         << ", but this case belongs to the other rocKE pack";
+        }
+
         std::vector<int64_t> rankedEngineIds;
         const auto status = graphObj.get_ranked_engine_ids(rankedEngineIds);
         const bool offeredItself
@@ -439,10 +455,11 @@ protected:
         }
 
         // A skip here would silently drop the only rocKE coverage in this project, so the
-        // arch gate is explicit: off gfx942 the pack is dropped by design and there is
-        // nothing to test; on gfx942 an absent engine is a real failure.
+        // reasons for one are enumerated rather than blanket. The cross-pack case is
+        // already handled above, before the graph is touched.
         if(!offeredItself)
         {
+            // Off gfx942 the pack is dropped by design and there is nothing to test.
             const auto& arch = TestConfig::get().getCurrentArch();
             if(arch.find("gfx942") == std::string::npos)
             {
@@ -450,6 +467,9 @@ protected:
                                 "this device is "
                              << arch << ", so the ingestor drops the pack";
             }
+
+            // On gfx942, with this pack's own engine pinned or nothing pinned at all, an
+            // absent engine is a real failure.
             FAIL() << "the rocKE engine did not offer itself for " << testCase.note << " on "
                    << arch
                    << ". Either the production packs were not built into this tree "
