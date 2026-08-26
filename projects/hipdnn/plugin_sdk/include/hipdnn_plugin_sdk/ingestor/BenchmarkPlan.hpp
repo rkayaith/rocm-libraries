@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -274,6 +275,34 @@ private:
                                    << toString(_candidates[best].kernelId) << " in "
                                    << ranked.front().first << " ms among " << _candidates.size()
                                    << " candidate(s)");
+
+            // The losing times too, at TRACE. The winner alone cannot answer the question
+            // that actually comes up -- "why did it pick that one, and by how much?" --
+            // and a margin inside measurement noise is the difference between a real
+            // choice and a coin flip. The full ranking is persisted to winners.jsonl, but
+            // that is on disk, keyed by graph+device, and unavailable when the cache is
+            // disabled or the write declines; this is the same information at the moment
+            // the decision is made.
+            //
+            // TRACE rather than a new DEBUG level: this file's vocabulary is
+            // TRACE/INFO/WARN/ERROR and there is no DEBUG macro.
+            if(ranked.size() > 1)
+            {
+                // The whole line is built before it reaches the macro. HIPDNN_PLUGIN_LOG_*
+                // expands `msg` into a stream expression, so a leading string LITERAL
+                // followed by `<< std::string` is evaluated on its own first and fails to
+                // compile ("invalid operands ... 'const char[33]' and '__string_type'").
+                std::ostringstream margins;
+                margins << "ingestor: benchmarking ranking [";
+                for(size_t rank = 0; rank < ranked.size(); ++rank)
+                {
+                    const auto& [timeMs, index] = ranked[rank];
+                    margins << (rank == 0 ? "" : ", ") << rank << ":"
+                            << toString(_candidates[index].kernelId) << "=" << timeMs << "ms";
+                }
+                margins << "]";
+                HIPDNN_PLUGIN_LOG_TRACE(margins.str());
+            }
 
             if(_recordRanking)
             {
