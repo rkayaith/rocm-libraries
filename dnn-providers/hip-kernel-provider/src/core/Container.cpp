@@ -102,12 +102,23 @@ const std::vector<Container::EngineDefinition>& Container::getEngineDefinitions(
         // disk: adding an engine is an install, not an edit here.
         for(const auto& set : kernel_ingestor_engine::discoverDescriptorSets())
         {
-            // engineNameToId, not a provider-side registration: the loader already interned
-            // and registered this name, and a second registry over the same process-wide
-            // string_view map risks a dangling view.
+            // engineNameToId is a pure FNV-1a hash of the UED name, so the id and the name
+            // agree by construction -- which is exactly the invariant
+            // hipdnnEnginePluginGetEngineName's contract requires the host to be able to
+            // re-verify (engineNameToId(name) == engine_id, checked at load; a mismatch
+            // drops the engine).
+            //
+            // The name is recorded here rather than registered into EngineNames.hpp's map:
+            // that map is a static in-tree registry a plugin cannot reach, and writing a
+            // string_view into it from here would risk a dangling view. getEngineName()
+            // below serves it instead, which is the mechanism the host added for this in
+            // engine plugin API 1.4.0.
             const auto engineId = engineNameToId(set.engine.name);
             definitions.push_back(
                 {engineId,
+                 // Aliases the memoized set's std::string, so it is valid for the process
+                 // -- what the host requires of the pointer getEngineName() hands back.
+                 set.engine.name,
                  // set aliases discoverDescriptorSets()'s memoized, process-lifetime vector.
                  // Capture by reference: [set] would re-copy a DescriptorSet per engine.
                  [&set](const device::IDevicePropertyProvider& /*devicePropertyProvider*/)
@@ -160,6 +171,42 @@ uint32_t Container::copyEngineIds(int64_t* engineIds, uint32_t maxEngines, uint3
     numEngines = enginesToCopy;
 
     return totalEngines;
+}
+
+hipdnnPluginStatus_t Container::getEngineName(int64_t engineId, const char** name)
+{
+    // The host never passes null, so this is a defect path rather than a decline -- and
+    // per the contract it costs the engine its place, so it must not be used for "no name".
+    if(name == nullptr)
+    {
+        return HIPDNN_PLUGIN_STATUS_BAD_PARAM;
+    }
+
+    for(const auto& definition : getEngineDefinitions())
+    {
+        if(definition.id != engineId)
+        {
+            continue;
+        }
+
+        // A statically registered engine carries no name here on purpose: the host's own
+        // EngineNames.hpp registry already names it, and NOT_APPLICABLE is the documented
+        // way to defer to it.
+        if(definition.name.empty())
+        {
+            return HIPDNN_PLUGIN_STATUS_NOT_APPLICABLE;
+        }
+
+        // .data() is NUL-terminated here because the view aliases a std::string owned by
+        // the process-lifetime static behind discoverDescriptorSets(). That is also what
+        // satisfies "must remain valid for the lifetime of the loaded library".
+        *name = definition.name.data();
+        return HIPDNN_PLUGIN_STATUS_SUCCESS;
+    }
+
+    // An id this plugin does not recognise. NOT_APPLICABLE is the only penalty-free
+    // decline; any other non-success status would drop the engine.
+    return HIPDNN_PLUGIN_STATUS_NOT_APPLICABLE;
 }
 
 Container::Container()
