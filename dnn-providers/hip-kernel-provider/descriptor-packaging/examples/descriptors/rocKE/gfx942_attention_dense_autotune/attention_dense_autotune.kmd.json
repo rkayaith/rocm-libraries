@@ -8,6 +8,11 @@
       "type": "string"
     },
     {
+      "name": "batch",
+      "type": "int",
+      "default_value": 1
+    },
+    {
       "name": "head_size",
       "type": "int",
       "default_value": 64

@@ -13,8 +13,8 @@
   "kernelDescriptors": [
     {
       "version": "1.0",
-      "id": "d7732e2e-d8a2-5962-8ef5-89828a106d0f",
-      "name": "attention_dense.bf16_d128_hq8_kv8_sq256.gfx942",
+      "id": "3227ab40-b774-5ac1-a750-0593589e5c65",
+      "name": "attention_dense.bf16_d128_hq8_kv8_sq256_b1.gfx942",
       "kernel_source": {
         "kind": "rocke",
         "source": "kernels/gfx942/attention_dense.py",
@@ -40,7 +40,76 @@
         "seqlen_q": 256,
         "seqlen_kv": 256,
         "causal": 1,
-        "block_n": 64
+        "block_n": 64,
+        "batch": 1
+      },
+      "priority": 0
+    },
+    {
+      "version": "1.0",
+      "id": "ed78cfc5-b3c5-54e9-b034-badab8bbbd1d",
+      "name": "attention_dense.bf16_d128_hq8_kv8_sq256_b2.gfx942",
+      "kernel_source": {
+        "kind": "rocke",
+        "source": "kernels/gfx942/attention_dense.py",
+        "builder": "build_gfx942_attention_dense",
+        "spec": {
+          "problem": {
+            "batch": 2,
+            "seqlen_q": 256,
+            "seqlen_kv": 256,
+            "num_query_heads": 8,
+            "num_kv_heads": 8,
+            "head_size": 128,
+            "causal": true,
+            "dtype": "bf16"
+          }
+        }
+      },
+      "metadata": {
+        "dtype": "BFLOAT16",
+        "head_size": 128,
+        "num_query_heads": 8,
+        "num_kv_heads": 8,
+        "seqlen_q": 256,
+        "seqlen_kv": 256,
+        "causal": 1,
+        "block_n": 64,
+        "batch": 2
+      },
+      "priority": 0
+    },
+    {
+      "version": "1.0",
+      "id": "e15292b7-8310-5a95-ba5a-914ff4fb59ab",
+      "name": "attention_dense.bf16_d128_hq8_kv8_sq256_b4.gfx942",
+      "kernel_source": {
+        "kind": "rocke",
+        "source": "kernels/gfx942/attention_dense.py",
+        "builder": "build_gfx942_attention_dense",
+        "spec": {
+          "problem": {
+            "batch": 4,
+            "seqlen_q": 256,
+            "seqlen_kv": 256,
+            "num_query_heads": 8,
+            "num_kv_heads": 8,
+            "head_size": 128,
+            "causal": true,
+            "dtype": "bf16"
+          }
+        }
+      },
+      "metadata": {
+        "dtype": "BFLOAT16",
+        "head_size": 128,
+        "num_query_heads": 8,
+        "num_kv_heads": 8,
+        "seqlen_q": 256,
+        "seqlen_kv": 256,
+        "causal": 1,
+        "block_n": 64,
+        "batch": 4
       },
       "priority": 0
     }

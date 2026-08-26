@@ -80,7 +80,16 @@ constexpr std::string_view SCORE_SYMBOL = "hipkernel.attention_dense.score";
 constexpr std::string_view DISPATCH_SYMBOL = "hipkernel.attention_dense.dispatch";
 
 // KMD field names. Each mirrors a field of the rocKE spec that is baked into the binary.
+//
+// `batch` is load-bearing and was missing: the rocKE kernel bakes batch into its
+// BUFFER-RESOURCE EXTENTS, and its own launcher cache keys on a name carrying `_b{batch}`
+// precisely because "two specs differing only in batch MUST NOT share a cached binary, or
+// a B>1 launch is served the B=1 kernel and reads out of bounds"
+// (rocke/library/kernels/gfx942/attention_dense.py:1823-1826). Omitting it here let a
+// batch-4 graph match a batch-1 kernel: only batch 0 was computed and the rest of the
+// output was never written. See Results/rocke-attention-dense-batch-not-matched.md.
 constexpr std::string_view DTYPE_FIELD = "dtype";
+constexpr std::string_view BATCH_FIELD = "batch";
 constexpr std::string_view HEAD_SIZE_FIELD = "head_size";
 constexpr std::string_view NUM_QUERY_HEADS_FIELD = "num_query_heads";
 constexpr std::string_view NUM_KV_HEADS_FIELD = "num_kv_heads";
@@ -429,6 +438,7 @@ bool attentionDenseKernelMatches(const MatchContext& context,
         = attributes->causal_mask() || attributes->causal_mask_bottom_right() ? 1 : 0;
 
     return kernel.getStringMetadata(std::string(DTYPE_FIELD)) == *dtype
+           && kernel.getIntMetadata(std::string(BATCH_FIELD)) == problem->batch
            && kernel.getIntMetadata(std::string(HEAD_SIZE_FIELD)) == problem->headSize
            && kernel.getIntMetadata(std::string(NUM_QUERY_HEADS_FIELD)) == problem->numQueryHeads
            && kernel.getIntMetadata(std::string(NUM_KV_HEADS_FIELD)) == problem->numKvHeads
