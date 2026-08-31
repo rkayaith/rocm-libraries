@@ -56,6 +56,12 @@ class Tuner(BaseTuner):
         params['__ipt__'] = STARTING_IPT + list(range(MIN_IPT, MAX_IPT + 1, IPT_INC))
         return params
 
+    def _get_key_type(self) -> str:
+        return "value_type"
+
+    def _get_value_type(self):
+        return ""
+
     def _get_restrictions(
         self, value_type: str, _: Optional[str] = None
     ) -> Callable[[dict], bool]:

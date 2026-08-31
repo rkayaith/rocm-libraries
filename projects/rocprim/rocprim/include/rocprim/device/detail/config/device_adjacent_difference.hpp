@@ -40,13 +40,14 @@ BEGIN_ROCPRIM_NAMESPACE
 
 namespace detail
 {
+// TARGET: {'gen': 'rdna2', 'arch': 'gfx1030', 'gpu': 'rx6900', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::rdna2, target_arch::gfx1030, gpu::rx6900, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 1024, '__ipt__': 1}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -54,7 +55,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 1}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 1024, '__ipt__': 1}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -62,14 +63,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 1}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 1024, '__ipt__': 2}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {1024, 2}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 1024, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -77,7 +78,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 1}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 1024, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -85,7 +86,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 1}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -93,7 +94,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 64, '__ipt__': 7}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -101,7 +102,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 7}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 512, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -113,13 +114,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'rdna3', 'arch': 'gfx1100', 'gpu': 'rx7900', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::rdna3, target_arch::gfx1100, gpu::rx7900, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 1024, '__ipt__': 2}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -127,7 +129,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 2}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -135,14 +137,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 64, '__ipt__': 7}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {64, 7}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 512, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -150,7 +152,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {512, 1}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -158,7 +160,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 64, '__ipt__': 7}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -166,7 +168,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 7}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 64, '__ipt__': 17}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -174,7 +176,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 17}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 256, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -186,13 +188,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'gcn5', 'arch': 'gfx906', 'gpu': 'mi50', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::gcn5, target_arch::gfx906, gpu::mi50, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 1024, '__ipt__': 2}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -200,7 +203,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 2}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -208,14 +211,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 64, '__ipt__': 17}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {64, 17}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 128, '__ipt__': 2}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -223,7 +226,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 2}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -231,7 +234,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 64, '__ipt__': 7}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -239,7 +242,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 7}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 64, '__ipt__': 19}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -247,7 +250,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 19}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 512, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -259,13 +262,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'cdna1', 'arch': 'gfx908', 'gpu': 'mi100', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::cdna1, target_arch::gfx908, gpu::mi100, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 128, '__ipt__': 1}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -273,7 +277,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 1}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 128, '__ipt__': 3}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -281,14 +285,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 3}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 128, '__ipt__': 7}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {128, 7}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 128, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -296,7 +300,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 1}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 128, '__ipt__': 2}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -304,7 +308,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 2}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 64, '__ipt__': 7}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -312,7 +316,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 7}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 64, '__ipt__': 19}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -320,7 +324,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 19}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 32, '__ipt__': 17}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -332,13 +336,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'cdna2', 'arch': 'gfx90a', 'gpu': 'mi210', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::cdna2, target_arch::gfx90a, gpu::mi210, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 256, '__ipt__': 2}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -346,7 +351,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {256, 2}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 512, '__ipt__': 5}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -354,14 +359,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {512, 5}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 256, '__ipt__': 11}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {256, 11}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 256, '__ipt__': 2}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -369,7 +374,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {256, 2}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 512, '__ipt__': 5}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -377,7 +382,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {512, 5}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 64, '__ipt__': 17}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -385,7 +390,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 17}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 64, '__ipt__': 19}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -393,7 +398,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 19}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 256, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -405,13 +410,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'cdna3', 'arch': 'gfx942', 'gpu': 'mi300x', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::cdna3, target_arch::gfx942, gpu::mi300x, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 64, '__ipt__': 13}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -419,7 +425,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 13}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 64, '__ipt__': 31}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -427,14 +433,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 31}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 64, '__ipt__': 19}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {64, 19}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 512, '__ipt__': 2}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -442,7 +448,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {512, 2}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 64, '__ipt__': 13}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -450,7 +456,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 13}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 64, '__ipt__': 29}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -458,7 +464,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {64, 29}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 256, '__ipt__': 17}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -466,7 +472,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {256, 17}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 128, '__ipt__': 19}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -478,13 +484,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'rdna4', 'arch': 'gfx1201', 'gpu': 'rx9070', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
                  comp_target<gen::rdna4, target_arch::gfx1201, gpu::rx9070, rep::amdgcn>>::value,
     adjacent_difference_config_params>
 {
-    // Based on value_type = double
+    // CONFIG: {'value_type': 'double', 'block_size_x': 32, '__ipt__': 31}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -492,7 +499,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {32, 31}
         };
     }
-    // Based on value_type = float
+    // CONFIG: {'value_type': 'float', 'block_size_x': 1024, '__ipt__': 5}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -500,14 +507,14 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {1024, 5}
         };
     }
-    // Based on value_type = rocprim::half
+    // CONFIG: {'value_type': 'rocprim::half', 'block_size_x': 256, '__ipt__': 17}
     if constexpr((bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)))
     {
         return adjacent_difference_config_params{
             {256, 17}
         };
     }
-    // Based on value_type = rocprim::int128_t
+    // CONFIG: {'value_type': 'rocprim::int128_t', 'block_size_x': 128, '__ipt__': 3}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 16)
                   && (sizeof(value_type) > 8)))
     {
@@ -515,7 +522,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 3}
         };
     }
-    // Based on value_type = int64_t
+    // CONFIG: {'value_type': 'int64_t', 'block_size_x': 128, '__ipt__': 1}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 8)
                   && (sizeof(value_type) > 4)))
     {
@@ -523,7 +530,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 1}
         };
     }
-    // Based on value_type = int
+    // CONFIG: {'value_type': 'int', 'block_size_x': 128, '__ipt__': 29}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 4)
                   && (sizeof(value_type) > 2)))
     {
@@ -531,7 +538,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 29}
         };
     }
-    // Based on value_type = short
+    // CONFIG: {'value_type': 'short', 'block_size_x': 128, '__ipt__': 17}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value) && (sizeof(value_type) <= 2)
                   && (sizeof(value_type) > 1)))
     {
@@ -539,7 +546,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
             {128, 17}
         };
     }
-    // Based on value_type = int8_t
+    // CONFIG: {'value_type': 'int8_t', 'block_size_x': 1024, '__ipt__': 3}
     if constexpr((!bool(rocprim::is_floating_point<value_type>::value)
                   && (sizeof(value_type) <= 1)))
     {
@@ -551,6 +558,7 @@ constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     return adjacent_difference_config_params_base<value_type>();
 }
 
+// TARGET: {'gen': 'unknown', 'arch': 'unknown', 'gpu': 'generic', 'rep': 'amdgcn'}
 template<class Target, class value_type>
 constexpr auto adjacent_difference_config_picker() -> std::enable_if_t<
     std::is_same<Target,
