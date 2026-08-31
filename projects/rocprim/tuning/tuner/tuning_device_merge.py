@@ -20,10 +20,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from typing import List, Optional, OrderedDict, Callable
+from typing import Optional, OrderedDict, Callable
 import sys
+import os
 
-sys.path.append("../")
+sys.path.append(f"{os.path.dirname(__file__)}/../")
 
 from utils import TYPE_CONFIGS
 from tuner.base_tuner import BaseTuner, TunerArgs, COMMON_VALUE_TYPES, COMMON_KEY_TYPES
@@ -37,12 +38,12 @@ class Tuner(BaseTuner):
     def __init__(self, args: TunerArgs):
         super().__init__(args)
 
-    def _get_tune_params(self) -> OrderedDict:
+    def _get_tune_params(self, key_type: str, value_type: Optional[str] = None) -> OrderedDict:
         """Returns tuning parameters and their possible values as an OrderedDict.
         Each parameter maps to a list of valid values to explore during tuning."""
         params = OrderedDict()
         params["block_size_x"] = list(range(64, 1025, 64))
-        params["ipt"] = [1, 2] + list(range(4, 33, 4))
+        params["__ipt__"] = [1, 2] + list(range(4, 33, 4))
         return params
 
     def _get_restrictions(
@@ -56,7 +57,7 @@ class Tuner(BaseTuner):
 
         def validate(params):
             block_size = params["block_size_x"]
-            ipt = params["ipt"]
+            ipt = params["__ipt__"]
 
             # Total size constraint
             if block_size * ipt > size:
