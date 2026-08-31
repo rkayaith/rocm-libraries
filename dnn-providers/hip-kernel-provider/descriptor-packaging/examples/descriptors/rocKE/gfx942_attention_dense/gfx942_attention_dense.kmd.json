@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "id": "86727b7b-aea6-4c3f-ad69-743aba8e2721",
+  "id": "b405e252-77a2-4871-ad86-ba3a304610e1",
   "name": "Gfx942AttentionDense variant fields",
   "fields": [
     {
@@ -66,6 +66,11 @@
       "name": "num_persistent",
       "type": "int",
       "default_value": 304
+    },
+    {
+      "name": "use_exp2_fast",
+      "type": "int",
+      "default_value": -1
     }
   ]
 }
