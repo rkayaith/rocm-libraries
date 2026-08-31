@@ -66,12 +66,9 @@ def get_available_algorithms() -> List[str]:
     """Return list of supported tuning algorithms."""
     return sorted([
         "device_merge",
-        "device_batch_memcpy",
         "device_adjacent_find",
         "device_adjacent_difference",
-        "device_adjacent_binary_search",
-        "device_find_end",
-        "device_find_first_of"
+        "device_adjacent_difference_inplace",
     ])
 
 
