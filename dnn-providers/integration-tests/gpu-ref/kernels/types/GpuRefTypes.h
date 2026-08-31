@@ -13,6 +13,7 @@
 #include "GpuRefLayernormArgs.h"
 #include "GpuRefPointwiseArgs.h"
 #include "GpuRefRMSNormArgs.h"
+#include "GpuRefReductionArgs.h"
 
 namespace gpu_ref
 {
