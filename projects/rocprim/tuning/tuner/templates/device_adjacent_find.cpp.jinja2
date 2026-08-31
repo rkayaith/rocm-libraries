@@ -1,0 +1,7 @@
+{% extends "common/base.cpp.jinja2" %}
+{% block config_constructor -%}
+rocprim::adjacent_find_config<{{ config.block_size_x }}, {{ config.__ipt__ }}>
+{%- endblock %}
+{% block benchmark_type %}
+using benchmark_type = device_adjacent_find_benchmark<key_type, {{config.FAPD}} ,config>;
+{% endblock %}
