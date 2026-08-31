@@ -65,24 +65,13 @@ def make_config(
     if config_data is None:
         config_data = type_data
 
-    # Legacy single-type headers name the type `input_type` (e.g. adjacent_find,
-    # adjacent_difference), while the pipeline keys on `key_type`. Normalize so
-    # migrated entries share the same identity as freshly-tuned ones.
-    if "key_type" not in type_data and "input_type" in type_data:
-        type_data = {**type_data, "key_type": type_data["input_type"]}
 
     # Select the following type names
     # TODO: derive this from alg name maybe?
-    type_names = ["key_type", "value_type", "data_type", "flag_type"]
+    type_names = ["key_type", "value_type", "data_type", "flag_type", "input_type"]
     # Only select relevant types
     type_info = {k: type_data[k] for k in type_names if k in type_data}
 
-    # Single-type algos omit `value_type`; the tuner emits value_type='empty_type'
-    # for these, so default it here too. Otherwise a migrated entry (no value_type)
-    # and its freshly-tuned counterpart hash differently and fail to overwrite,
-    # leaving duplicate same-guard branches where the stale one wins.
-    if "key_type" in type_info and "value_type" not in type_info:
-        type_info["value_type"] = "empty_type"
 
     # Annotate with extra info for jinja
     type_details = {k: annotate_type(type_info[k], k) for k in type_info}
@@ -176,6 +165,10 @@ def main():
                 log.warning(f"Skipping due to JSONDecodeError: {file_path}")
                 continue
 
+            for key in data:
+                print(key)
+                if key == 'key_type':
+                    print(data[key])
             # Record the target: gen, arch, gpu, rep
             target_info = derive_target(data, gfx_mapping)
             # Create hashable key

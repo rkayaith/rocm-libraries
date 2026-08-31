@@ -59,11 +59,17 @@ class Tuner(BaseTuner):
         params['FAPD'] = FIRST_ADJ_POS_DECIMAL
         return params
 
+    def _get_key_type(self) -> str:
+        return "input_type"
+
+    def _get_value_type(self):
+        return ""
+
     def _get_restrictions(
-        self, value_type: str, _: Optional[str] = None
+        self, input_type: str, _: Optional[str] = None
     ) -> Callable[[dict], bool]:
-        size = self.bytes_size // TYPE_CONFIGS[value_type].size
-        element_size = TYPE_CONFIGS[value_type].size
+        size = self.bytes_size // TYPE_CONFIGS[input_type].size
+        element_size = TYPE_CONFIGS[input_type].size
 
         def validate(params):
             block_size = params['block_size_x']
