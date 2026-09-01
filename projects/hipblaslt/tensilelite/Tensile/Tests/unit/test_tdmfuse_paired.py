@@ -552,6 +552,52 @@ def test_thick_wait1_lands_on_the_thick_tensor(pgrA, pgrB, thick, marker):
     assert marker in out
 
 
+
+
+@pytest.mark.parametrize(
+    "depthU, mi, wg, mtLabel",
+    [
+        (512, [16, 16, 128, 1, 1, 2, 8, 2, 2], [32, 4, 1], "DU512_MT64x256"),
+        (256, [16, 16, 128, 1, 1, 2, 8, 2, 2], [32, 4, 1], "DU256_MT64x256"),
+        (256, [16, 16, 128, 1, 1, 2, 16, 2, 2], [32, 8, 1], "DU256_MT64x512"),
+    ],
+)
+@pytest.mark.parametrize(
+    "pgrA, pgrB, label",
+    [(1, 2, "hero"), (2, 1, "mirror")],
+)
+def test_divergent_tdmf1_codegen_thick_wait(_gp_gfx1250, gfx1250_iim, assembler, capsys,
+                                            depthU, mi, wg, mtLabel, pgrA, pgrB, label):
+    """Pass2 mirror/hero cells: divergent TDMFuse=1 must codegen thick waits."""
+    import re
+
+    from Tensile.Common.Types import DebugConfig
+    from Tensile.KernelWriterAssembly import KernelWriterAssembly
+
+    sol, out = _derive(
+        gfx1250_iim, assembler, capsys,
+        DepthU=depthU,
+        MatrixInstruction=mi,
+        WorkGroup=wg,
+        ScheduleIterAlg=4,
+        PrefetchGlobalRead=max(pgrA, pgrB),
+        PrefetchGlobalReadA=pgrA,
+        PrefetchGlobalReadB=pgrB,
+    )
+    assert sol.get("Valid") is True, f"{label}/{mtLabel} rejected: {out!r}"
+    kernel = sol.getKernels()[0]
+    kernel.duplicate = False
+    kwa = KernelWriterAssembly(assembler, DebugConfig())
+    err, src = kwa.getSourceFileString(kernel)
+    assert err == 0, f"{label}/{mtLabel} codegen failed err={err}"
+    waits = [ln.strip() for ln in src.splitlines() if re.match(r"s_wait_tensorcnt", ln.strip())]
+    tc1 = sum(1 for w in waits if re.search(r"s_wait_tensorcnt\s+1(?:\s|$)", w))
+    assert tc1 >= 2, f"{label}/{mtLabel}: expected >=2 tensorcnt(1), got {tc1}"
+    labels = [ln for ln in src.splitlines() if "DcpEarlyFill" in ln and ln.rstrip().endswith(":")]
+    assert len(labels) >= 2, f"{label}/{mtLabel}: expected DcpEarlyFill labels, got {labels!r}"
+
+
+
 def test_two_is_still_refused_at_the_hero(_gp_gfx1250, gfx1250_iim, assembler, capsys):
     """The reason this row was asked for, kept next to the row that answers it."""
     sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=2)

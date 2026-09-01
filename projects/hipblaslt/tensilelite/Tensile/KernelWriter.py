@@ -783,18 +783,18 @@ class KernelWriter(metaclass=abc.ABCMeta):
           self._emitTdmWaveParitySCC(mod, kernel, tmp.idx, "check wave parity")
 
     late = Module("TDM decoupled late fill %s" % singleTc)
-    pinThinFence = (self.tdmFusePaired(kernel) and singleIsA
+    pinThinFence = (self.tdmFusePaired(kernel)
                     and hasattr(self.states, "memTokenLdsDcp"))
     # Every wave reads the single-buffered block this iteration, so the refill is
     # a write-after-read against the whole workgroup, not just this wave. The
     # read-after-write against the next iteration's prefetched read is already
     # closed by the sync at the head of this sub-iteration.
     if pinThinFence:
-      late.add(SSchedulingFence(comment="pin all local reads before A-thin WAR fence"))
+      late.add(SSchedulingFence(comment="pin all local reads before %s-thin WAR fence" % singleTc))
     late.add(SWaitCnt(dscnt=0, comment="TDM decoupled: all ds_reads done before %s refill" % singleTc))
     late.add(SBarrier(comment="TDM decoupled: signal+wait done reading %s block" % singleTc))
     if pinThinFence:
-      late.add(SSchedulingFence(comment="pin A-thin refill after whole-WG WAR fence"))
+      late.add(SSchedulingFence(comment="pin %s-thin refill after whole-WG WAR fence" % singleTc))
 
     if self.tdmFusePaired(kernel):
       # Here a cadence belongs to a descriptor SET, not to a wave parity: each
