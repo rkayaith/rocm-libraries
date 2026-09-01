@@ -41,7 +41,7 @@ from Tensile.Common import assignParameterWithDefault, IsaInfo, \
 from Tensile.Common.DataType import DataType
 from Tensile.Common.DecouplePgr import pgrLevelsForTensors, ldsBlocksForPgrLevel, \
                                        decoupledOneBlockBoth, tdmBothTensors, \
-                                       tdmDealiasAB, tdmWaveComponents, decouplePgrBlocks, \
+                                       tdmWaveComponents, decouplePgrBlocks, \
                                        equalPairDegeneratesToScalar, \
                                        divergentPairUnsupportedReason, \
                                        tdmFuseAMx, tdmFusePaired
@@ -2926,7 +2926,7 @@ class Solution(collections.abc.Mapping):
           reject(state, printRejectionReason,
                  "TDMFuse=2 names MXSA and MXSB as the two single-wave members of its shared "
                  "group, so it requires MX scales on both tensors; without them the group is "
-                 "just {A} and this is TDMFuse=6 with the scales moved")
+                 "just {A}")
           return
         # Unreachable while upstream's temporary blanket TDMSplit reject stands
         # (97e1223a3f9, PR #10911) at function scope above this block. Kept: it
@@ -2963,49 +2963,25 @@ class Solution(collections.abc.Mapping):
                  "solution, so the writer would emit a different grouping than the name claims")
           return
 
-      if tdmFuse == 4:
-        # defineTdmSgprs reaches {MXSA,MXSB} + {A,B} under exactly NumWaves > 1
-        # and not UseSubtileImpl. Outside that, each tensor already owns its
-        # descriptor and this grouping does not exist to be pinned.
-        if state["NumWaves"] <= 1:
-          reject(state, printRejectionReason,
-                 "TDMFuse=4 requires wave-separated TDM (NumWaves > 1); at NumWaves=%d every "
-                 "tensor keeps its own descriptor and nothing is fused" % state["NumWaves"])
-          return
-        if state.get("UseSubtileImpl"):
-          reject(state, printRejectionReason,
-                 "TDMFuse=4 is not available with UseSubtileImpl=1, which gives each tensor its "
-                 "own descriptor to avoid reinitialising a shared one before every load")
-          return
-        if not (state["ProblemType"]["MXBlockA"] and state["ProblemType"]["MXBlockB"]):
-          reject(state, printRejectionReason,
-                 "TDMFuse=4 names the MX scale group {MXSA,MXSB}, so it requires MX scales on "
-                 "both tensors; without them the only group is {A,B}")
-          return
-        if state["enableTDMMetadata"]:
-          reject(state, printRejectionReason,
-                 "TDMFuse=4 does not describe the sparse metadata tensor, which the TDM moves on "
-                 "a third descriptor (tdmMetadataGroup0) that no value of this parameter names")
-          return
 
-      if tdmFuse == 5:
+      if tdmFuse == 1:
         # {MXSA,A} + {MXSB,B} on a crossed parity dispatch.
         if state["NumWaves"] <= 1:
           reject(state, printRejectionReason,
-                 "TDMFuse=5 splits each of its two descriptor sets by wave parity, which needs "
+                 "TDMFuse=1 splits each of its two descriptor sets by wave parity, which needs "
                  "wave-separated TDM (NumWaves > 1); at NumWaves=%d every tensor keeps its own "
                  "descriptor and nothing is fused" % state["NumWaves"])
           return
         if state.get("UseSubtileImpl"):
           reject(state, printRejectionReason,
-                 "TDMFuse=5 is not available with UseSubtileImpl=1, which gives each tensor its "
+                 "TDMFuse=1 is not available with UseSubtileImpl=1, which gives each tensor its "
                  "own descriptor and so has no shared set to dispatch")
           return
         if not (state["ProblemType"]["MXBlockA"] and state["ProblemType"]["MXBlockB"]):
           reject(state, printRejectionReason,
-                 "TDMFuse=5 names MXSA and MXSB as the odd-wave member of one set each, so it "
+                 "TDMFuse=1 names MXSA and MXSB as the odd-wave member of one set each, so it "
                  "requires MX scales on both tensors; without them both sets hold a single "
-                 "tensor and this is TDMFuse=6 without its third set")
+                 "tensor and both sets hold a single tensor")
           return
         # Unreachable while upstream's temporary blanket TDMSplit reject stands
         # (97e1223a3f9, PR #10911) at function scope above this block. Kept: it
@@ -3013,13 +2989,13 @@ class Solution(collections.abc.Mapping):
         # record, and it revives the moment TDMSplit is re-enabled.
         if state.get("TDMSplit"):
           reject(state, printRejectionReason,
-                 "TDMFuse=5 is not available with TDMSplit, whose multi-wave increment recomputes "
+                 "TDMFuse=1 is not available with TDMSplit, whose multi-wave increment recomputes "
                  "one parity-selected split stride for one shared descriptor; this grouping has "
                  "two shared descriptors and no arithmetic that names the second")
           return
         if state["enableTDMMetadata"]:
           reject(state, printRejectionReason,
-                 "TDMFuse=5 does not describe the sparse metadata tensor, which the TDM moves on "
+                 "TDMFuse=1 does not describe the sparse metadata tensor, which the TDM moves on "
                  "a descriptor (tdmMetadataGroup0) that no value of this parameter names")
           return
         # Compares block counts only: LdsOffsetBlkA/B are assigned later.
@@ -3030,7 +3006,7 @@ class Solution(collections.abc.Mapping):
           # end-of-loop increment mask sits in the same module -- moving it late
           # leaves the other set advancing by an increment that was never zeroed.
           reject(state, printRejectionReason,
-                 "TDMFuse=5 requires HalfPLR=0 at a divergent decoupled pair: the per-set fill "
+                 "TDMFuse=1 requires HalfPLR=0 at a divergent decoupled pair: the per-set fill "
                  "relocation moves one set's advance into a later sub-iteration, and HalfPLR's "
                  "increment mask rides in that same module, so the set that stays at the top "
                  "would advance on the final iteration. Got HalfPLR=%d with PrefetchGlobalReadA=%d "
@@ -3042,43 +3018,10 @@ class Solution(collections.abc.Mapping):
         # drift, decline rather than accept a name the writer will not honour.
         if not tdmFusePaired(state):
           reject(state, printRejectionReason,
-                 "TDMFuse=5 passed its solution-level guards but tdmFusePaired declined the "
+                 "TDMFuse=1 passed its solution-level guards but tdmFusePaired declined the "
                  "solution, so the writer would emit a different grouping than the name claims")
           return
 
-      if tdmFuse == 6:
-        if state["NumWaves"] <= 1 or state.get("UseSubtileImpl"):
-          reject(state, printRejectionReason,
-                 "TDMFuse=6 de-aliases A from B on the wave-separated path; at NumWaves=%d or "
-                 "under UseSubtileImpl each tensor already owns its descriptor"
-                 % state["NumWaves"])
-          return
-        # Unreachable while upstream's temporary blanket TDMSplit reject stands
-        # (97e1223a3f9, PR #10911) at function scope above this block. Kept: it
-        # carries this row's own reason, which the blanket reject does not
-        # record, and it revives the moment TDMSplit is re-enabled.
-        if state.get("TDMSplit"):
-          reject(state, printRejectionReason,
-                 "TDMFuse=6 is not available with TDMSplit, whose multi-wave increment recomputes "
-                 "one parity-selected split stride for one shared descriptor")
-          return
-        if not (state["ProblemType"]["MXBlockA"] and state["ProblemType"]["MXBlockB"]):
-          reject(state, printRejectionReason,
-                 "TDMFuse=6 names the MX scale group {MXSA,MXSB}, so it requires MX scales on "
-                 "both tensors")
-          return
-        if state["enableTDMMetadata"]:
-          reject(state, printRejectionReason,
-                 "TDMFuse=6 does not describe the sparse metadata tensor")
-          return
-        # SIA4 is OptLevel 3: barriers are rebuilt from tensor_load/ds_read
-        # tokens. Placement must stay outside wave-parity around a de-aliased
-        # fill (count is not a detector). Guards must match tdmDealiasAB.
-        if not tdmDealiasAB(state):
-          reject(state, printRejectionReason,
-                 "TDMFuse=6 passed its solution-level guards but tdmDealiasAB declined the "
-                 "solution, so the writer would emit a different grouping than the name claims")
-          return
 
     # DepthU == -1?
     if state["DepthU"] == -1:

@@ -168,7 +168,7 @@ def test_the_divergent_pairs_are_accepted(
 def test_rejects_cluster_with_divergent_pgr(
         _gp_gfx1250, gfx1250_iim, assembler, capsys):
     sol, out = _derive(gfx1250_iim, assembler, capsys,
-                       ClusterDim=[2, 1], TDMFuse=5)
+                       ClusterDim=[2, 1], TDMFuse=1)
     assert sol.get("Valid") is False
     assert "ClusterDim != [1, 1] is incompatible with divergent" in out
     assert "cluster barrier drains tensorcnt" in out
@@ -177,7 +177,7 @@ def test_rejects_cluster_with_divergent_pgr(
 def test_cluster_allows_equal_pgr(
         _gp_gfx1250, gfx1250_iim, assembler, capsys):
     sol, out = _derive(gfx1250_iim, assembler, capsys,
-                       ClusterDim=[2, 1], TDMFuse=5,
+                       ClusterDim=[2, 1], TDMFuse=1,
                        PrefetchGlobalReadA=2, PrefetchGlobalReadB=2)
     assert sol.get("Valid") is True, f"rejected with: {out!r}"
 

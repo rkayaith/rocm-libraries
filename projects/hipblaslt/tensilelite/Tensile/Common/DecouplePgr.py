@@ -201,24 +201,6 @@ def decoupledSingleBuffered(ks):
     return decoupled and min(numLdsBlkA, numLdsBlkB) == 1 and max(numLdsBlkA, numLdsBlkB) > 1
 
 
-def tdmDealiasAB(ks):
-    """True when A and B get their own TDM descriptor sets instead of sharing one.
-
-    Selected only by TDMFuse=6 (never derived; 0 stays inert). Equal pairs
-    spend the extra SGPRs without using the cadence split. MXSA/MXSB stay
-    parity-aliased. TDMSplit keeps the shared descriptor.
-    """
-    if ks.get("TDMFuse") != 6:
-        return False
-    if not tdmBothTensors(ks):
-        return False
-    # Unreachable while upstream's temporary blanket TDMSplit reject stands
-    # (97e1223a3f9, PR #10911): no solution carrying TDMSplit=True now reaches
-    # any writer predicate. Kept so this row's exclusion outlives that reject.
-    if ks.get("TDMSplit"):
-        return False
-    return ks.get("NumWaves", 1) > 1 and not ks.get("UseSubtileImpl")
-
 
 def tdmFuseAMx(ks):
     """True when {A,MXSA,MXSB} share one TDM descriptor set and B owns its own.
@@ -234,7 +216,7 @@ def tdmFuseAMx(ks):
     policy for three group members rather than an even partition, and there is
     no arithmetic that generalises it to another wave count.
 
-    TDMSplit is excluded for the same reason it is excluded from tdmDealiasAB:
+    TDMSplit is excluded for the same reason it is excluded from tdmFuseAMx:
     its multi-wave increment recomputes one parity-selected split stride for one
     shared descriptor, and this row has no parity pairing left to select on.
     """
@@ -255,10 +237,10 @@ def tdmFuseAMx(ks):
 def tdmFusePaired(ks):
     """True when {MXSA,A} and {MXSB,B} each share one TDM descriptor set.
 
-    TDMFuse=5. Two sets of 4+8 is the same 24 SGPRs the default {A,B}+{MXSA,MXSB}
+    TDMFuse=1. Two sets of 4+8 is the same 24 SGPRs the default {A,B}+{MXSA,MXSB}
     pairing already spends.
 
-    Selected only by TDMFuse=5, never derived, so 0 stays inert.
+    Selected only by TDMFuse=1, never derived, so 0 stays inert.
 
     The wave division is crossed -- A and MXSB on the even waves, MXSA and B on
     the odd (see tdmWavePartition) -- so A and B keep the parity the default
@@ -268,11 +250,11 @@ def tdmFusePaired(ks):
     parity split every pre-existing row uses, so unlike tdmFuseAMx there is no
     remainder policy to pin the wave count.
 
-    TDMSplit is excluded for the same reason it is excluded from tdmDealiasAB and
+    TDMSplit is excluded for the same reason it is excluded from tdmFuseAMx and
     tdmFuseAMx: its multi-wave increment recomputes one parity-selected split
     stride for one shared descriptor, and this row has two.
     """
-    if ks.get("TDMFuse") != 5:
+    if ks.get("TDMFuse") != 1:
         return False
     if not tdmBothTensors(ks):
         return False

@@ -39,23 +39,21 @@ substring that no other reject can produce -- in practice the row number plus
 the clause naming the mechanism, never a whole sentence, because these texts are
 prose and get reworded.
 
-Row 5 keeps its own guards next to its feature in test_tdmfuse_paired, so what
+Row 1 keeps its own guards next to its feature in test_tdmfuse_paired, so what
 is here for that row is the cross-product cell and the one clause that file does
-not reach, the sparse metadata tensor. Rows 2, 4 and 6 are covered here outright:
-before this file row 2 had one message pinned, row 4 none, and row 6 one.
+not reach, the sparse metadata tensor. Row 2 is covered here outright; row 1 guards live in test_tdmfuse_paired.
 
 The TDMSplit axis is the one worth stating outright, because it is not uniform:
 
-    TDMFuse   0     2       4     5       6
-    TDMSplit  ok    reject  ok    reject  reject
+    TDMFuse   0     1       2
+    TDMSplit  ok    reject  reject
 
-Rows 2, 5 and 6 each refuse TDMSplit for a reason of their own -- 2 has retired
+Rows 1 and 2 each refuse TDMSplit for a reason of their own -- 2 has retired
 the parity pairing its select depends on, 5 has two shared descriptors and no
-arithmetic naming the second, 6 has de-aliased the pairing away -- and rows 0
-and 4 accept it, because a grouping that keeps one parity-selected shared
+arithmetic naming the second, 6 has de-aliased the pairing away -- and row 0 accepts it, because a grouping that keeps one parity-selected shared
 descriptor is exactly what TDMSplit's multi-wave increment recomputes. The
-asymmetry is the content: a guard copied to row 4 by mistake, or dropped from
-row 4's neighbours, is a silent change of the selectable space.
+asymmetry is the content: a guard copied to row 0 by mistake, or dropped from
+row 2's neighbours, is a silent change of the selectable space.
 
 TDMSplit is disabled upstream (PR #10911). Cases that set TDMSplit=True
 are xfail(strict=False) so they revive when the blanket reject lifts.
@@ -185,7 +183,7 @@ def _derive(gfx1250_iim, assembler, capsys, **overrides):
         "TDMInst": 3,
         "MXScaleFormat": "InMemorySwizzle",
         "LDSTrInst": True,
-        "TDMFuse": 6,
+        "TDMFuse": 1,
         "TDMSplit": False,
         "PrefetchGlobalRead": 2,
         "PrefetchGlobalReadA": 2,
@@ -230,7 +228,7 @@ def _derive(gfx1250_iim, assembler, capsys, **overrides):
 # Controls. Every reject below is vacuous if the shape it starts from is itself
 # refused, so the accepts come first and cover all four rows.
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("fuse", [0, 2, 4, 5, 6])
+@pytest.mark.parametrize("fuse", [0, 1, 2])
 def test_the_base_shape_is_accepted_by_every_row(
         _gp_gfx1250, gfx1250_iim, assembler, capsys, fuse):
     sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=fuse)
@@ -253,7 +251,7 @@ _TDMSPLIT_MECHANISM = {
 }
 
 
-@pytest.mark.parametrize("fuse", [0, 2, 4, 5, 6])
+@pytest.mark.parametrize("fuse", [0, 1, 2])
 @_TDMSPLIT_DISABLED_UPSTREAM
 def test_tdmsplit_across_every_grouping(
         _gp_gfx1250, gfx1250_iim, assembler, capsys, fuse):
@@ -270,7 +268,7 @@ def test_tdmsplit_across_every_grouping(
     sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=fuse, TDMSplit=True)
     mechanism = _TDMSPLIT_MECHANISM[fuse]
 
-    if fuse not in (2, 5, 6):
+    if fuse not in (1, 2):
         assert sol.get("Valid") is True, f"TDMFuse={fuse} rejected with: {out!r}"
         return
 
@@ -281,19 +279,6 @@ def test_tdmsplit_across_every_grouping(
         assert mechanism in out
 
 
-@_TDMSPLIT_DISABLED_UPSTREAM
-def test_row_four_is_the_only_fused_grouping_that_keeps_tdmsplit(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    """Stated on its own because it is the easiest thing here to get wrong.
-
-    {MXSA,MXSB} + {A,B} leaves the data tensors on the parity pair TDMSplit's
-    increment selects on, so this row has nothing to refuse -- unlike its three
-    neighbours. A guard copied here out of symmetry would silently delete a
-    selectable combination, and no kernel name would change.
-    """
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=4, TDMSplit=True)
-    assert sol.get("Valid") is True, f"rejected with: {out!r}"
-    assert "not available with TDMSplit" not in out
 
 
 @pytest.mark.parametrize(
@@ -315,9 +300,9 @@ def test_tdmsplit_is_refused_whatever_the_pair_spelling(
     other two.
     """
     sol, out = _derive(gfx1250_iim, assembler, capsys,
-                       TDMFuse=6, TDMSplit=True, **pair)
+                       TDMFuse=1, TDMSplit=True, **pair)
     assert sol.get("Valid") is False, label
-    assert "TDMFuse=6 is not available with TDMSplit" in out
+    assert "TDMFuse=1 is not available with TDMSplit" in out
 
 
 @pytest.mark.xfail(
@@ -388,14 +373,14 @@ def test_row_two_requires_mx_scales_on_both_tensors(
     """Without B's scales the shared group is just {A}, which is a different row.
 
     That is the mechanism worth pinning rather than the bare requirement: the
-    grouping does not become invalid, it becomes TDMFuse=6 with the scales
+    grouping does not become invalid, it becomes both sets hold a single tensor
     moved, so accepting it here would name one kernel with another's token.
     """
     sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=2,
                        ProblemType=_NO_MX_ON_B)
     assert sol.get("Valid") is False
     assert "TDMFuse=2 names MXSA and MXSB as the two single-wave members" in out
-    assert "this is TDMFuse=6 with the scales moved" in out
+    assert "this is both sets hold a single tensor moved" in out
 
 
 def test_row_two_accepts_stagger(_gp_gfx1250, gfx1250_iim, assembler, capsys):
@@ -413,7 +398,7 @@ def test_row_two_requires_an_equal_decoupled_pair(
         _gp_gfx1250, gfx1250_iim, assembler, capsys):
     """MXSB rides A's descriptor set but follows B's LDS block count.
 
-    Kept here as well as beside TDMFuse=5, which exists because of it, so that
+    Kept here as well as beside TDMFuse=1, which exists because of it, so that
     this row's guard set is complete in one place: the divergent pair is the
     only one of row 2's refusals that turns on the decoupled feature at all.
     """
@@ -441,39 +426,6 @@ def test_row_two_declines_when_the_predicate_disagrees(
 
 
 # ---------------------------------------------------------------------------
-# TDMFuse=4, {MXSA,MXSB} + {A,B}. The default pairing, pinned rather than
-# derived. No guard of this row was covered before this file.
-# ---------------------------------------------------------------------------
-def test_row_four_requires_wave_separated_tdm(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    """At one wave every tensor already owns its descriptor and nothing is fused.
-
-    Pinning a grouping that is not produced would put a TDMF4 token on a kernel
-    identical to the unfused one, so two different names would describe the
-    same assembly.
-    """
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=4,
-                       MatrixInstruction=_ONE_WAVE_MI, WorkGroup=_ONE_WAVE_WG)
-    assert sol.get("Valid") is False
-    assert "TDMFuse=4 requires wave-separated TDM (NumWaves > 1)" in out
-
-
-def test_row_four_requires_mx_scales_on_both_tensors(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    """Without both scale tensors the only group left is {A,B}.
-
-    The message names the group that goes missing, which is what distinguishes
-    this from row 2's and row 6's MX refusals -- all three would otherwise read
-    as the same objection.
-    """
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=4,
-                       ProblemType=_NO_MX_ON_B)
-    assert sol.get("Valid") is False
-    assert "TDMFuse=4 names the MX scale group {MXSA,MXSB}" in out
-    assert "without them the only group is {A,B}" in out
-
-
-# ---------------------------------------------------------------------------
 # The sparse metadata clause. All four rows carry one and none was covered.
 # ---------------------------------------------------------------------------
 # TDMFuse names data and scale tensors only, so the metadata descriptor
@@ -481,7 +433,7 @@ def test_row_four_requires_mx_scales_on_both_tensors(
 # and 5 call it "a descriptor", row 4 "a third descriptor", row 6 says only that
 # the row does not describe it -- three texts, one mechanism, and the row number
 # is what makes each assertion unambiguous.
-@pytest.mark.parametrize("fuse", [2, 4, 5, 6])
+@pytest.mark.parametrize("fuse", [1, 2])
 def test_every_row_refuses_the_sparse_metadata_tensor(
         _gp_gfx1250, gfx1250_iim, assembler, capsys, fuse):
     """Sparse puts a third tensor on the TDM that no grouping value names.
@@ -497,134 +449,10 @@ def test_every_row_refuses_the_sparse_metadata_tensor(
 
 
 # ---------------------------------------------------------------------------
-# TDMFuse=6, {A} + {B} + {MXSA,MXSB}.
-# ---------------------------------------------------------------------------
-def test_row_six_requires_mx_scales_on_both_tensors(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=6,
-                       ProblemType=_NO_MX_ON_B)
-    assert sol.get("Valid") is False
-    assert "TDMFuse=6 names the MX scale group {MXSA,MXSB}" in out
-
-
-@pytest.mark.parametrize(
-    "pair, label",
-    [
-        ({"PrefetchGlobalReadA": 2, "PrefetchGlobalReadB": 2}, "equal"),
-        ({"_remove": ("PrefetchGlobalReadA", "PrefetchGlobalReadB")}, "legacy"),
-    ],
-)
-def test_row_six_without_a_divergent_pair_is_admitted_at_sia_four(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys, pair, label):
-    """This pinned the opposite until the refusal's premise was measured away.
-
-    e9504db146a refused row 6 at SIA=4 without a divergent pair because the
-    equal pair computed wrong results there: at StinkyTofu OptLevel 3 the
-    barrier rebuild left the LDS0 barrier inside the wave-parity region around
-    the de-aliased fill, so half the workgroup skipped it. 4d9145fb2dc then
-    corrected the rebuild to walk the whole tree, and the refusal outlived the
-    defect it was written for -- self-sealingly, because the guard kept this
-    arm out of every corpus, so no post-fix corpus contained it to re-measure.
-
-    The premise changed, not the tolerance. Re-measured on the tree this test
-    ships with, on b8-3 (MI450 B0) at MT64x512, DepthU 256, PGRA=PGRB=2,
-    num-elements-to-validate=-1 and Random MX scales on BOTH tensors: 15 of 15
-    reps PASSED at K=384, 512, 1024 and 1152. The negative control ran in the
-    same session, on a build differing only in KernelWriter.py with 4d9145fb2dc
-    and its dependent follow-up 0e0b4c342fd backed out, and FAILED 15 of 15 at
-    K=1024 with 212638 of 262144 elements wrong and at K=1152 with 261736 --
-    the same two K values and the same element counts as the original report in
-    b8-3:~/_pgrval19/val.log. So the fix is what moves this arm, and the counts
-    say so twice. Logs b8-3:~/f6val/{head,ctl}_rep1..15.log.
-
-    What that does not license is a barrier COUNT as the regression check.
-    Both builds emit eight barriers and only placement differs; the
-    parity-guarded count is what separates them, reading 1 without the rebuild
-    against 0 with it.
-
-    An equal pair resolves away to its legacy scalar before this point, so both
-    spellings arrive here as the same solution, and both have to be admitted.
-    """
-    sol, out = _derive(gfx1250_iim, assembler, capsys,
-                       TDMFuse=6, ScheduleIterAlg=4, **pair)
-    assert sol.get("Valid") is True, f"{label} rejected with: {out!r}"
-
-
-def test_row_six_at_sia_four_with_a_divergent_pair_is_admitted(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    """Row 6 SIA clause admits divergent pairs.
-
-    divergentPairUnsupportedReason reads derived _ScheduleIterAlg (SIA4 -> 0).
-    OptLevel 3 rebuilds barriers from the whole tree; they must sit before the
-    wave-parity branch around a de-aliased fill. hero=(1,2) mirror=(2,1).
-    """
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=6, ScheduleIterAlg=4,
-                       PrefetchGlobalReadA=1, PrefetchGlobalReadB=2)
-    assert sol.get("Valid") is True, f"rejected with: {out!r}"
-    # The guard that used to refuse this ahead of the exemption stays silent.
-    assert "only ScheduleIterAlg=0 places the fill where it can be moved" not in out
-
-
-# The half of the old tripwire that is still load-bearing, and the reason the
-# test above is not just a flipped assertion. SIA=4 is admitted because it
-# derives to 0, not because the level was relaxed, so the hazard the refusal
-# guarded still needs pinning: 1, 2 and 3 are different schedulers and none of
-# them can host the relocated fill. 3 is the sharp one -- with the clause taken
-# out it emits the relocation wrapping four empty `.header` modules and both
-# early-return guards pass spuriously, so the kernel builds, fits and computes
-# wrong results from K = 2*DepthU instead of coming back refused. That K is
-# derived, not sampled -- two trips through the unrolled loop is what it takes
-# for a fill to overwrite a block still being read, and the reject in
-# Solution.depthUIteration carries the argument and the FFM sweep that agrees
-# with it. It is not one of the empirical SIA4 thresholds, which were
-# withdrawn.
-#
-# The clause differs at 2 because SIA=2 derives 1LDSBuffer=1, and that
-# contradiction with a (1,2) pair is caught before the divergent guard is
-# consulted. Pinning each message rather than just the refusal is what keeps
-# that precedence visible: a widening of the derived-key read fails at 1 and 3
-# here, and 2 keeps saying which guard is actually holding it.
-@pytest.mark.parametrize(
-    "sia, clause",
-    [
-        (1, "only ScheduleIterAlg=0 places the fill where it can be moved"),
-        (2, "1LDSBuffer=1 gives every tensor one shared LDS block"),
-        (3, "only ScheduleIterAlg=0 places the fill where it can be moved"),
-    ],
-)
-def test_row_six_with_a_divergent_pair_is_still_refused_below_sia_four(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys, sia, clause):
-    sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=6,
-                       ScheduleIterAlg=sia,
-                       PrefetchGlobalReadA=1, PrefetchGlobalReadB=2)
-    assert sol.get("Valid") is False, sia
-    assert clause in out
-
-
-def test_row_six_accepts_every_pair_spelling_at_sia_zero(
-        _gp_gfx1250, gfx1250_iim, assembler, capsys):
-    """The complement of the SIA clause, and a correction to its reading.
-
-    This row is often described as requiring a divergent pair. It does not: the
-    equal and legacy spellings are accepted at ScheduleIterAlg=0, and only the
-    (no divergent pair, SIA=4) combination is refused. Without this the SIA test
-    above would pass just as well against a guard that refused equal pairs
-    outright.
-    """
-    for pair, label in (
-            ({"PrefetchGlobalReadA": 1, "PrefetchGlobalReadB": 2}, "divergent"),
-            ({"PrefetchGlobalReadA": 2, "PrefetchGlobalReadB": 2}, "equal"),
-            ({"_remove": ("PrefetchGlobalReadA", "PrefetchGlobalReadB")}, "legacy"),
-    ):
-        sol, out = _derive(gfx1250_iim, assembler, capsys, TDMFuse=6, **pair)
-        assert sol.get("Valid") is True, f"{label} rejected with: {out!r}"
-
-
-# ---------------------------------------------------------------------------
 # Shared envelope. One message, four rows, and it is reachable from none of
 # them on an MX shape -- so assert what is actually produced.
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("fuse", [2, 4, 5, 6])
+@pytest.mark.parametrize("fuse", [1, 2])
 def test_one_sided_tdm_is_refused_before_the_grouping_is_considered(
         _gp_gfx1250, gfx1250_iim, assembler, capsys, fuse):
     """Every row here needs MX scales on both tensors, and an MX shape with a
@@ -641,7 +469,7 @@ def test_one_sided_tdm_is_refused_before_the_grouping_is_considered(
     assert "describes how TDM transfers share descriptors" not in out
 
 
-@pytest.mark.parametrize("fuse", [2, 4, 5, 6])
+@pytest.mark.parametrize("fuse", [1, 2])
 def test_subtile_is_refused_before_the_grouping_is_considered(
         _gp_gfx1250, gfx1250_iim, assembler, capsys, fuse):
     """Same precedence for UseSubtileImpl, and for the same reason.

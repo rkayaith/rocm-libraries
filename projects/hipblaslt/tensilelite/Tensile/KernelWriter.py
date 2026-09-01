@@ -52,8 +52,7 @@ from .Components.CustomSchedule import customMainLoopSchedule
 from .Components.ClusterLoad import ClusterLoadTDM
 from .Components.StreamK import streamKVariantClass
 from .Components.Subtile.Kernel import *
-from .Common.DecouplePgr import decouplePgrBlocks, decoupledSingleBuffered, decoupledOneBlockBoth, \
-                                tdmDealiasAB
+from .Common.DecouplePgr import decouplePgrBlocks, decoupledSingleBuffered, decoupledOneBlockBoth
 from .SolutionStructs import Solution, isPackedIndex
 from .SolutionStructs.Utilities import getMiInputType, isSubtileIterateMode
 from .AsmMemoryInstruction import MemoryInstruction
@@ -822,8 +821,7 @@ class KernelWriter(metaclass=abc.ABCMeta):
       self.codes.perIterGlobalRead[lateIter].add(late)
       return
 
-    if self.tdmDealiasAB(kernel):
-      # A and B hold their own descriptors, so each fill is one instruction
+          # A and B hold their own descriptors, so each fill is one instruction
       # already guarded to the waves that carry that tensor and the re-slot is a
       # move rather than a duplication. Everything else in the group still has to
       # appear at both slots under complementary guards:
@@ -932,7 +930,7 @@ class KernelWriter(metaclass=abc.ABCMeta):
     # PGR=2 -> 2 LDS blocks. Hero is B-thick (1,2); mirror is A-thick (2,1).
     # The wait belongs on the thick tensor, not hard-coded to B / blkA==1.
     thickTc = "A" if numLdsBlkA == 2 else "B"
-    if kernel.get("TDMFuse", 0) == 5:
+    if kernel.get("TDMFuse", 0) == 1:
       if hasattr(self.states, "memTokenLdsDcp"):
         marker = "DcpEarlyFill%s" % thickTc
         for i, line in enumerate(lines):
@@ -954,7 +952,7 @@ class KernelWriter(metaclass=abc.ABCMeta):
         expectedWait1 = 2
         if wait1 != expectedWait1:
           raise RuntimeError(
-              "TDMFuse=5 cannot honour its divergent thick-wait: expected %u "
+              "TDMFuse=1 cannot honour its divergent thick-wait: expected %u "
               "s_wait_tensorcnt 1 on thick %s (%d/%d LDS blocks), found %u"
               % (expectedWait1, thickTc, numLdsBlkA, numLdsBlkB, wait1))
         return "".join(lines)
@@ -7830,7 +7828,7 @@ class KernelWriter(metaclass=abc.ABCMeta):
       self.states.memTokenLdsSplit = \
         [[blk, half1Tokens[blk]] for blk in range(self.states.numLDSBlk)]
     if (self._dcpDivergent(kernel) and kernel["enableTDMA"] and kernel["enableTDMB"]
-        and kernel.get("TDMFuse", 0) == 5):
+        and kernel.get("TDMFuse", 0) == 1):
       _, numLdsBlkA, numLdsBlkB = decouplePgrBlocks(kernel)
       if numLdsBlkA == 1 or numLdsBlkB == 1:
         self.states.memTokenLdsDcp = {

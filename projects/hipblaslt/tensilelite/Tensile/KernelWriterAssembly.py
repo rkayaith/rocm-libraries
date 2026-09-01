@@ -80,7 +80,7 @@ from .Components.GlobalWriteBatch import GlobalWriteBatchWriter
 from .KernelWriterModules import *
 from .AsmMemoryHelpers import dsStore, dsLoad, _vgprOffset
 from .Common.DecouplePgr import decouplePgrBlocks, decoupledSingleBuffered, decoupledOneBlockBoth, \
-                                tdmDealiasAB, tdmWaveComponents, tdmFuseAMx, \
+                                tdmWaveComponents, tdmFuseAMx, \
                                 tdmFusePaired, \
                                 tdmWavePartition, tdmWaveCompIdMode
 from .SolutionStructs import isPackedIndex
@@ -382,14 +382,6 @@ class KernelWriterAssembly(KernelWriter):
       return SMovB32(sgpr(dstSgprIdx), sgpr(waveIdxSgpr), comment)
     return SLShiftRightB32(sgpr(dstSgprIdx), compShift, sgpr(waveIdxSgpr), comment)
 
-  def tdmDealiasAB(self, kernel) -> bool:
-    """True when A and B hold their own TDM descriptor sets (see Common.DecouplePgr).
-
-    Still wave-separated: parity decides which tensor a wave fills, and which
-    K-slice of it. Only the descriptors separate, so that A's fill and B's fill
-    are two instructions that can be placed independently.
-    """
-    return self.isTdmWaveSeparated(kernel) and tdmDealiasAB(kernel)
 
   def tdmFuseAMx(self, kernel) -> bool:
     """True when {A,MXSA,MXSB} share one descriptor set and B owns its own."""
@@ -401,8 +393,7 @@ class KernelWriterAssembly(KernelWriter):
 
   def tdmSeparateABDescriptors(self, kernel) -> bool:
     """True when A's and B's TDM descriptors are distinct register sets."""
-    return self.tdmDealiasAB(kernel) or self.tdmFuseAMx(kernel) \
-           or self.tdmFusePaired(kernel)
+    return self.tdmFuseAMx(kernel) or self.tdmFusePaired(kernel)
 
   def tdmDescriptorSetOwner(self, kernel, tc: str) -> str:
     """The tensor whose name programs the descriptor set that carries `tc`.
@@ -420,7 +411,7 @@ class KernelWriterAssembly(KernelWriter):
     if self.tdmFusePaired(kernel):
       return "A" if tc in ("A", "MXSA") else "B"
     if tc in ("A", "B"):
-      return tc if self.tdmDealiasAB(kernel) else "A"
+      return "A"
     return "MXSA"
 
   def _tdmPairedParityOrder(self, kernel, tPA, tPB):
@@ -428,7 +419,7 @@ class KernelWriterAssembly(KernelWriter):
 
     The wave-separated helpers are called once per (A,B) and once per
     (MXSA,MXSB) pair, and each call programs one descriptor set on the even
-    waves and one on the odd. TDMFuse=5 crosses those pairs, so the scale call
+    waves and one on the odd. TDMFuse=1 crosses those pairs, so the scale call
     programs the set B rides and its even member is MXSB. Every other grouping
     answers with the pair's own order.
     """
@@ -829,7 +820,7 @@ class KernelWriterAssembly(KernelWriter):
                         (kernel["InternalSupportParams"]["SupportCustomStaggerU"]
                          and bool(self.states.staggerUCode))
     # B advances from GlobalReadIncsB every iteration once it owns a descriptor
-    # set, so the name must outlive setup. TDMFuse=5 is the exception among the
+    # set, so the name must outlive setup. TDMFuse=1 is the exception among the
     # separated groupings: both of its sets advance from a parity-selected copy,
     # so the names die with setup exactly as under the shared pairing.
     if not self.isTdmWaveSeparated(kernel) or needsStaggerSgprs \
@@ -855,7 +846,7 @@ class KernelWriterAssembly(KernelWriter):
       return module
     # When B owns its descriptor, GlobalReadIncs{A,B} are read inside the loop
     # rather than a parity-selected copy, so there is nothing to release. Under
-    # TDMFuse=5 both sets read a parity-selected copy, so there is.
+    # TDMFuse=1 both sets read a parity-selected copy, so there is.
     if self.tdmSeparateABDescriptors(kernel) and not self.tdmFusePaired(kernel):
       return module
     if self.states.a.numSgprGlobalReadIncs > 0:
@@ -1105,14 +1096,14 @@ class KernelWriterAssembly(KernelWriter):
       # Subtile uses separate descriptors -- deferred allocation provides
       # enough SGPR headroom, and separate descriptors avoid the reinit
       # overhead before each tensor_load_to_lds.
-      # TDMFuse=6 takes separate A/B descriptors so each tensor's fill is its own
+      # TDMFuse=1 takes separate A/B descriptors so each tensor's fill is its own
       # instruction; its MXSA/MXSB pair stays aliased.
       # TDMFuse=2 separates B and puts both scale tensors on A's set.
-      # TDMFuse=5 separates B and aliases each data tensor's own scales onto it.
+      # TDMFuse=1 separates B and aliases each data tensor's own scales onto it.
       fuseAMx = self.tdmFuseAMx(kernel)
       fusePaired = self.tdmFusePaired(kernel)
       aliasAB = kernel["NumWaves"] > 1 and not kernel.get("UseSubtileImpl") \
-                and not self.tdmDealiasAB(kernel) and not fuseAMx and not fusePaired
+                 and not fuseAMx and not fusePaired
       aliasMXS = kernel["NumWaves"] > 1 and not kernel.get("UseSubtileImpl") \
                  and not fuseAMx and not fusePaired
       if fusePaired:
@@ -1166,8 +1157,7 @@ class KernelWriterAssembly(KernelWriter):
     if kernel["enableTDMA"] and kernel["enableTDMB"] and kernel["NumWaves"] > 1:
       # tdmABIncs exists only to hold the parity-selected increment for the one
       # shared A/B descriptor.
-      if not self.tdmDealiasAB(kernel):
-        module.add(self.defineSgpr("tdmABIncs", 1))
+      module.add(self.defineSgpr("tdmABIncs", 1))
 
       # Multi-wave TDMSplit recomputes the LDS/global split increments (and the
       # dim1 H0/H1 boundaries) transiently at point of use (see
@@ -11631,11 +11621,7 @@ class KernelWriterAssembly(KernelWriter):
         isIterA = isIterA or kernel.get("_TDMIterateModeB", False)
       tdmAGroup2 = "tdmAGroup2" if isIterA else None
       tdmAGroup3 = "tdmAGroup3" if isIterA else None
-      if self.tdmDealiasAB(kernel):
-        self._emitTdmDealiasedIssue(imod.middle, kernel, "A", comp,
-                                    "tdmAGroup0", "tdmAGroup1", tdmAGroup2, tdmAGroup3)
-      else:
-        imod.middle.add(comp.issueLoad("tdmAGroup0", "tdmAGroup1", tdmAGroup2, tdmAGroup3))
+
       # TODO: Embed metadata TDM issueLoad here (mirrors non-TDM pattern where globalReadBody(tP["tpsMetadata"])
       # is called after globalReadBody(tP) for the sparse tensor). This would allow _splitTdmLoad in SIA.py
       # to extract and defer both A and metadata TDM loads together, eliminating the separate globalReadMetadata
@@ -11741,7 +11727,7 @@ class KernelWriterAssembly(KernelWriter):
     if tc == "B" and kernel["enableTDMB"]:
       # An aliased descriptor issues one shared load, counted against A, so B emits
       # nothing here. B needs its own load whenever it owns a set; which waves issue
-      # it differs (parity when de-aliased, every wave at TDMFuse=2 and 5).
+      # it differs (parity when de-aliased, every wave at TDMFuse=2 and 1).
       if self.tdmSeparateABDescriptors(kernel):
         comp: TensorDataMoverLoad = TensorDataMoverLoad.find(self)
         if hasattr(self.states, "memTokenLdsDcp"):
@@ -12085,7 +12071,7 @@ class KernelWriterAssembly(KernelWriter):
   # With NumWaves > 1 the B/MXSB descriptors are RegSet aliases of A/MXSA, so one
   # physical descriptor serves both and only the A/MXSA call sites are reached.
   _tdmDecoupledAliasPartner = {"A": "B", "MXSA": "MXSB"}
-  # TDMFuse=5 aliases each data tensor's own scales onto it instead.
+  # TDMFuse=1 aliases each data tensor's own scales onto it instead.
   _tdmDecoupledAliasPartnerPaired = {"A": "MXSA", "B": "MXSB"}
 
   def _tdmAliasPartner(self, kernel, tc):
@@ -12098,7 +12084,7 @@ class KernelWriterAssembly(KernelWriter):
     """(even, odd) member of an aliased pair, read from the wave partition.
 
     Which parity carries which member is a property of the grouping, not of
-    which name owns the set: TDMFuse=5 puts MXSB on the even waves of the set
+    which name owns the set: TDMFuse=1 puts MXSB on the even waves of the set
     that B owns.
     """
     _numComp, waves = tdmWavePartition(kernel, tc)
@@ -20237,11 +20223,6 @@ class KernelWriterAssembly(KernelWriter):
     # and every wave builds both: that is what keeps every wave-uniform mutation
     # of either descriptor (the increments, the StreamK K-offset, TDMSplit)
     # reading an initialised value on every wave.
-    if self.tdmDealiasAB(kernel) and tcA in ("A",):
-      mod.add(self.initTDMDescriptorWaveSeparatedImpl(kernel, tPA, waveIdxSgpr))
-      mod.add(self.initTDMDescriptorWaveSeparatedImpl(kernel, tPB, waveIdxSgpr))
-      return mod
-
     if self.tdmFuseAMx(kernel):
       mod.add(self._tdmFuseAMxDispatch(kernel, tPA, tPB, waveIdxSgpr,
                                        lambda tP: self.initTDMDescriptorWaveSeparatedImpl(kernel, tP, waveIdxSgpr),
@@ -20280,11 +20261,6 @@ class KernelWriterAssembly(KernelWriter):
 
     # Both start addresses are computed on every wave, for the same reason the
     # init above is (see initTDMDescriptorWaveSeparated).
-    if self.tdmDealiasAB(kernel) and tcA in ("A",):
-      mod.add(comp.calculateStartAddrWaveSeparated(self, kernel, tPA, f"Address{tcA}", dstGroup0A, waveIdxSgpr))
-      mod.add(comp.calculateStartAddrWaveSeparated(self, kernel, tPB, f"Address{tcB}", dstGroup0B, waveIdxSgpr))
-      return mod
-
     if self.tdmFuseAMx(kernel):
       def startAddr(tP):
         tc = tP["tensorChar"]
@@ -20326,16 +20302,6 @@ class KernelWriterAssembly(KernelWriter):
     # each with that tensor's own increment.
     # The solution-level predicate is enough here: only the wave-separated path
     # reaches this helper at all, so the writer-state half is already true.
-    if tdmDealiasAB(kernel) and tcA == "A":
-      with self.allocTmpSgpr(1, tag="tdmApplyStreamKOffsetDealiased_tmpSgprRes") as tmpSgprRes:
-        tmpSgpr = tmpSgprRes.idx
-        for tc in (tcA, tcB):
-          mod.add(SMulI32(dst=sgpr(tmpSgpr), src0=sgpr("StreamKLocalStart"), src1=sgpr(f"GlobalReadIncs{tc}"),
-                           comment=f"StreamK K-offset {tc} = localStart * increment"))
-          mod.add(SAddU32(dst=sgpr(f"tdm{tc}Group0+2"), src0=sgpr(f"tdm{tc}Group0+2"), src1=sgpr(tmpSgpr),
-                           comment=f"Apply StreamK K-offset to TDM {tc} global addr"))
-      return mod
-
     # The shared set's pointer must be advanced exactly once, by tdmABIncs, which
     # already holds this wave's member after the three-way select. The MXSA/MXSB
     # call must return: it would re-offset the shared set and read tdmMXSAMXSBIncs,
@@ -20386,14 +20352,6 @@ class KernelWriterAssembly(KernelWriter):
       else:
         mod.add(SSubU32(dst=sgpr(tmpSgpr), src0=sgpr("StreamKLocalEnd"), src1=1,
                         comment="tail iteration index within current StreamK tile"))
-      if tdmDealiasAB(kernel) and tcA == "A":
-        with self.allocTmpSgpr(1, tag="tdmApplyStreamKTailOffsetDealiased") as offTmp:
-          for tc in (tcA, tcB):
-            mod.add(SMulI32(dst=sgpr(offTmp.idx), src0=sgpr(tmpSgpr), src1=sgpr(f"GlobalReadIncs{tc}"),
-                            comment=f"StreamK tail K-offset {tc} = (localEnd - 1) * increment"))
-            mod.add(SAddU32(dst=sgpr(f"tdm{tc}Group0+2"), src0=sgpr(f"tdm{tc}Group0+2"), src1=sgpr(offTmp.idx),
-                            comment=f"Apply StreamK tail K-offset to TDM {tc} global addr"))
-        return mod
       mod.add(SMulI32(dst=sgpr(tmpSgpr), src0=sgpr(tmpSgpr), src1=sgpr(incSgprName),
                       comment="StreamK tail K-offset = (localEnd - 1) * increment"))
       mod.add(SAddU32(dst=sgpr(f"{group0Name}+2"), src0=sgpr(f"{group0Name}+2"), src1=sgpr(tmpSgpr),
@@ -20774,7 +20732,7 @@ class KernelWriterAssembly(KernelWriter):
     tcB: str = tPB['tensorChar']
     mod = Module("TDMGlobalIncrementsWaveSeparated")
     # The increment register is named after the CALL, whose one set it advances;
-    # the descriptor is named after that set's even member, which TDMFuse=5
+    # the descriptor is named after that set's even member, which TDMFuse=1
     # crosses relative to the pair.
     incSgprName = f"tdm{tcA}{tcB}Incs"
     tdmGroup0 = f"tdm{self._tdmPairedParityOrder(kernel, tPA, tPB)[0]['tensorChar']}Group0"
@@ -20788,31 +20746,6 @@ class KernelWriterAssembly(KernelWriter):
         mod.add(comp.incrementGlobalAddr(self, f"tdm{tcB}Group0", f"GlobalReadIncs{tcB}"))
       return mod
 
-    dealiased = self.tdmDealiasAB(kernel) and tcA in ("A",)
-    if dealiased:
-      staggering = loopIdx is not None and loopIdx == self.states.unrollIdx \
-                   and self.states.staggerUCode
-      for tc in (tcA, tcB):
-        group0 = f"tdm{tc}Group0"
-        if staggering:
-          with self.allocTmpSgpr(2, tag="tdmIncrementDealiased_tmpSgprInfo") as tmpSgprInfo:
-            incTmpLo = tmpSgprInfo.idx
-            incTmpHi = tmpSgprInfo.idx + 1
-            if prefetchIndex:
-              mod.add(SAddU32(dst=sgpr(incTmpLo), src0=self.loopCounter(kernel, self.states.unrollIdx), \
-                      src1=prefetchIndex, comment="remove pf(%u)"%prefetchIndex))
-              mod.add(SCmpEQU32(src0=sgpr("StaggerUIter"), src1=sgpr(incTmpLo), comment="Is this wrapIter? (pf)"))
-            else:
-              mod.add(SCmpEQU32(src0=self.loopCounter(kernel, self.states.unrollIdx), \
-                        src1=sgpr("StaggerUIter"), comment="Is this the wrapIter?"))
-            mod.add(SCSelectB32(dst=sgpr(incTmpLo), src0=sgpr(f"WrapU{tc}+0"), \
-                    src1=sgpr(f"GlobalReadIncs{tc}"), comment=f"select WrapU{tc} or normal inc (lo)"))
-            mod.add(SCSelectB32(dst=sgpr(incTmpHi), src0=sgpr(f"WrapU{tc}+1"), src1=0, \
-                    comment=f"select WrapU{tc} or normal inc (hi)"))
-            mod.add(SAddU64(dst=sgpr(f"{group0}+2", 2), src0=sgpr(f"{group0}+2", 2), \
-                    src1=sgpr(incTmpLo, 2), comment=f"TDM {tc} addr += inc (with wrap, 64-bit)"))
-        else:
-          mod.add(comp.incrementGlobalAddr(self, group0, f"GlobalReadIncs{tc}"))
     elif loopIdx is not None and loopIdx == self.states.unrollIdx and self.states.staggerUCode:
       with self.allocTmpSgpr(4, tag="tdmIncrementABWaveSperated_tmpSgprInfo") as tmpSgprInfo:
         incTmpLo = tmpSgprInfo.idx
@@ -20901,8 +20834,6 @@ class KernelWriterAssembly(KernelWriter):
     # the per-tensor cadence increment (AIHPBLAS-4159).
     # Separate descriptors read GlobalReadIncs{tc} directly, so there is no shared
     # register to prime and nothing to select.
-    if self.tdmDealiasAB(kernel) and tcA == "A":
-      return mod
     if self.tdmFuseAMx(kernel):
       # The A/B call already wrote the shared increment for all four waves and this
       # call must not overwrite it. B is absent from the select: it owns its
@@ -21207,15 +21138,8 @@ class KernelWriterAssembly(KernelWriter):
       # The shared set stops via its one selected register; B via its own.
       mod.add(SCMovB32(dst=sgpr("tdmABIncs"), src=0, comment=""))
       mod.add(SCMovB32(dst=sgpr("GlobalReadIncsB"), src=0, comment=""))
-    elif kernel["NumWaves"] > 1 and not self.tdmDealiasAB(kernel):
+    elif kernel["NumWaves"] > 1 :
       mod.add(SCMovB32(dst=sgpr("tdmABIncs"), src=0, comment=""))
-      if kernel["ProblemType"]["MXBlockA"]:
-        mod.add(SCMovB32(dst=sgpr("tdmMXSAMXSBIncs"), src=0, comment=""))
-    elif kernel["NumWaves"] > 1:
-      # De-aliased A/B advance from GlobalReadIncs{A,B}; the aliased MXSA/MXSB
-      # pair still advances from its shared parity-selected register.
-      mod.add(SCMovB32(dst=sgpr("GlobalReadIncsA"), src=0, comment=""))
-      mod.add(SCMovB32(dst=sgpr("GlobalReadIncsB"), src=0, comment=""))
       if kernel["ProblemType"]["MXBlockA"]:
         mod.add(SCMovB32(dst=sgpr("tdmMXSAMXSBIncs"), src=0, comment=""))
     else:

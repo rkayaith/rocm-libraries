@@ -225,8 +225,6 @@ class _SetupNewTilePapTdmWriter:
     def isTdmWaveSeparated(self, kernel):
         return kwa_module.KernelWriterAssembly.isTdmWaveSeparated(self, kernel)
 
-    def tdmDealiasAB(self, kernel):
-        return kwa_module.KernelWriterAssembly.tdmDealiasAB(self, kernel)
 
     def tdmFuseAMx(self, kernel):
         return kwa_module.KernelWriterAssembly.tdmFuseAMx(self, kernel)

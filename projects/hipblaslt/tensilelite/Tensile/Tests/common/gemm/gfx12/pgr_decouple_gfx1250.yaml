@@ -61,7 +61,7 @@ BenchmarkProblems:
         # Upstream still rejects TDMSplit (PR #10911); xfailed unit tests keep
         # the per-row guards. Restore [False, True] when it is selectable again.
         - TDMSplit: [False]
-        - TDMFuse: [0, 5]
+        - TDMFuse: [0, 1]
         - PrefetchGlobalRead: [2]
         - PrefetchGlobalReadA: [1, 2]
         - PrefetchGlobalReadB: [1, 2]

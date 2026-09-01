@@ -22,7 +22,7 @@
 #
 # SPDX-License-Identifier: MIT
 ################################################################################
-"""TDMFuse=5, the crossed {MXSA,A} + {MXSB,B} TDM descriptor grouping.
+"""TDMFuse=1, the crossed {MXSA,A} + {MXSB,B} TDM descriptor grouping.
 
 Three things here are load-bearing and nothing else in-tree states them.
 
@@ -76,7 +76,7 @@ _PRISTINE_DEFAULT_SOLUTION = copy.deepcopy(dict(defaultSolution))
 _TENSORS = ("A", "MXSA", "MXSB", "B")
 
 
-def _ks(fuse=5, pgrA=1, pgrB=2, **overrides):
+def _ks(fuse=1, pgrA=1, pgrB=2, **overrides):
     """The smallest dict the grouping predicates read."""
     ks = {
         "TDMFuse": fuse,
@@ -105,7 +105,6 @@ class _Grouping:
     """
 
     isTdmWaveSeparated = KernelWriterAssembly.isTdmWaveSeparated
-    tdmDealiasAB = KernelWriterAssembly.tdmDealiasAB
     tdmFuseAMx = KernelWriterAssembly.tdmFuseAMx
     tdmFusePaired = KernelWriterAssembly.tdmFusePaired
     tdmSeparateABDescriptors = KernelWriterAssembly.tdmSeparateABDescriptors
@@ -125,10 +124,10 @@ W = _Grouping()
 # ---------------------------------------------------------------------------
 # The predicate.
 # ---------------------------------------------------------------------------
-def test_paired_is_selected_only_by_five():
-    """Nothing derives this grouping, so 0 stays inert and 2/4/6 keep theirs."""
-    assert tdmFusePaired(_ks(fuse=5)) is True
-    for other in (0, 2, 4, 6):
+def test_paired_is_selected_only_by_one():
+    """Nothing derives this grouping, so 0 stays inert and 2 keeps its own."""
+    assert tdmFusePaired(_ks(fuse=1)) is True
+    for other in (0, 2):
         assert tdmFusePaired(_ks(fuse=other)) is False
 
 
@@ -150,11 +149,10 @@ def test_paired_declines_outside_its_envelope(overrides):
 
 @pytest.mark.parametrize("pgrA, pgrB", [(1, 2), (2, 1), (2, 2), (0, 2), (1, 1)])
 def test_paired_does_not_key_on_the_block_counts(pgrA, pgrB):
-    """Unlike 2 and 6 this row holds at every pair, which is the point of it.
+    """Unlike 2 this row holds at every pair, which is the point of it.
 
     2 is rejected at a divergent pair because its three-member set carries two
-    cadences; 6 requires one because its de-aliased cadence was verified nowhere
-    else. Each of this row's sets is one cadence at every pair, so neither
+    cadences. Each of this row's sets is one cadence at every pair, so neither
     argument reaches it.
     """
     assert tdmFusePaired(_ks(pgrA=pgrA, pgrB=pgrB)) is True
@@ -198,7 +196,7 @@ def test_only_the_scales_change_parity_against_the_default():
     data tensor -- rather than both data tensors landing on the even waves and
     both of the much smaller scale tensors on the odd.
     """
-    paired, default = _ks(fuse=5), _ks(fuse=0)
+    paired, default = _ks(fuse=1), _ks(fuse=0)
     assert tdmWavePartition(paired, "A") == tdmWavePartition(default, "A")
     assert tdmWavePartition(paired, "B") == tdmWavePartition(default, "B")
     assert tdmWavePartition(paired, "MXSA") == tdmWavePartition(default, "MXSB")
@@ -337,7 +335,7 @@ def _namingKernel(**overrides):
 
 def test_paired_is_named():
     """A pinned grouping has to be in the name, or two kernels dedup to one."""
-    assert "TDMF5" in getKernelNameMin(_namingKernel(TDMFuse=5), False)
+    assert "TDMF1" in getKernelNameMin(_namingKernel(TDMFuse=1), False)
 
 
 def test_off_leaves_the_name_alone():
@@ -348,9 +346,9 @@ def test_off_leaves_the_name_alone():
 
 
 def test_each_grouping_gets_its_own_name():
-    names = {f: getKernelNameMin(_namingKernel(TDMFuse=f), False) for f in (0, 2, 4, 5, 6)}
-    assert len(set(names.values())) == 5
-    assert "TDMF5" in names[5] and "TDMF5" not in names[2]
+    names = {f: getKernelNameMin(_namingKernel(TDMFuse=f), False) for f in (0, 1, 2)}
+    assert len(set(names.values())) == 3
+    assert "TDMF1" in names[1] and "TDMF1" not in names[2]
 
 
 # ---------------------------------------------------------------------------
@@ -445,7 +443,7 @@ def _derive(gfx1250_iim, assembler, capsys, **overrides):
         "TDMInst": 3,
         "MXScaleFormat": "InMemorySwizzle",
         "LDSTrInst": True,
-        "TDMFuse": 5,
+        "TDMFuse": 1,
         "PrefetchGlobalRead": 2,
         "PrefetchGlobalReadA": 1,
         "PrefetchGlobalReadB": 2,
@@ -510,7 +508,7 @@ def test_accepts_mirror_divergent_thick_wait(_gp_gfx1250, gfx1250_iim, assembler
                        PrefetchGlobalRead=2,
                        PrefetchGlobalReadA=2, PrefetchGlobalReadB=1)
     assert sol.get("Valid") is True, f"mirror_f5 rejected with: {out!r}"
-    assert "TDMFuse=5 cannot honour its divergent thick-wait" not in out
+    assert "TDMFuse=1 cannot honour its divergent thick-wait" not in out
 
 
 class _ThickWaitStub:
@@ -542,7 +540,7 @@ def test_thick_wait1_lands_on_the_thick_tensor(pgrA, pgrB, thick, marker):
         "s_wait_tensorcnt 0\n"
     )
     kernel = {
-        "TDMFuse": 5,
+        "TDMFuse": 1,
         "PrefetchGlobalRead": 2,
         "PrefetchGlobalReadA": pgrA,
         "PrefetchGlobalReadB": pgrB,
@@ -566,7 +564,7 @@ def test_rejects_one_wave(_gp_gfx1250, gfx1250_iim, assembler, capsys):
                        MatrixInstruction=[16, 16, 128, 1, 1, 2, 16, 1, 1],
                        WorkGroup=[32, 1, 1])
     assert sol.get("Valid") is False
-    assert "TDMFuse=5 splits each of its two descriptor sets by wave parity" in out
+    assert "TDMFuse=1 splits each of its two descriptor sets by wave parity" in out
 
 
 def test_rejects_subtile(_gp_gfx1250, gfx1250_iim, assembler, capsys):
@@ -588,7 +586,7 @@ def test_rejects_without_mx_scales_on_both(_gp_gfx1250, gfx1250_iim, assembler, 
                        ProblemType={"MacDataTypeB": "F8", "DataTypeMXSB": "E8",
                                     "MXBlockB": 0})
     assert sol.get("Valid") is False
-    assert "TDMFuse=5 names MXSA and MXSB as the odd-wave member" in out
+    assert "TDMFuse=1 names MXSA and MXSB as the odd-wave member" in out
 
 
 @pytest.mark.xfail(
@@ -603,13 +601,13 @@ def test_rejects_tdmsplit(_gp_gfx1250, gfx1250_iim, assembler, capsys):
     """
     sol, out = _derive(gfx1250_iim, assembler, capsys, TDMSplit=True)
     assert sol.get("Valid") is False
-    assert "TDMFuse=5 is not available with TDMSplit" in out
+    assert "TDMFuse=1 is not available with TDMSplit" in out
 
 
 def test_accepts_stagger(_gp_gfx1250, gfx1250_iim, assembler, capsys):
     """StaggerU is selected by YAML, not rejected by TDMFuse validation.
 
-    Keep this case valid so TDMFuse=5 does not silently regain the removed
+    Keep this case valid so TDMFuse=1 does not silently regain the removed
     StaggerU=0 hard restriction.
     """
     sol, out = _derive(gfx1250_iim, assembler, capsys, StaggerU=32)
@@ -626,7 +624,7 @@ def test_rejects_halfplr_at_a_divergent_pair(_gp_gfx1250, gfx1250_iim, assembler
     """
     sol, out = _derive(gfx1250_iim, assembler, capsys, HalfPLR=1)
     assert sol.get("Valid") is False
-    assert "TDMFuse=5 requires HalfPLR=0 at a divergent decoupled pair" in out
+    assert "TDMFuse=1 requires HalfPLR=0 at a divergent decoupled pair" in out
 
 
 def test_rejects_without_tdm_on_both_tensors(_gp_gfx1250, gfx1250_iim, assembler, capsys):

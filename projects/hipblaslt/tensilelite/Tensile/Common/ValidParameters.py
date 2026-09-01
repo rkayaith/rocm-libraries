@@ -1220,61 +1220,14 @@ validParameters = { # we need to make sure this matches develop
     #      under NumWaves > 1 and not UseSubtileImpl, giving {A,B} + {MXSA,MXSB},
     #      and gives every tensor its own descriptor otherwise. 0 therefore
     #      means "leave this alone", NOT "do not fuse".
-    #   4  {MXSA,MXSB} + {A,B}. Two fused groups on a TWO-WAY wave-parity
-    #      dispatch: s_bitcmp1_b32 s[sgprWaveIdx], 0 sends even waves down the
-    #      A / MXSA arm and odd waves down the B / MXSB arm. This is what 0
-    #      already produces on wave-separated MX shapes, so it moves no
-    #      assembly; what it buys is that the grouping is REFUSED wherever it
-    #      would not be produced (NumWaves == 1, UseSubtileImpl, no MX scales,
-    #      sparse metadata) rather than degrading silently under a name that
-    #      claims it.
-    #   2  {A,MXSA,MXSB} + {B}. Two descriptor sets on a THREE-WAY dispatch of
-    #      the shared set, and the grouping the hand-written OAI deliverable uses.
-    #      The dispatch is uneven: at NumWaves=4 two waves carry A, ONE carries
-    #      MXSA, ONE carries MXSB, and -- because B is alone in its set and has no
-    #      partner to divide against -- ALL FOUR carry B, so B's component id
-    #      becomes the full wave index over four components even though B's arm
-    #      reads as untouched. Costs the same 24 SGPRs as the default pairing.
-    #      Restricted to NumWaves == 4: 4 does not divide by 3, so the 1/1/2 split
-    #      is a remainder policy for three members rather than an even partition.
-    #   5  {MXSA,A} + {MXSB,B}, on the same two-way wave-parity dispatch as 0
-    #      but CROSSED: A and MXSB take the even waves, MXSA and B the odd ones.
-    #      A and B therefore keep the parity 0 gives them, so their global
-    #      addressing does not move and only the scales change side, and every
-    #      wave carries one data tensor plus one scale tensor -- which the
-    #      parallel assignment (both data tensors even, both scales odd) does
-    #      not. Costs the same 24 SGPRs as 0, 2 and 4.
-    #      Its sets are the only ones that coincide with the per-tensor LDS
-    #      block-count partition: {MXSA,A} is all of
-    #      KernelWriterAssembly._tdmDecoupledGroup "A" and {MXSB,B} all of "B".
-    #      One cadence per set is what lets the parity-aware swap arm express it
-    #      without the third arm row 2 would need. The price is the same coin's
-    #      other face: a wave's PARITY no longer decides its cadence, since each
-    #      cadence is now split across both parities. A divergent
-    #      PrefetchGlobalReadA/B pair therefore needs the per-set fill
-    #      relocation in KernelWriter._dcpScheduleSingleBufferedFillLate rather
-    #      than that function's parity split, and HalfPLR is refused there
-    #      because its increment mask rides in the module that moves.
-    #   6  {A} + {B} + {MXSA,MXSB}. Three descriptor sets: A and B each own one,
-    #      the MX scales stay parity-aliased on a third. Not in the design table,
-    #      which runs 0..5, so 6 sits above the table rather than in it. Costs 12
-    #      SGPRs for B's own set against a ceiling of 106, so it is expensive and
-    #      can fail to fit. Requires a divergent decoupled pair, which is the only
-    #      envelope the cadence was verified on.
+    #   1  {MXSA,A} + {MXSB,B}, crossed parity dispatch (was f5).
+    #   2  {A,MXSA,MXSB} + {B}, three-tensor fused descriptor grouping.
     #
     # TDMSplit is orthogonal: it halves each data tensor's load into two
     # instructions without changing which tensors share a descriptor.
     #
-    # THE NUMBERING NEEDS SETTLING BEFORE THIS SHIPS. 0 is spent on "off", so the
-    # design table's `None` grouping -- every tensor on its own instruction --
-    # has no number. Renumbering costs nothing today and is a compatibility
-    # problem once tuning libraries carry values. The unimplemented rows keep the
-    # table's numbers provisionally:
-    #     1  `AB`      {A,B}, MX scales unfused
-    #     3  `B_MX`    {B,MXSA,MXSB} + {A}
-    # Row 3 is the mirror of 2 and realisable the same way, but is unimplemented:
-    # it needs B's share of the shared set split across two waves against A alone.
-    "TDMFuse": [0, 2, 4, 5, 6],
+    # Row 3 (`B_MX`, {B,MXSA,MXSB} + {A}) is the mirror of 2 and unimplemented.
+    "TDMFuse": [0, 1, 2],
     # In-device layout of the MX scale tensors (MXSA/MXSB).
     # User-facing values:
     #   "NoSwizzle":       no swizzling; plain row/column layout (this is the default
