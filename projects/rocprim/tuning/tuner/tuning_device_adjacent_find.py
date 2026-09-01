@@ -32,16 +32,9 @@ from tuner.base_tuner import BaseTuner, TunerArgs, COMMON_KEY_TYPES
 """
 Inclusive range for params tuning, edit these to adjust tuning grid range
 """
-MAX_BLOCK_SIZE_X = 1024
-MIN_BLOCK_SIZE_X = 64
-BLOCK_SIZE_INC = 64
-
-STARTING_IPT = [1, 2]
-MIN_IPT = 4
-MAX_IPT = 32
-IPT_INC = 4
-
-FIRST_ADJ_POS_DECIMAL = [1, 5, 9]
+BLOCK_SIZES = [64, 128, 256, 512, 1024]
+IPT = [1, 2, 4, 8, 16, 32]
+FAPD = [1, 5, 9]
 
 
 class Tuner(BaseTuner):
@@ -54,9 +47,9 @@ class Tuner(BaseTuner):
 
     def _get_tune_params(self, key_type: str, value_type: Optional[str] = None) -> OrderedDict:
         params = OrderedDict()
-        params['block_size_x'] = list(range(MIN_BLOCK_SIZE_X, MAX_BLOCK_SIZE_X + 1, BLOCK_SIZE_INC))
-        params['__ipt__'] = STARTING_IPT + list(range(MIN_IPT, MAX_IPT + 1, IPT_INC))
-        params['FAPD'] = FIRST_ADJ_POS_DECIMAL
+        params['block_size_x'] = BLOCK_SIZES
+        params['__ipt__'] = IPT
+        params['FAPD'] = FAPD
         return params
 
     def _get_key_type(self) -> str:
@@ -69,33 +62,9 @@ class Tuner(BaseTuner):
         self, input_type: str, _: Optional[str] = None
     ) -> Callable[[dict], bool]:
         size = self.bytes_size // TYPE_CONFIGS[input_type].size
-        element_size = TYPE_CONFIGS[input_type].size
 
         def validate(params):
-            block_size = params['block_size_x']
-            items_per_thread = params['__ipt__']
-
-            # Total size constraint
-            if block_size * items_per_thread > size:
-                return False
-
-            # Memory size constraint
-            if block_size * items_per_thread * element_size > 65536:
-                return False
-
-            # Block size constraint
-            if block_size > 1024:
-                return False
-
-            # Items per thread constraint - high items_per_threads don't perform well
-            if items_per_thread >= block_size:
-                return False
-
-            # High items_per_threads on gfx1030 cause HSA_STATUS_ERROR_INVALID_ISA
-            if params.get("arch_name") == "gfx1030" and items_per_thread > 28:
-                return False
-
-            return True
+            return size >= 2
 
         return validate
 
