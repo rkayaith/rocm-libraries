@@ -821,58 +821,6 @@ class KernelWriter(metaclass=abc.ABCMeta):
       self.codes.perIterGlobalRead[lateIter].add(late)
       return
 
-          # A and B hold their own descriptors, so each fill is one instruction
-      # already guarded to the waves that carry that tensor and the re-slot is a
-      # move rather than a duplication. Everything else in the group still has to
-      # appear at both slots under complementary guards:
-      #
-      #   - the MX scale pair is still parity-aliased, so its fill is one
-      #     instruction serving both scales. MXSA follows A's block count and
-      #     MXSB follows B's, so the copy that runs late is the one on the
-      #     single-buffered parity.
-      #   - a descriptor advance must stay with the fill it follows. A wave fills
-      #     from the pointer it holds and then advances it, so leaving the advance
-      #     at the top while the fill moves late has the late fill read from an
-      #     address already moved. That fails FFM validation for every
-      #     K > DepthU, first at 512x512x1x544.
-      singleFill = self.codes.globalReadA if singleIsA else self.codes.globalReadB
-      doubleFill = self.codes.globalReadB if singleIsA else self.codes.globalReadA
-      rest = Module("TDM decoupled per-parity fill group")
-      kept = []
-      for item in src.items():
-        if item is doubleFill:
-          kept.append(item)
-        elif item is singleFill:
-          continue
-        else:
-          rest.add(item)
-      hasRest = rest.itemsSize() > 0
-
-      if hasRest:
-        lblEarly = Label(self.labels.getNameInc("DcpEarlyFill%sEnd" % doubleTc), "")
-        early = Module("TDM decoupled early fill group %s" % doubleTc)
-        parityCheck(early)
-        early.add(skipEarly(labelName=lblEarly.getLabelName(),
-                            comment="this wave carries %s, whose group moves late" % singleTc))
-        self._dcpRetokenTensorLoads(rest, doubleTc)
-        early.add(rest)
-        early.add(lblEarly)
-        kept.append(early)
-      src.setItems(kept)
-
-      late.add(singleFill)
-      if hasRest:
-        lblLate = Label(self.labels.getNameInc("DcpLateFill%sEnd" % singleTc), "")
-        parityCheck(late)
-        late.add(skipLate(labelName=lblLate.getLabelName(),
-                          comment="this wave carries %s, whose group stays at the top" % doubleTc))
-        lateRest = deepcopy(rest)
-        self._dcpRetokenTensorLoads(lateRest, singleTc)
-        late.add(lateRest)
-        late.add(lblLate)
-      self.codes.perIterGlobalRead[lateIter].add(late)
-      return
-
     lblLate = Label(self.labels.getNameInc("DcpLateFill%sEnd" % singleTc), "")
     parityCheck(late)
     late.add(skipLate(labelName=lblLate.getLabelName(),
