@@ -259,10 +259,10 @@ if(ROCKE_INSTALL_TESTS)
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/golden/rocke_representative_ir_sha256.json"
             DESTINATION ${ROCKE_TEST_INSTALL_DIR}/golden)
 
-    # The harness above builds LIBRARY kernels for its attention, attention_dense
-    # and attention_d256 families (the one platform -> library exception), so the
-    # `kernels` and `builders` packages must be importable by both runners.
-    # Without them every attention case degrades to an expected-failure and
+    # The harness above builds LIBRARY kernels for its attention, attention_dense,
+    # attention_d256 and kda_chunkwise families (the one platform -> library
+    # exception), so the `kernels` and `builders` packages must be importable by
+    # both runners. Without them those cases degrade to expected failures and
     # rocke_golden_static reports drift instead of passing.
     #
     # Destination matters: TheRock's artifact-hipkernelprovider.toml captures the
